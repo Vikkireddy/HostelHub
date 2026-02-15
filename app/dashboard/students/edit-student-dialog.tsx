@@ -1,0 +1,81 @@
+"use client";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
+import { StudentFormFields } from "./student-form-fields";
+import type { StudentFormValues } from "./students.constants";
+import type { Student } from "./columns";
+
+interface Room {
+  id: number;
+  number: string;
+  floor: number;
+  type: string;
+  rent?: number;
+  status?: string;
+  capacity?: number;
+  occupancy?: number;
+}
+
+interface EditStudentDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  student: Student | null;
+  form: StudentFormValues;
+  onFormChange: (updater: (prev: StudentFormValues) => StudentFormValues) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  isPending: boolean;
+  error?: Error | null;
+  roomsForEdit: (currentRoomId?: number) => Room[];
+}
+
+export function EditStudentDialog({
+  open,
+  onOpenChange,
+  student,
+  form,
+  onFormChange,
+  onSubmit,
+  isPending,
+  error,
+  roomsForEdit,
+}: EditStudentDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Edit Student</DialogTitle>
+          <DialogDescription>
+            Update student details. Name and phone are required. Change room to reassign.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-4">
+          {error && <Typography variant="error">{error.message}</Typography>}
+          <StudentFormFields
+            form={form}
+            onChange={onFormChange}
+            rooms={roomsForEdit(student?.room_id)}
+            idPrefix="edit"
+            roomCaption="Change room to reassign the student. Current room is always available."
+          />
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

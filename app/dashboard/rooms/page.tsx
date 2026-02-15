@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { BedDouble, DoorOpen, Users, Wrench, Plus } from "lucide-react";
+import { BedDouble, DoorOpen, Users, Wrench, Plus, Inbox, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StatusChip } from "@/components/ui/status-chip";
 import { Progress } from "@/components/ui/progress";
@@ -24,6 +24,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Typography } from "@/components/ui/typography";
+import { Box } from "@/components/ui/box";
+import { EmptyState } from "@/components/ui/empty-state";
+import { RoomsSkeleton } from "@/components/skeletons";
+import { useSearchStore } from "@/lib/search-store";
+import { useAuthStore } from "@/lib/auth-store";
+import { fetchWithHostel } from "@/lib/api-client";
 
 interface Room {
   id: number;
@@ -45,19 +52,76 @@ const initialForm = {
   status: "available",
 };
 
+function filterRooms<T extends { number: string; floor: number; type: string }>(
+  rooms: T[],
+  query: string
+): T[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return rooms;
+  return rooms.filter(
+    (r) =>
+      r.number.toLowerCase().includes(q) ||
+      String(r.floor).includes(q) ||
+      r.type.toLowerCase().includes(q)
+  );
+}
+
 export default function RoomsPage() {
   const queryClient = useQueryClient();
+  const { query } = useSearchStore();
+  const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
   const [form, setForm] = useState(initialForm);
+  const [editForm, setEditForm] = useState(initialForm);
 
   const { data: rooms = [], isLoading, error } = useQuery<Room[]>({
-    queryKey: ["rooms"],
-    queryFn: () => fetch("/api/rooms").then((r) => r.json()),
+    queryKey: ["rooms", hostelId],
+    queryFn: () =>
+      fetchWithHostel("/api/rooms", hostelId).then((r) => r.json()),
+  });
+
+  const updateRoom = useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: typeof initialForm;
+    }) => {
+      const res = await fetchWithHostel(`/api/rooms/${id}`, hostelId, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          number: data.number,
+          floor: Number(data.floor),
+          type: data.type,
+          capacity: Number(data.capacity),
+          rent: Number(data.rent),
+          status: data.status,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to update room");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      setEditForm(initialForm);
+      setEditModalOpen(false);
+      setEditingRoom(null);
+    },
   });
 
   const createRoom = useMutation({
     mutationFn: async (data: typeof initialForm) => {
-      const res = await fetch("/api/rooms", {
+      const res = await fetchWithHostel("/api/rooms", hostelId, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -89,71 +153,257 @@ export default function RoomsPage() {
     createRoom.mutate(form);
   };
 
-  const totalRooms = rooms.length;
-  const available = rooms.filter((r) => r.status === "available").length;
-  const occupied = rooms.filter((r) => r.status === "full").length;
-  const maintenance = rooms.filter((r) => r.status === "maintenance").length;
+  const handleEdit = (room: Room) => {
+    setEditingRoom(room);
+    setEditForm({
+      number: room.number,
+      floor: String(room.floor),
+      type: room.type,
+      capacity: String(room.capacity),
+      rent: String(room.rent),
+      status: room.status,
+    });
+    setEditModalOpen(true);
+  };
 
-  if (isLoading) return <div className="p-8">Loading rooms...</div>;
-  if (error) return <div className="p-8 text-red-600">Failed to load rooms</div>;
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRoom || !editForm.number.trim() || !editForm.floor || !editForm.type || !editForm.capacity || !editForm.rent)
+      return;
+    updateRoom.mutate({ id: editingRoom.id, data: editForm });
+  };
+
+  const deleteRoom = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetchWithHostel(`/api/rooms/${id}`, hostelId, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to delete room");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      setDeleteModalOpen(false);
+      setRoomToDelete(null);
+    },
+  });
+
+  const handleDeleteRoom = (room: Room) => {
+    setRoomToDelete(room);
+    setDeleteModalOpen(true);
+  };
+
+  const filteredRooms = useMemo(() => filterRooms(rooms, query), [rooms, query]);
+  const totalRooms = filteredRooms.length;
+  const available = filteredRooms.filter((r) => r.status === "available").length;
+  const occupied = filteredRooms.filter((r) => r.status === "full").length;
+  const maintenance = filteredRooms.filter((r) => r.status === "maintenance").length;
+
+  if (isLoading) return <RoomsSkeleton />;
+  if (error) return <Box className="p-8 text-red-600">Failed to load rooms</Box>;
 
   return (
-    <div className="space-y-8">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <Box className="space-y-8">
+      <Box className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
+            <Box className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
               <BedDouble className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{totalRooms}</p>
-              <p className="text-sm text-slate-500">Total Rooms</p>
-            </div>
+            </Box>
+            <Box>
+              <Typography className="text-2xl font-bold">{totalRooms}</Typography>
+              <Typography variant="muted">Total Rooms</Typography>
+            </Box>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
+            <Box className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
               <DoorOpen className="h-6 w-6 text-green-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{available}</p>
-              <p className="text-sm text-slate-500">Available</p>
-            </div>
+            </Box>
+            <Box>
+              <Typography className="text-2xl font-bold">{available}</Typography>
+              <Typography variant="muted">Available</Typography>
+            </Box>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100">
+            <Box className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100">
               <Users className="h-6 w-6 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{occupied}</p>
-              <p className="text-sm text-slate-500">Occupied</p>
-            </div>
+            </Box>
+            <Box>
+              <Typography className="text-2xl font-bold">{occupied}</Typography>
+              <Typography variant="muted">Occupied</Typography>
+            </Box>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100">
+            <Box className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100">
               <Wrench className="h-6 w-6 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{maintenance}</p>
-              <p className="text-sm text-slate-500">Maintenance</p>
-            </div>
+            </Box>
+            <Box>
+              <Typography className="text-2xl font-bold">{maintenance}</Typography>
+              <Typography variant="muted">Maintenance</Typography>
+            </Box>
           </CardContent>
         </Card>
-      </div>
+      </Box>
 
-      <div>
-        <div className="mb-4 flex items-center justify-between">
+      <Box>
+        <Box className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold">All Rooms</h3>
           <Button onClick={() => setModalOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Room
           </Button>
-        </div>
+        </Box>
+
+        <Dialog
+          open={editModalOpen}
+          onOpenChange={(open) => {
+            setEditModalOpen(open);
+            if (!open) setEditingRoom(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Room</DialogTitle>
+              <DialogDescription>
+                Update room details. Capacity cannot be reduced below current occupancy.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              {updateRoom.isError && (
+                <Typography variant="error">{updateRoom.error?.message}</Typography>
+              )}
+              <Box className="space-y-2">
+                <Label htmlFor="edit-number">Room Number *</Label>
+                <Input
+                  id="edit-number"
+                  value={editForm.number}
+                  onChange={(e) => setEditForm((f) => ({ ...f, number: e.target.value }))}
+                  placeholder="e.g. 101"
+                  required
+                />
+              </Box>
+              <Box className="space-y-2">
+                <Label htmlFor="edit-floor">Floor *</Label>
+                <Input
+                  id="edit-floor"
+                  type="number"
+                  min={1}
+                  value={editForm.floor}
+                  onChange={(e) => setEditForm((f) => ({ ...f, floor: e.target.value }))}
+                  placeholder="e.g. 1"
+                  required
+                />
+              </Box>
+              <Box className="space-y-2">
+                <Label htmlFor="edit-type">Type *</Label>
+                <Select
+                  value={editForm.type}
+                  onValueChange={(v) => setEditForm((f) => ({ ...f, type: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Single">Single</SelectItem>
+                    <SelectItem value="Double">Double</SelectItem>
+                    <SelectItem value="Triple">Triple</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Box>
+              <Box className="space-y-2">
+                <Label htmlFor="edit-capacity">Capacity *</Label>
+                <Input
+                  id="edit-capacity"
+                  type="number"
+                  min={editingRoom?.occupancy ?? 1}
+                  value={editForm.capacity}
+                  onChange={(e) => setEditForm((f) => ({ ...f, capacity: e.target.value }))}
+                  placeholder="e.g. 1"
+                  required
+                />
+                {editingRoom && (
+                  <Typography variant="caption">
+                    Min: {editingRoom.occupancy} (current occupancy)
+                  </Typography>
+                )}
+              </Box>
+              <Box className="space-y-2">
+                <Label htmlFor="edit-rent">Rent (₹/month) *</Label>
+                <Input
+                  id="edit-rent"
+                  type="number"
+                  min={0}
+                  value={editForm.rent}
+                  onChange={(e) => setEditForm((f) => ({ ...f, rent: e.target.value }))}
+                  placeholder="e.g. 5000"
+                  required
+                />
+              </Box>
+              <Box className="space-y-2">
+                <Label htmlFor="edit-status">Status</Label>
+                <Select
+                  value={editForm.status}
+                  onValueChange={(v) => setEditForm((f) => ({ ...f, status: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="available">Available</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Box>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateRoom.isPending}>
+                  {updateRoom.isPending ? "Saving..." : "Save Changes"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={deleteModalOpen}
+          onOpenChange={(open) => {
+            setDeleteModalOpen(open);
+            if (!open) setRoomToDelete(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Delete Room</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to permanently delete Room {roomToDelete?.number}? This cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteModalOpen(false)} disabled={deleteRoom.isPending}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={() => roomToDelete && deleteRoom.mutate(roomToDelete.id)} disabled={deleteRoom.isPending}>
+                {deleteRoom.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={modalOpen} onOpenChange={setModalOpen}>
           <DialogContent className="sm:max-w-md">
@@ -165,11 +415,9 @@ export default function RoomsPage() {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               {createRoom.isError && (
-                <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
-                  {createRoom.error?.message}
-                </p>
+                <Typography variant="error">{createRoom.error?.message}</Typography>
               )}
-              <div className="space-y-2">
+              <Box className="space-y-2">
                 <Label htmlFor="number">Room Number *</Label>
                 <Input
                   id="number"
@@ -178,8 +426,8 @@ export default function RoomsPage() {
                   placeholder="e.g. 101"
                   required
                 />
-              </div>
-              <div className="space-y-2">
+              </Box>
+              <Box className="space-y-2">
                 <Label htmlFor="floor">Floor *</Label>
                 <Input
                   id="floor"
@@ -190,8 +438,8 @@ export default function RoomsPage() {
                   placeholder="e.g. 1"
                   required
                 />
-              </div>
-              <div className="space-y-2">
+              </Box>
+              <Box className="space-y-2">
                 <Label htmlFor="type">Type *</Label>
                 <Select
                   value={form.type}
@@ -206,8 +454,8 @@ export default function RoomsPage() {
                     <SelectItem value="Triple">Triple</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-2">
+              </Box>
+              <Box className="space-y-2">
                 <Label htmlFor="capacity">Capacity *</Label>
                 <Input
                   id="capacity"
@@ -218,8 +466,8 @@ export default function RoomsPage() {
                   placeholder="e.g. 1"
                   required
                 />
-              </div>
-              <div className="space-y-2">
+              </Box>
+              <Box className="space-y-2">
                 <Label htmlFor="rent">Rent (₹/month) *</Label>
                 <Input
                   id="rent"
@@ -230,8 +478,8 @@ export default function RoomsPage() {
                   placeholder="e.g. 5000"
                   required
                 />
-              </div>
-              <div className="space-y-2">
+              </Box>
+              <Box className="space-y-2">
                 <Label htmlFor="status">Status</Label>
                 <Select
                   value={form.status}
@@ -245,7 +493,7 @@ export default function RoomsPage() {
                     <SelectItem value="maintenance">Maintenance</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </Box>
               <DialogFooter>
                 <Button
                   type="button"
@@ -262,8 +510,16 @@ export default function RoomsPage() {
           </DialogContent>
         </Dialog>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {rooms.map((room) => {
+        {rooms.length === 0 ? (
+          <EmptyState
+            icon={Inbox}
+            title="No rooms found"
+            message="Add rooms using the Add Room button above"
+            className="min-h-[280px]"
+          />
+        ) : (
+        <Box className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {filteredRooms.map((room) => {
             const occupancyPercent = (room.occupancy / room.capacity) * 100;
             const progressVariant =
               room.status === "full"
@@ -272,40 +528,62 @@ export default function RoomsPage() {
                 ? "warning"
                 : "default";
             return (
-              <Card key={room.id} className="overflow-hidden">
+              <Card key={room.id} className="group overflow-hidden">
                 <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                  <div className="flex items-center gap-2">
+                  <Box className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-slate-500" />
                     <span className="font-medium">Room {room.number}</span>
-                  </div>
-                  <StatusChip status={room.status as "available" | "full" | "maintenance"} />
+                  </Box>
+                  <Box className="flex items-center gap-2">
+                    <StatusChip status={room.status as "available" | "full" | "maintenance"} />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-slate-500 opacity-0 transition-opacity group-hover:opacity-100 hover:text-slate-700 hover:bg-slate-100"
+                      onClick={() => handleEdit(room)}
+                      title="Edit room"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-red-500 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-700 hover:bg-red-50 disabled:opacity-50"
+                      onClick={() => handleDeleteRoom(room)}
+                      disabled={room.occupancy > 0}
+                      title={room.occupancy > 0 ? "Cannot delete room with occupants" : "Delete room"}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </Box>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-sm text-slate-500">Floor {room.floor}</p>
-                  <div>
-                    <p className="text-sm">
+                  <Typography variant="muted">Floor {room.floor}</Typography>
+                  <Box>
+                    <Typography className="text-sm">
                       <span className="text-slate-500">Type:</span> {room.type}
-                    </p>
-                    <p className="text-sm">
+                    </Typography>
+                    <Typography className="text-sm">
                       <span className="text-slate-500">Occupancy:</span>{" "}
                       {room.occupancy}/{room.capacity}
-                    </p>
-                  </div>
+                    </Typography>
+                  </Box>
                   <Progress
                     value={occupancyPercent}
                     variant={progressVariant}
                     className="h-2"
                   />
-                  <p className="text-sm font-medium">
+                  <Typography className="text-sm font-medium">
                     <span className="text-slate-500">Rent:</span> ₹
                     {room.rent.toLocaleString()}/mo
-                  </p>
+                  </Typography>
                 </CardContent>
               </Card>
             );
           })}
-        </div>
-      </div>
-    </div>
+        </Box>
+        )}
+      </Box>
+    </Box>
   );
 }

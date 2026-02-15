@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
+import { getHostelIdFromRequest } from "@/lib/get-hostel-id";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const hostelId = getHostelIdFromRequest(request);
+    if (hostelId == null) {
+      return NextResponse.json([], { status: 200 });
+    }
+
     const [rows] = await pool.execute(
       `SELECT r.*, COALESCE(occ.occupancy, 0) as occupancy FROM rooms r
        LEFT JOIN (SELECT room_id, COUNT(*) as occupancy FROM students WHERE status = 'present' GROUP BY room_id) occ ON r.id = occ.room_id
-       ORDER BY r.number`
+       WHERE r.hostel_id = ?
+       ORDER BY r.number`,
+      [hostelId]
     );
     return NextResponse.json(rows);
   } catch (error) {
@@ -20,6 +28,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const hostelId = getHostelIdFromRequest(request);
+    if (hostelId == null) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { number, floor, type, capacity, rent, status = "available" } = body;
 
@@ -40,9 +53,9 @@ export async function POST(request: NextRequest) {
     }
 
     const [result] = await pool.execute(
-      `INSERT INTO rooms (number, floor, type, capacity, rent, status)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [String(number).trim(), Number(floor), type, Number(capacity), Number(rent), status]
+      `INSERT INTO rooms (hostel_id, number, floor, type, capacity, rent, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [hostelId, String(number).trim(), Number(floor), type, Number(capacity), Number(rent), status]
     );
 
     const insertId = (result as { insertId: number }).insertId;

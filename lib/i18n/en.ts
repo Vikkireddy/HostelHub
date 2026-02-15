@@ -1,0 +1,151 @@
+export const en = {
+  // Dashboard page
+  DASHBOARD: "Dashboard",
+  WELCOME_BACK_ADMIN: "Welcome back, Admin",
+  LOADING_DASHBOARD: "Loading dashboard...",
+  FAILED_TO_LOAD_DASHBOARD: "Failed to load dashboard",
+
+  // Stats grid
+  TOTAL_STUDENTS: "Total Students",
+  PLUS_TWO_THIS_MONTH: "+2 this month",
+  AVAILABLE_ROOMS: "Available Rooms",
+  OCCUPIED: "occupied",
+  PENDING_BILLS: "Pending Bills",
+  DUE_AMOUNT: "Due Amount",
+  VIEW_ALL: "View All →",
+
+  // Pending bills modal
+  PENDING_BILLS_MODAL_TITLE: "Pending Bills",
+  PENDING_BILLS_DESCRIPTION: "Students with pending or overdue payments. Total due: ₹{amount}",
+  ROOM: "Room",
+
+  // Revenue chart
+  REVENUE_OVERVIEW: "Revenue Overview",
+  NO_REVENUE_DATA_FOUND: "No revenue data found",
+  REVENUE_EMPTY_MESSAGE: "Revenue will appear here once payments are recorded",
+
+  // Room distribution chart
+  ROOM_DISTRIBUTION: "Room Distribution",
+  NO_ROOM_DISTRIBUTION_FOUND: "No room distribution found",
+  ROOM_DISTRIBUTION_EMPTY_MESSAGE: "Add rooms from the Rooms page to see distribution",
+
+  // Recent payments
+  RECENT_PAYMENTS: "Recent Payments",
+  MARK_AS_PAID: "Mark as Paid",
+  DAYS: "Days",
+  DUE_TODAY: "Due today",
+  NO_PAYMENTS_FOUND: "No payments found",
+  PAYMENTS_EMPTY_MESSAGE: "Payment records will appear here once payments are recorded",
+
+  // Students overview
+  STUDENTS_OVERVIEW: "Students Overview",
+  MANAGE: "Manage →",
+  NO_STUDENTS_FOUND: "No students found",
+  STUDENTS_EMPTY_MESSAGE: "Add students from the Students page to see them here",
+  NAME: "Name",
+  ROOM_LABEL: "Room",
+  COURSE: "Course",
+  JOIN_DATE: "Join Date",
+  PHONE: "Phone",
+
+  // Student actions
+  MARK_AS_LEFT: "Mark as Left",
+  CHECK_OUT: "Check Out",
+  CHECKOUT_DISABLED_DUES: "Clear pending payments before checkout",
+  STUDENT_CHECKOUT: "Student Check-Out",
+  CHECKOUT_CONFIRM_MESSAGE: "Are you sure you want to check out this student? This will free up their room.",
+  STUDENT_LABEL: "Student",
+  JOINED: "Joined",
+  CHECKOUT_DATE: "Checkout Date",
+  PENDING_DUES_WARNING: "Pending Dues. This student has ₹{amount} in pending/overdue payments.",
+  CONFIRM_CHECKOUT: "Confirm Check-Out",
+  CANCEL: "Cancel",
+  CONFIRM_MARK_AS_LEFT: "Are you sure this student has left the hostel? Their room will be freed and their record will be moved to Exited Students.",
+  STUDENT_MARKED_AS_LEFT: "Student marked as left successfully",
+
+  // Student tabs
+  PRESENT: "Present",
+  INACTIVE: "Inactive",
+  LEFT_DATE: "Left Date",
+  NO_INACTIVE_STUDENTS: "No inactive students found",
+  INACTIVE_STUDENTS_EMPTY_MESSAGE: "Students who leave the hostel will appear here",
+  LOADING_STUDENTS: "Loading students...",
+  FAILED_TO_LOAD_STUDENTS: "Failed to load students",
+  STUDENT_MANAGEMENT: "Student Management",
+  ADD_STUDENT: "Add Student",
+  OVERDUE: "Overdue",
+  PENDING: "Pending",
+  TOTAL_DUE: "Total Due",
+  DUE_OVERDUE_AMOUNT_BY_MONTH: "Due/overdue amount by month for {studentName}",
+  PAYMENT_BREAKDOWN: "Payment Breakdown",
+  VIEW_BREAKDOWN: "View breakdown",
+  SEARCH_STUDENTS_PLACEHOLDER: "Search name, phone, ID…",
+  ALL_ROOMS: "All Rooms",
+  ALL_STATUS: "All Status",
+  COLLECTED_AMOUNT: "Collected Amount",
+  PENDING_AMOUNT: "Pending Amount",
+  OVERDUE_COUNT: "Overdue Count",
+  THIS_MONTH: "This Month",
+  VIEW_COLLECTED: "View Collected",
+  VIEW_PENDING: "View Pending",
+  VIEW_OVERDUE: "View Overdue",
+  VIEW_THIS_MONTH: "View This Month",
+
+  // Signup page
+  SIGNUP_CREATE_YOUR_HOSTEL: "Create Your Hostel",
+  SIGNUP_REGISTER_SUBTITLE: "Register your hostel and start managing",
+  SIGNUP_TITLE: "Sign Up",
+  SIGNUP_FILL_DETAILS: "Fill in your hostel and account details",
+  SIGNUP_ALREADY_HAVE_ACCOUNT: "Already have an account?",
+  SIGNUP_SIGN_IN: "Sign In",
+  SIGNUP_FAILED: "Sign-up failed. Please try again.",
+  SIGNUP_ERROR_OCCURRED: "An error occurred. Please try again.",
+
+  // Signup sections
+  SIGNUP_HOSTEL_DETAILS: "Hostel Details",
+  SIGNUP_ADDRESS_OPTIONAL: "Address (Optional)",
+  SIGNUP_ACCOUNT_CREDENTIALS: "Account Credentials",
+
+  // Signup fields
+  SIGNUP_HOSTEL_NAME: "Hostel Name *",
+  SIGNUP_HOSTEL_NAME_PLACEHOLDER: "e.g. Sunrise Hostel",
+  SIGNUP_OWNER_NAME: "Owner / Admin Name *",
+  SIGNUP_OWNER_NAME_PLACEHOLDER: "e.g. John Doe",
+  SIGNUP_EMAIL_ADDRESS: "Email Address *",
+  SIGNUP_EMAIL_PLACEHOLDER: "admin@hostel.com",
+  SIGNUP_MOBILE_NUMBER: "Mobile Number *",
+  SIGNUP_MOBILE_PLACEHOLDER: "9876543210",
+  SIGNUP_ADDRESS: "Address",
+  SIGNUP_ADDRESS_PLACEHOLDER: "123 Main Street",
+  SIGNUP_CITY: "City",
+  SIGNUP_CITY_PLACEHOLDER: "Hyderabad",
+  SIGNUP_STATE: "State",
+  SIGNUP_STATE_PLACEHOLDER: "Telangana",
+  SIGNUP_PINCODE: "Pincode",
+  SIGNUP_PINCODE_PLACEHOLDER: "500001",
+  SIGNUP_PASSWORD: "Password *",
+  SIGNUP_PASSWORD_PLACEHOLDER: "",
+  SIGNUP_CONFIRM_PASSWORD: "Confirm Password *",
+  SIGNUP_CONFIRM_PASSWORD_PLACEHOLDER: "",
+  SIGNUP_PASSWORD_HINT: "Min 8 chars, 1 uppercase, 1 number, 1 special character",
+  SIGNUP_ACCEPT_TERMS: "I accept the Terms & Conditions and Privacy Policy",
+  SIGNUP_BUTTON: "Sign Up",
+  SIGNUP_CREATING_ACCOUNT: "Creating account...",
+
+  // Signup validation errors
+  SIGNUP_ERROR_HOSTEL_REQUIRED: "Hostel name is required",
+  SIGNUP_ERROR_OWNER_REQUIRED: "Owner/Admin name is required",
+  SIGNUP_ERROR_EMAIL_REQUIRED: "Email is required",
+  SIGNUP_ERROR_EMAIL_INVALID: "Invalid email format",
+  SIGNUP_ERROR_MOBILE_REQUIRED: "Mobile number is required",
+  SIGNUP_ERROR_MOBILE_INVALID: "Mobile must be 10 digits",
+  SIGNUP_ERROR_PASSWORD_MIN: "Minimum 8 characters",
+  SIGNUP_ERROR_PASSWORD_UPPERCASE: "At least 1 uppercase letter",
+  SIGNUP_ERROR_PASSWORD_NUMBER: "At least 1 number",
+  SIGNUP_ERROR_PASSWORD_SPECIAL: "At least 1 special character",
+  SIGNUP_ERROR_CONFIRM_REQUIRED: "Confirm password is required",
+  SIGNUP_ERROR_TERMS_REQUIRED: "You must accept the Terms & Conditions",
+  SIGNUP_ERROR_PASSWORDS_MISMATCH: "Passwords do not match",
+} as const;
+
+export type EnKeys = keyof typeof en;
