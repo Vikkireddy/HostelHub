@@ -2,9 +2,9 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 interface AuthState {
-  user: { email: string; name: string } | null;
+  user: { email: string; name: string; hostelId: number | null } | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => boolean;
+  login: (emailOrPhone: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -13,12 +13,29 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
-      login: (email: string, password: string) => {
-        if (email === "admin@hostel.com" && password === "admin123") {
-          set({ user: { email, name: "Admin" }, isAuthenticated: true });
-          return true;
+      login: async (emailOrPhone: string, password: string) => {
+        try {
+          const res = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ emailOrPhone, password }),
+          });
+          const data = await res.json();
+          if (data.success && data.user) {
+            set({
+              user: {
+                email: data.user.email,
+                name: data.user.name,
+                hostelId: data.user.hostelId ?? null,
+              },
+              isAuthenticated: true,
+            });
+            return true;
+          }
+          return false;
+        } catch {
+          return false;
         }
-        return false;
       },
       logout: () => set({ user: null, isAuthenticated: false }),
     }),

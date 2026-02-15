@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/lib/auth-store";
 import { cn } from "@/lib/utils";
+import { Typography } from "@/components/ui/typography";
+import { Box } from "@/components/ui/box";
 
 export default function LoginPage() {
   const [emailOrPhone, setEmailOrPhone] = useState("");
@@ -18,10 +21,10 @@ export default function LoginPage() {
   const { login } = useAuthStore();
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const success = login(emailOrPhone, password);
+    const success = await login(emailOrPhone, password);
     if (success) {
       router.push("/dashboard");
     } else {
@@ -30,9 +33,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
-      <div className="mb-8 flex flex-col items-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-primary shadow-lg">
+    <Box className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
+      <Box className="mb-8 flex flex-col items-center">
+        <Box className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-primary shadow-lg">
           <svg
             className="h-10 w-10 text-white"
             fill="none"
@@ -46,10 +49,10 @@ export default function LoginPage() {
               d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
             />
           </svg>
-        </div>
+        </Box>
         <h1 className="text-2xl font-bold text-slate-900">HostelHub</h1>
-        <p className="text-slate-500">Sign in with your email or phone</p>
-      </div>
+        <Typography className="text-slate-500">Sign in with your email or phone</Typography>
+      </Box>
 
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader>
@@ -59,11 +62,11 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <p className="rounded-md bg-red-50 p-2 text-sm text-red-600">{error}</p>
+              <Typography variant="error" className="p-2">{error}</Typography>
             )}
-            <div className="space-y-2">
+            <Box className="space-y-2">
               <Label htmlFor="email">Email or Phone</Label>
-              <div className="relative">
+              <Box className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   id="email"
@@ -74,11 +77,11 @@ export default function LoginPage() {
                   className={cn("pl-10", "border-primary ring-2 ring-primary/20")}
                   required
                 />
-              </div>
-            </div>
-            <div className="space-y-2">
+              </Box>
+            </Box>
+            <Box className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <div className="relative">
+              <Box className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   id="password"
@@ -96,17 +99,23 @@ export default function LoginPage() {
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
-              </div>
-            </div>
+              </Box>
+            </Box>
             <Button type="submit" className="w-full">
               Sign In
             </Button>
           </form>
-          <p className="mt-4 text-center text-xs text-slate-500">
+          <Typography variant="caption" className="mt-4 block text-center">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="font-semibold text-[var(--link)] underline hover:opacity-90">
+              Sign Up
+            </Link>
+          </Typography>
+          <Typography variant="caption" className="mt-1 block text-center text-muted-foreground">
             Admin: admin@hostel.com / admin123
-          </p>
+          </Typography>
         </CardContent>
       </Card>
-    </div>
+    </Box>
   );
 }

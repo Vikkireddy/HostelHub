@@ -9,9 +9,10 @@
   --popover-foreground: #0f172a;
   --primary: #18222e;
   --primary-foreground: #f7fafd;
+  --primary-400: #f3f6f9;
+  --primary-500: #243a5c;;
   --primary-600: #18222e;
   --primary-700: #141a2e;
-  --primary-500: #243a5c;
   --btn-bg: #18222e;
   --btn-foreground: #f7fafd;
   --secondary: #f1f5f9;
@@ -25,6 +26,7 @@
   --border: #e2e8f0;
   --input: #e2e8f0;
   --ring: #18222e;
+  --link: #227D9B;
 }
 
 @theme inline {
@@ -49,8 +51,10 @@
   --color-ring: var(--ring);
   --color-btn-bg: var(--btn-bg);
   --color-btn-foreground: var(--btn-foreground);
+  --color-primary-400: var(--primary-400);
   --color-primary-500: var(--primary-500);
   --color-primary-600: var(--primary-600);
+  --color-link: var(--link);
 }
 
 @layer base {

@@ -1,0 +1,12 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+export default function ExitedStudentsRedirect() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace("/dashboard/students");
+  }, [router]);
+  return null;
+}

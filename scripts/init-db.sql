@@ -22,6 +22,9 @@ CREATE TABLE IF NOT EXISTS students (
   room_id INT,
   course VARCHAR(255),
   join_date DATE,
+  id_proof_type VARCHAR(50),
+  id_proof_number VARCHAR(100),
+  address TEXT,
   status ENUM('present', 'left') DEFAULT 'present',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -53,42 +56,7 @@ CREATE TABLE IF NOT EXISTS payments (
   FOREIGN KEY (student_id) REFERENCES students(id)
 );
 
--- Complaints table
-CREATE TABLE IF NOT EXISTS complaints (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  student_id INT,
-  room_id INT,
-  description TEXT NOT NULL,
-  status ENUM('open', 'in-progress', 'resolved') DEFAULT 'open',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (student_id) REFERENCES students(id),
-  FOREIGN KEY (room_id) REFERENCES rooms(id)
-);
-
--- Food menu table
-CREATE TABLE IF NOT EXISTS food_menu (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  day VARCHAR(20) NOT NULL,
-  breakfast TEXT,
-  lunch TEXT,
-  snacks TEXT,
-  dinner TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
 -- Insert default admin (password: admin123 - use bcrypt in production)
 INSERT INTO admins (email, password_hash, name) VALUES
 ('admin@hostel.com', '$2a$10$placeholder', 'Admin')
 ON DUPLICATE KEY UPDATE email=email;
-
--- Insert default food menu
-INSERT INTO food_menu (day, breakfast, lunch, snacks, dinner) VALUES
-('Monday', 'Poha, Tea, Banana', 'Dal, Rice, Roti, Sabzi', 'Samosa, Chai', 'Paneer Butter Masala, Roti, Rice'),
-('Tuesday', 'Idli, Sambhar, Coffee', 'Rajma, Rice, Roti, Salad', 'Bread Pakora, Juice', 'Chole, Rice, Roti, Raita'),
-('Wednesday', 'Paratha, Curd, Pickle', 'Dal Fry, Rice, Roti, Aloo Gobi', 'Vada Pav, Tea', 'Mixed Veg, Roti, Pulao'),
-('Thursday', 'Upma, Chutney, Tea', 'Kadhi, Rice, Roti, Bhindi', 'Pav Bhaji', 'Dal Makhani, Jeera Rice, Roti'),
-('Friday', 'Aloo Paratha, Curd', 'Sambar, Rice, Roti, Cabbage', 'Maggi, Cold Drink', 'Shahi Paneer, Naan, Pulao'),
-('Saturday', 'Chole Bhature, Lassi', 'Biryani, Raita, Salad', 'Cake, Tea', 'Egg Curry / Paneer, Rice, Roti'),
-('Sunday', 'Puri, Aloo Sabzi, Tea', 'Special Thali (Dal, Rice, 2 Sabzi, Roti, Sweet)', 'Dosa, Chutney', 'Butter Chicken / Paneer Tikka, Naan');

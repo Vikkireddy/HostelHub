@@ -7,6 +7,7 @@ const statusConfig: Record<string, StatusVariant> = {
   overdue: "error",
   pending: "warning",
   paid: "success",
+  "no-due-amount": "success",
   open: "error",
   "in-progress": "warning",
   resolved: "success",
@@ -36,7 +37,7 @@ function StatusChip({ status, className, ...props }: StatusChipProps) {
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize",
+        "inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium capitalize",
         variantStyles[variant],
         className
       )}
