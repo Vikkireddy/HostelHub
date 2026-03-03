@@ -1,0 +1,242 @@
+"use client";
+
+import { Input } from "@/components/ui/input";
+import { RequiredLabel } from "@/components/ui/required-label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Typography } from "@/components/ui/typography";
+import { Box } from "@/components/ui/box";
+import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
+import { DEFAULT_AC_TYPE } from "@/app/dashboard/rooms/rooms.constants";
+import {
+  ID_PROOF_OPTIONS,
+  ID_PROOF_VALIDATIONS,
+  normalizeIdProof,
+  normalizePhone,
+} from "./students.constants";
+import type { StudentFormValues } from "./students.constants";
+
+interface Room {
+  id: number;
+  number: string;
+  floor: number;
+  type: string;
+  ac_type?: string;
+  rent?: number;
+}
+
+interface StudentFormFieldsProps {
+  form: StudentFormValues;
+  onChange: (updater: (prev: StudentFormValues) => StudentFormValues) => void;
+  rooms: Room[];
+  idPrefix?: string;
+  roomCaption?: string;
+  idProofError?: string | null;
+  phoneError?: string | null;
+}
+
+const textareaClassName =
+  "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+
+export function StudentFormFields({
+  form,
+  onChange,
+  rooms,
+  idPrefix = "",
+  roomCaption,
+  idProofError,
+  phoneError,
+}: StudentFormFieldsProps) {
+  const id = (name: string) => (idPrefix ? `${idPrefix}-${name}` : name);
+
+  return (
+    <Box className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <Box className="space-y-2">
+        <RequiredLabel htmlFor={id("name")}>Name</RequiredLabel>
+        <Input
+          id={id("name")}
+          value={form.name}
+          onChange={(e) => onChange((f) => ({ ...f, name: e.target.value }))}
+          placeholder="Full name"
+          required
+        />
+      </Box>
+      <Box className="space-y-2">
+        <RequiredLabel htmlFor={id("email")}>Email</RequiredLabel>
+        <Input
+          id={id("email")}
+          type="email"
+          value={form.email}
+          onChange={(e) => onChange((f) => ({ ...f, email: e.target.value }))}
+          placeholder="student@example.com"
+          required
+        />
+      </Box>
+      <Box className="space-y-2">
+        <RequiredLabel htmlFor={id("phone")}>Phone</RequiredLabel>
+        <Input
+          id={id("phone")}
+          value={form.phone}
+          onChange={(e) => {
+            const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+            onChange((f) => ({ ...f, phone: val }));
+          }}
+          onBlur={() => {
+            if (form.phone.trim()) {
+              const normalized = normalizePhone(form.phone);
+              if (normalized !== form.phone) {
+                onChange((f) => ({ ...f, phone: normalized }));
+              }
+            }
+          }}
+          placeholder="10-digit mobile (e.g. 9876543210)"
+          inputMode="numeric"
+          maxLength={10}
+          required
+          className={phoneError ? "border-destructive" : ""}
+        />
+        {phoneError && (
+          <Typography variant="caption" className="text-destructive">
+            {phoneError}
+          </Typography>
+        )}
+      </Box>
+      <Box className="space-y-2">
+        <RequiredLabel htmlFor={id("course")}>Course</RequiredLabel>
+        <Input
+          id={id("course")}
+          value={form.course}
+          onChange={(e) => onChange((f) => ({ ...f, course: e.target.value }))}
+          placeholder="e.g. B.Tech CSE"
+          required
+        />
+      </Box>
+      <Box className="space-y-2">
+        <RequiredLabel htmlFor={id("id_proof_type")}>ID Proof Type</RequiredLabel>
+        <Select
+          value={form.id_proof_type || ""}
+          onValueChange={(v) =>
+            onChange((f) => ({ ...f, id_proof_type: v, id_proof_number: "" }))
+          }
+          required
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select ID proof type" />
+          </SelectTrigger>
+          <SelectContent>
+            {ID_PROOF_OPTIONS.map((opt) => (
+              <SelectItem key={opt} value={opt}>
+                {opt}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Box>
+      <Box className="space-y-2">
+        <RequiredLabel htmlFor={id("id_proof_number")}>ID Proof Number</RequiredLabel>
+        <Input
+          id={id("id_proof_number")}
+          value={form.id_proof_number}
+          onChange={(e) => {
+            let val = e.target.value;
+            const rule = form.id_proof_type ? ID_PROOF_VALIDATIONS[form.id_proof_type] : null;
+            if (form.id_proof_type === "Aadhaar") {
+              val = val.replace(/\D/g, "").slice(0, 12);
+            } else if (form.id_proof_type === "PAN") {
+              val = val.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 10);
+            } else if (form.id_proof_type === "Other") {
+              val = val.replace(/[^A-Za-z0-9\s\-]/g, "").slice(0, rule?.maxLength ?? 30);
+            } else if (rule?.maxLength) {
+              val = val.replace(/[^A-Za-z0-9]/g, "").slice(0, rule.maxLength);
+            }
+            onChange((f) => ({ ...f, id_proof_number: val }));
+          }}
+          onBlur={() => {
+            if (form.id_proof_type && form.id_proof_number.trim()) {
+              const normalized = normalizeIdProof(form.id_proof_type, form.id_proof_number);
+              if (normalized !== form.id_proof_number) {
+                onChange((f) => ({ ...f, id_proof_number: normalized }));
+              }
+            }
+          }}
+          placeholder={
+            form.id_proof_type && ID_PROOF_VALIDATIONS[form.id_proof_type]?.placeholder
+              ? ID_PROOF_VALIDATIONS[form.id_proof_type].placeholder
+              : "Select ID type first, then enter number"
+          }
+          maxLength={form.id_proof_type ? ID_PROOF_VALIDATIONS[form.id_proof_type]?.maxLength : undefined}
+          required
+          className={idProofError ? "border-destructive" : ""}
+        />
+        {idProofError && (
+          <Typography variant="caption" className="text-destructive">
+            {idProofError}
+          </Typography>
+        )}
+      </Box>
+      <Box className="space-y-2 sm:col-span-2">
+        <RequiredLabel htmlFor={id("room")}>Assign to Room</RequiredLabel>
+        <Select
+          value={form.room_id || ""}
+          onValueChange={(v) => onChange((f) => ({ ...f, room_id: v }))}
+          required
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={idPrefix ? "Select room" : "Select which room this student belongs to"} />
+          </SelectTrigger>
+          <SelectContent>
+            {rooms.map((r) => (
+              <SelectItem key={r.id} value={String(r.id)}>
+                Room {r.number} (Floor {r.floor}, {r.type}, {r.ac_type || DEFAULT_AC_TYPE}) — ₹{Number(r.rent || 0).toLocaleString()}/mo
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {roomCaption && (
+          <Typography variant="caption">{roomCaption}</Typography>
+        )}
+      </Box>
+      <Box className="space-y-2 sm:col-span-2">
+        <RequiredLabel htmlFor={id("address")}>Address</RequiredLabel>
+        <textarea
+          id={id("address")}
+          rows={3}
+          value={form.address}
+          onChange={(e) => onChange((f) => ({ ...f, address: e.target.value }))}
+          placeholder="Full address"
+          className={textareaClassName}
+          required
+        />
+      </Box>
+      <Box className="space-y-2">
+        <RequiredLabel htmlFor={id("join_date")}>Join Date</RequiredLabel>
+        <DesktopDatePicker
+          value={form.join_date ? new Date(form.join_date + "T00:00:00") : null}
+          onChange={(date) =>
+            onChange((f) => ({
+              ...f,
+              join_date: date ? date.toISOString().slice(0, 10) : "",
+            }))
+          }
+          slotProps={{
+            textField: {
+              id: id("join_date"),
+              required: true,
+              size: "small",
+              fullWidth: true,
+            },
+            popper: {
+              disablePortal: true,
+              sx: { zIndex: 9999 },
+            },
+          }}
+        />
+      </Box>
+    </Box>
+  );
+}

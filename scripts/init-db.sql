@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS admins (
 -- Students table
 CREATE TABLE IF NOT EXISTS students (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  hostel_id INT NULL,
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255),
   phone VARCHAR(20) NOT NULL,
@@ -36,6 +37,7 @@ CREATE TABLE IF NOT EXISTS rooms (
   number VARCHAR(20) NOT NULL UNIQUE,
   floor INT NOT NULL,
   type ENUM('Single', 'Double', 'Triple') NOT NULL,
+  ac_type ENUM('AC', 'Non-AC') NOT NULL DEFAULT 'Non-AC',
   capacity INT NOT NULL,
   rent DECIMAL(10, 2) NOT NULL,
   status ENUM('available', 'full', 'maintenance') DEFAULT 'available',

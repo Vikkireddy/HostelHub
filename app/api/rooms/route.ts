@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/get-hostel-id";
+import { VALID_AC_TYPES, DEFAULT_AC_TYPE } from "@/app/dashboard/rooms/rooms.constants";
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { number, floor, type, capacity, rent, status = "available" } = body;
+    const { number, floor, type, ac_type = DEFAULT_AC_TYPE, capacity, rent, status = "available" } = body;
 
     if (!number || floor == null || !type || capacity == null || rent == null) {
       return NextResponse.json(
@@ -48,15 +49,32 @@ export async function POST(request: NextRequest) {
     if (!validTypes.includes(type)) {
       return NextResponse.json({ error: "Type must be Single, Double, or Triple" }, { status: 400 });
     }
+    if (ac_type && !(VALID_AC_TYPES as readonly string[]).includes(ac_type)) {
+      return NextResponse.json({ error: "AC type must be AC or Non-AC" }, { status: 400 });
+    }
     if (status && !validStatuses.includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    const [result] = await pool.execute(
-      `INSERT INTO rooms (hostel_id, number, floor, type, capacity, rent, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [hostelId, String(number).trim(), Number(floor), type, Number(capacity), Number(rent), status]
-    );
+    let result: unknown;
+    try {
+      [result] = await pool.execute(
+        `INSERT INTO rooms (hostel_id, number, floor, type, ac_type, capacity, rent, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [hostelId, String(number).trim(), Number(floor), type, ac_type, Number(capacity), Number(rent), status]
+      );
+    } catch (insertErr) {
+      const mysqlErr = insertErr as { code?: string; errno?: number };
+      if (mysqlErr.code === "ER_BAD_FIELD_ERROR" || mysqlErr.errno === 1054) {
+        [result] = await pool.execute(
+          `INSERT INTO rooms (hostel_id, number, floor, type, capacity, rent, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [hostelId, String(number).trim(), Number(floor), type, Number(capacity), Number(rent), status]
+        );
+      } else {
+        throw insertErr;
+      }
+    }
 
     const insertId = (result as { insertId: number }).insertId;
     const [rows] = await pool.execute(

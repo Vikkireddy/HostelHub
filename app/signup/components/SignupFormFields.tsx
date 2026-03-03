@@ -6,7 +6,7 @@ import type { SignupFormValues } from "@/lib/validations/signup";
 import { SignupFormField, SignupFormSection } from "./index";
 import { Controller } from "react-hook-form";
 import { t } from "@/lib/i18n";
-import { SIGNUP_SECTIONS } from "../signup-field-config";
+import { SIGNUP_SECTIONS } from "../SignupSectionConfig";
 
 interface SignupFormFieldsProps {
   control: Control<SignupFormValues>;
@@ -54,8 +54,9 @@ export function SignupFormFields({
                 placeholder={t(field.placeholderKey) || undefined}
                 type={field.type}
                 error={getError(field.name)}
-                 icon={field.icon}
+                icon={field.icon}
                 sx={field.sx}
+                required={field.required}
                 {...(field.type === "password" ? getPasswordProps(field.name) : {})}
               />
             ))}

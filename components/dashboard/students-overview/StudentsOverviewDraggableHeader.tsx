@@ -1,6 +1,6 @@
 "use client";
 
-import { TableCell } from "@mui/material";
+import { Button, TableCell } from "@mui/material";
 import { GripVertical } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -24,16 +24,25 @@ export function StudentsOverviewDraggableHeader({ id, label }: StudentsOverviewD
 
   return (
     <TableCell ref={setNodeRef} style={style} sx={HEADER_CELL_SX}>
-      <Box className="flex items-center gap-2 justify-center">
-        <button
+      <Box className="flex gap-2 ">
+        <Button
           type="button"
-          className="cursor-grab touch-none rounded p-1 hover:bg-slate-200 active:cursor-grabbing"
+          variant="text"
+          size="small"
+          sx={{
+            minWidth: "auto",
+            p: 0.5,
+            cursor: "grab",
+            touchAction: "none",
+            "&:hover": { bgcolor: "action.hover" },
+            "&:active": { cursor: "grabbing" },
+          }}
           {...attributes}
           {...listeners}
           aria-label="Drag to reorder"
         >
           <GripVertical className="h-4 w-4 text-slate-500" />
-        </button>
+        </Button>
         {label}
       </Box>
     </TableCell>

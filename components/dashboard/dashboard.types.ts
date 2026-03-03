@@ -108,6 +108,7 @@ type RecentPaymentsProps = {
 
 type StudentsOverviewProps = {
   students: StudentProps[];
+  headerAction?: React.ReactNode;
 };
 
 export type {

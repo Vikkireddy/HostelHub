@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RequiredLabel } from "@/components/ui/required-label";
 import {
   Dialog,
   DialogContent,
@@ -31,12 +32,14 @@ import { RoomsSkeleton } from "@/components/skeletons";
 import { useSearchStore } from "@/lib/search-store";
 import { useAuthStore } from "@/lib/auth-store";
 import { fetchWithHostel } from "@/lib/api-client";
+import { VALID_AC_TYPES, DEFAULT_AC_TYPE } from "./rooms.constants";
 
 interface Room {
   id: number;
   number: string;
   floor: number;
   type: string;
+  ac_type?: string;
   capacity: number;
   occupancy: number;
   status: string;
@@ -47,6 +50,7 @@ const initialForm = {
   number: "",
   floor: "",
   type: "",
+  ac_type: DEFAULT_AC_TYPE,
   capacity: "",
   rent: "",
   status: "available",
@@ -99,6 +103,7 @@ export default function RoomsPage() {
           number: data.number,
           floor: Number(data.floor),
           type: data.type,
+          ac_type: data.ac_type,
           capacity: Number(data.capacity),
           rent: Number(data.rent),
           status: data.status,
@@ -110,7 +115,13 @@ export default function RoomsPage() {
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (updatedRoom: Room) => {
+      queryClient.setQueryData<Room[]>(["rooms", hostelId], (old) => {
+        if (!old) return old;
+        return old.map((r) =>
+          r.id === updatedRoom.id ? { ...r, ...updatedRoom } : r
+        );
+      });
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       setEditForm(initialForm);
@@ -128,6 +139,7 @@ export default function RoomsPage() {
           number: data.number,
           floor: Number(data.floor),
           type: data.type,
+          ac_type: data.ac_type,
           capacity: Number(data.capacity),
           rent: Number(data.rent),
           status: data.status,
@@ -149,7 +161,7 @@ export default function RoomsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.number.trim() || !form.floor || !form.type || !form.capacity || !form.rent) return;
+    if (!form.number.trim() || !form.floor || !form.type || !form.ac_type || !form.capacity || !form.rent) return;
     createRoom.mutate(form);
   };
 
@@ -159,6 +171,7 @@ export default function RoomsPage() {
       number: room.number,
       floor: String(room.floor),
       type: room.type,
+      ac_type: room.ac_type || DEFAULT_AC_TYPE,
       capacity: String(room.capacity),
       rent: String(room.rent),
       status: room.status,
@@ -168,7 +181,7 @@ export default function RoomsPage() {
 
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingRoom || !editForm.number.trim() || !editForm.floor || !editForm.type || !editForm.capacity || !editForm.rent)
+    if (!editingRoom || !editForm.number.trim() || !editForm.floor || !editForm.type || !editForm.ac_type || !editForm.capacity || !editForm.rent)
       return;
     updateRoom.mutate({ id: editingRoom.id, data: editForm });
   };
@@ -283,7 +296,7 @@ export default function RoomsPage() {
                 <Typography variant="error">{updateRoom.error?.message}</Typography>
               )}
               <Box className="space-y-2">
-                <Label htmlFor="edit-number">Room Number *</Label>
+                <RequiredLabel htmlFor="edit-number">Room Number</RequiredLabel>
                 <Input
                   id="edit-number"
                   value={editForm.number}
@@ -293,7 +306,7 @@ export default function RoomsPage() {
                 />
               </Box>
               <Box className="space-y-2">
-                <Label htmlFor="edit-floor">Floor *</Label>
+                <RequiredLabel htmlFor="edit-floor">Floor</RequiredLabel>
                 <Input
                   id="edit-floor"
                   type="number"
@@ -305,7 +318,7 @@ export default function RoomsPage() {
                 />
               </Box>
               <Box className="space-y-2">
-                <Label htmlFor="edit-type">Type *</Label>
+                <RequiredLabel htmlFor="edit-type">Type</RequiredLabel>
                 <Select
                   value={editForm.type}
                   onValueChange={(v) => setEditForm((f) => ({ ...f, type: v }))}
@@ -321,7 +334,23 @@ export default function RoomsPage() {
                 </Select>
               </Box>
               <Box className="space-y-2">
-                <Label htmlFor="edit-capacity">Capacity *</Label>
+                <RequiredLabel htmlFor="edit-ac-type">AC / Non-AC</RequiredLabel>
+                <Select
+                  value={editForm.ac_type}
+                  onValueChange={(v) => setEditForm((f) => ({ ...f, ac_type: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VALID_AC_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Box>
+              <Box className="space-y-2">
+                <RequiredLabel htmlFor="edit-capacity">Capacity</RequiredLabel>
                 <Input
                   id="edit-capacity"
                   type="number"
@@ -338,7 +367,7 @@ export default function RoomsPage() {
                 )}
               </Box>
               <Box className="space-y-2">
-                <Label htmlFor="edit-rent">Rent (₹/month) *</Label>
+                <RequiredLabel htmlFor="edit-rent">Rent (₹/month)</RequiredLabel>
                 <Input
                   id="edit-rent"
                   type="number"
@@ -418,7 +447,7 @@ export default function RoomsPage() {
                 <Typography variant="error">{createRoom.error?.message}</Typography>
               )}
               <Box className="space-y-2">
-                <Label htmlFor="number">Room Number *</Label>
+                <RequiredLabel htmlFor="number">Room Number</RequiredLabel>
                 <Input
                   id="number"
                   value={form.number}
@@ -428,7 +457,7 @@ export default function RoomsPage() {
                 />
               </Box>
               <Box className="space-y-2">
-                <Label htmlFor="floor">Floor *</Label>
+                <RequiredLabel htmlFor="floor">Floor</RequiredLabel>
                 <Input
                   id="floor"
                   type="number"
@@ -440,7 +469,7 @@ export default function RoomsPage() {
                 />
               </Box>
               <Box className="space-y-2">
-                <Label htmlFor="type">Type *</Label>
+                <RequiredLabel htmlFor="type">Type</RequiredLabel>
                 <Select
                   value={form.type}
                   onValueChange={(v) => setForm((f) => ({ ...f, type: v }))}
@@ -456,7 +485,23 @@ export default function RoomsPage() {
                 </Select>
               </Box>
               <Box className="space-y-2">
-                <Label htmlFor="capacity">Capacity *</Label>
+                <RequiredLabel htmlFor="ac-type">AC / Non-AC</RequiredLabel>
+                <Select
+                  value={form.ac_type}
+                  onValueChange={(v) => setForm((f) => ({ ...f, ac_type: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VALID_AC_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Box>
+              <Box className="space-y-2">
+                <RequiredLabel htmlFor="capacity">Capacity</RequiredLabel>
                 <Input
                   id="capacity"
                   type="number"
@@ -468,7 +513,7 @@ export default function RoomsPage() {
                 />
               </Box>
               <Box className="space-y-2">
-                <Label htmlFor="rent">Rent (₹/month) *</Label>
+                <RequiredLabel htmlFor="rent">Rent (₹/month)</RequiredLabel>
                 <Input
                   id="rent"
                   type="number"
@@ -561,7 +606,7 @@ export default function RoomsPage() {
                   <Typography variant="muted">Floor {room.floor}</Typography>
                   <Box>
                     <Typography className="text-sm">
-                      <span className="text-slate-500">Type:</span> {room.type}
+                      <span className="text-slate-500">Type:</span> {room.type} · {room.ac_type || DEFAULT_AC_TYPE}
                     </Typography>
                     <Typography className="text-sm">
                       <span className="text-slate-500">Occupancy:</span>{" "}

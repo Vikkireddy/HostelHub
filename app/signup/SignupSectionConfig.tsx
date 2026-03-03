@@ -17,6 +17,7 @@ export interface SignupFieldConfig {
   type?: "text" | "email" | "password";
   icon: React.ReactNode;
   sx?: object;
+  required?: boolean;
 }
 
 export interface SignupSectionConfig {
@@ -34,10 +35,10 @@ export const SIGNUP_SECTIONS: SignupSectionConfig[] = [
     titleKey: "SIGNUP_HOSTEL_DETAILS",
     columns: 2,
     fields: [
-      { name: "hostelName", labelKey: "SIGNUP_HOSTEL_NAME", placeholderKey: "SIGNUP_HOSTEL_NAME_PLACEHOLDER", icon: <BusinessIcon /> },
-      { name: "ownerName", labelKey: "SIGNUP_OWNER_NAME", placeholderKey: "SIGNUP_OWNER_NAME_PLACEHOLDER", icon: <PersonIcon /> },
-      { name: "email", labelKey: "SIGNUP_EMAIL_ADDRESS", placeholderKey: "SIGNUP_EMAIL_PLACEHOLDER", type: "email", icon: <EmailIcon /> },
-      { name: "mobile", labelKey: "SIGNUP_MOBILE_NUMBER", placeholderKey: "SIGNUP_MOBILE_PLACEHOLDER", icon: <PhoneIcon /> },
+      { name: "hostelName", labelKey: "SIGNUP_HOSTEL_NAME", placeholderKey: "SIGNUP_HOSTEL_NAME_PLACEHOLDER", icon: <BusinessIcon />, required: true },
+      { name: "ownerName", labelKey: "SIGNUP_OWNER_NAME", placeholderKey: "SIGNUP_OWNER_NAME_PLACEHOLDER", icon: <PersonIcon />, required: true },
+      { name: "email", labelKey: "SIGNUP_EMAIL_ADDRESS", placeholderKey: "SIGNUP_EMAIL_PLACEHOLDER", type: "email", icon: <EmailIcon />, required: true },
+      { name: "mobile", labelKey: "SIGNUP_MOBILE_NUMBER", placeholderKey: "SIGNUP_MOBILE_PLACEHOLDER", icon: <PhoneIcon />, required: true },
     ],
   },
   {
@@ -58,8 +59,8 @@ export const SIGNUP_SECTIONS: SignupSectionConfig[] = [
     titleKey: "SIGNUP_ACCOUNT_CREDENTIALS",
     columns: 2,
     fields: [
-      { name: "password", labelKey: "SIGNUP_PASSWORD", placeholderKey: "SIGNUP_PASSWORD_PLACEHOLDER", type: "password", icon: <LockIcon /> },
-      { name: "confirmPassword", labelKey: "SIGNUP_CONFIRM_PASSWORD", placeholderKey: "SIGNUP_CONFIRM_PASSWORD_PLACEHOLDER", type: "password", icon: <LockIcon /> },
+      { name: "password", labelKey: "SIGNUP_PASSWORD", placeholderKey: "SIGNUP_PASSWORD_PLACEHOLDER", type: "password", icon: <LockIcon />, required: true },
+      { name: "confirmPassword", labelKey: "SIGNUP_CONFIRM_PASSWORD", placeholderKey: "SIGNUP_CONFIRM_PASSWORD_PLACEHOLDER", type: "password", icon: <LockIcon />, required: true },
     ],
   },
 ];

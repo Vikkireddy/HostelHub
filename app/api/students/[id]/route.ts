@@ -92,9 +92,22 @@ export async function PATCH(
       address,
     } = body;
 
-    if (!name || !phone) {
+    const required = [
+      ["name", name],
+      ["email", email],
+      ["phone", phone],
+      ["room_id", room_id],
+      ["course", course],
+      ["join_date", join_date],
+      ["id_proof_type", id_proof_type],
+      ["id_proof_number", id_proof_number],
+      ["address", address],
+    ] as const;
+    const missing = required.filter(([, v]) => v == null || String(v).trim() === "");
+    if (missing.length > 0) {
+      const fields = missing.map(([f]) => f).join(", ");
       return NextResponse.json(
-        { error: "Name and phone are required" },
+        { error: `All fields are required. Missing: ${fields}` },
         { status: 400 }
       );
     }
