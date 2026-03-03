@@ -10,9 +10,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
-import { Box } from "@/components/ui/box";
-import { StudentFormFields } from "./student-form-fields";
-import { initialStudentForm, type StudentFormValues } from "./students.constants";
+import { StudentFormFields } from "./StudentFormFields";
+import type { StudentFormValues } from "./students.constants";
+import type { Student } from "./columns";
 
 interface Room {
   id: number;
@@ -25,34 +25,40 @@ interface Room {
   occupancy?: number;
 }
 
-interface AddStudentDialogProps {
+interface EditStudentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  student: Student | null;
   form: StudentFormValues;
   onFormChange: (updater: (prev: StudentFormValues) => StudentFormValues) => void;
   onSubmit: (e: React.FormEvent) => void;
   isPending: boolean;
   error?: Error | null;
-  availableRooms: Room[];
+  roomsForEdit: (currentRoomId?: number) => Room[];
+  idProofError?: string | null;
+  phoneError?: string | null;
 }
 
-export function AddStudentDialog({
+export function EditStudentDialog({
   open,
   onOpenChange,
+  student,
   form,
   onFormChange,
   onSubmit,
   isPending,
   error,
-  availableRooms,
-}: AddStudentDialogProps) {
+  roomsForEdit,
+  idProofError,
+  phoneError,
+}: EditStudentDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Add Student</DialogTitle>
+          <DialogTitle>Edit Student</DialogTitle>
           <DialogDescription>
-            Enter student details. Name and phone are required.
+            Update student details. All fields are mandatory. Change room to reassign.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
@@ -60,19 +66,18 @@ export function AddStudentDialog({
           <StudentFormFields
             form={form}
             onChange={onFormChange}
-            rooms={availableRooms}
-            roomCaption={
-              availableRooms.length === 0
-                ? "No rooms available. Add rooms from the Rooms page first."
-                : "Choose the room this student will be assigned to. Only available rooms are shown."
-            }
+            rooms={roomsForEdit(student?.room_id)}
+            idPrefix="edit"
+            idProofError={idProofError}
+            phoneError={phoneError}
+            roomCaption="Change room to reassign the student. Current room is always available."
           />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : "Add Student"}
+              {isPending ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </form>
@@ -80,4 +85,3 @@ export function AddStudentDialog({
     </Dialog>
   );
 }
-

@@ -14,12 +14,19 @@ import { StudentCheckoutModal } from "./student-checkout-modal";
 import { StudentsSkeleton } from "@/components/skeletons";
 import { useSearchStore } from "@/lib/search-store";
 
-import { AddStudentDialog } from "./add-student-dialog";
-import { EditStudentDialog } from "./edit-student-dialog";
-import { DeleteStudentDialog } from "./delete-student-dialog";
-import { StudentsTabs } from "./students-tabs";
+import { AddStudentDialog } from "./AddStudentDialog";
+import { EditStudentDialog } from "./EditStudentDialog";
+import { DeleteStudentDialog } from "./DeleteStudentDialog";
+import { StudentsTabs } from "./StudentsTabs";
 
-import { initialStudentForm, type StudentFormValues } from "./students.constants";
+import {
+  initialStudentForm,
+  type StudentFormValues,
+  validateIdProof,
+  normalizeIdProof,
+  validatePhone,
+  normalizePhone,
+} from "./students.constants";
 import { filterStudents } from "./students.utils";
 
 interface Room {
@@ -45,6 +52,10 @@ export default function StudentsPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteStudent, setDeleteStudent] = useState<Student | null>(null);
   const [form, setForm] = useState<StudentFormValues>({ ...initialStudentForm });
+  const [idProofError, setIdProofError] = useState<string | null>(null);
+  const [editIdProofError, setEditIdProofError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [editPhoneError, setEditPhoneError] = useState<string | null>(null);
   const [filterRoom, setFilterRoom] = useState<string>("all");
   const [filterPaymentStatus, setFilterPaymentStatus] = useState<string>("all");
 
@@ -203,8 +214,37 @@ export default function StudentsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.phone.trim()) return;
-    createStudent.mutate(form);
+    setIdProofError(null);
+    setPhoneError(null);
+    const { name, email, phone, room_id, course, join_date, id_proof_type, id_proof_number, address } = form;
+    if (
+      !name.trim() ||
+      !email.trim() ||
+      !phone.trim() ||
+      !room_id ||
+      !course.trim() ||
+      !join_date ||
+      !id_proof_type ||
+      !id_proof_number.trim() ||
+      !address.trim()
+    )
+      return;
+    const phoneErr = validatePhone(phone);
+    if (phoneErr) {
+      setPhoneError(phoneErr);
+      return;
+    }
+    const err = validateIdProof(id_proof_type, id_proof_number);
+    if (err) {
+      setIdProofError(err);
+      return;
+    }
+    const normalizedForm = {
+      ...form,
+      phone: normalizePhone(phone),
+      id_proof_number: normalizeIdProof(id_proof_type, id_proof_number),
+    };
+    createStudent.mutate(normalizedForm);
   };
 
   const availableRooms = rooms.filter(
@@ -236,8 +276,38 @@ export default function StudentsPage() {
 
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingStudent || !editForm.name.trim() || !editForm.phone.trim()) return;
-    updateStudent.mutate({ id: editingStudent.id, data: editForm });
+    setEditIdProofError(null);
+    setEditPhoneError(null);
+    const { name, email, phone, room_id, course, join_date, id_proof_type, id_proof_number, address } = editForm;
+    if (
+      !editingStudent ||
+      !name.trim() ||
+      !email.trim() ||
+      !phone.trim() ||
+      !room_id ||
+      !course.trim() ||
+      !join_date ||
+      !id_proof_type ||
+      !id_proof_number.trim() ||
+      !address.trim()
+    )
+      return;
+    const phoneErr = validatePhone(phone);
+    if (phoneErr) {
+      setEditPhoneError(phoneErr);
+      return;
+    }
+    const err = validateIdProof(id_proof_type, id_proof_number);
+    if (err) {
+      setEditIdProofError(err);
+      return;
+    }
+    const normalizedData = {
+      ...editForm,
+      phone: normalizePhone(phone),
+      id_proof_number: normalizeIdProof(id_proof_type, id_proof_number),
+    };
+    updateStudent.mutate({ id: editingStudent.id, data: normalizedData });
   };
 
   const handleCheckOut = (student: Student) => {
@@ -276,20 +346,32 @@ export default function StudentsPage() {
 
       <AddStudentDialog
         open={modalOpen}
-        onOpenChange={setModalOpen}
+        onOpenChange={(open) => {
+          setModalOpen(open);
+          if (!open) {
+            setIdProofError(null);
+            setPhoneError(null);
+          }
+        }}
         form={form}
         onFormChange={setForm}
         onSubmit={handleSubmit}
         isPending={createStudent.isPending}
         error={createStudent.error}
         availableRooms={availableRooms}
+        idProofError={idProofError}
+        phoneError={phoneError}
       />
 
       <EditStudentDialog
         open={editModalOpen}
         onOpenChange={(open) => {
           setEditModalOpen(open);
-          if (!open) setEditingStudent(null);
+          if (!open) {
+            setEditingStudent(null);
+            setEditIdProofError(null);
+            setEditPhoneError(null);
+          }
         }}
         student={editingStudent}
         form={editForm}
@@ -298,6 +380,8 @@ export default function StudentsPage() {
         isPending={updateStudent.isPending}
         error={updateStudent.error}
         roomsForEdit={roomsForEdit}
+        idProofError={editIdProofError}
+        phoneError={editPhoneError}
       />
 
       <StudentCheckoutModal

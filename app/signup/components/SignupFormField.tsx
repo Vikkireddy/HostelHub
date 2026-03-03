@@ -18,6 +18,7 @@ export interface SignupFormFieldProps<T extends FieldValues> {
   showPassword?: boolean;
   onTogglePassword?: () => void;
   sx?: object;
+  required?: boolean;
 }
 
 export function SignupFormField<T extends FieldValues>({
@@ -31,6 +32,7 @@ export function SignupFormField<T extends FieldValues>({
   showPassword,
   onTogglePassword,
   sx,
+  required = false,
 }: SignupFormFieldProps<T>) {
   const isPassword = type === "password";
   const inputType = isPassword && showPassword ? "text" : type;
@@ -47,6 +49,7 @@ export function SignupFormField<T extends FieldValues>({
           fullWidth
           size="small"
           variant="outlined"
+          required={required}
           error={!!error}
           helperText={error}
           placeholder={placeholder}

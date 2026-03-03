@@ -91,6 +91,11 @@
   }
 }
 
+.MuiFormLabel-asterisk,
+.MuiInputLabel-asterisk {
+  color: #ef4444 !important;
+}
+
 .animate-in {
   animation: enter 150ms ease-out;
 }

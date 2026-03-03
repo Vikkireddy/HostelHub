@@ -10,7 +10,7 @@ import { COLUMN_CONFIG, type ColumnId } from "./students-overview/students-overv
 import type { StudentsOverviewProps } from "./dashboard.types";
 import { t } from "@/lib/i18n";
 
-export function StudentsOverview({ students }: StudentsOverviewProps) {
+export function StudentsOverview({ students, headerAction }: StudentsOverviewProps) {
   const [columnOrder, setColumnOrder] = useState<ColumnId[]>(() =>
     COLUMN_CONFIG.map((c) => c.id)
   );
@@ -19,9 +19,12 @@ export function StudentsOverview({ students }: StudentsOverviewProps) {
     <Card className="rounded-xl border-slate-200 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-slate-900">{t("STUDENTS_OVERVIEW")}</CardTitle>
-        <Link href="/dashboard/students" className="text-sm text-link hover:underline">
-          {t("MANAGE")}
-        </Link>
+        <div className="flex items-center gap-2">
+          {headerAction}
+          <Link href="/dashboard/students" className="text-sm text-link hover:underline">
+            {t("MANAGE")}
+          </Link>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         {students.length === 0 ? (

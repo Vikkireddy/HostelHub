@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/get-hostel-id";
+import { VALID_AC_TYPES, DEFAULT_AC_TYPE } from "@/app/dashboard/rooms/rooms.constants";
 
 export async function DELETE(
   request: NextRequest,
@@ -65,7 +66,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { number, floor, type, capacity, rent, status } = body;
+    const { number, floor, type, ac_type, capacity, rent, status } = body;
 
     const [existingRows] = await pool.execute(
       `SELECT r.*, COALESCE(occ.occupancy, 0) as occupancy FROM rooms r
@@ -82,6 +83,7 @@ export async function PATCH(
     const newCapacity = capacity != null ? Number(capacity) : Number(existing.capacity);
     const newFloor = floor != null ? Number(floor) : Number(existing.floor);
     const newType = type || (existing.type as string);
+    const newAcType = ac_type != null ? ac_type : (existing.ac_type as string) || DEFAULT_AC_TYPE;
     const newRent = rent != null ? Number(rent) : Number(existing.rent);
     const newStatus = status || (existing.status as string);
     const newNumber = number != null ? String(number).trim() : (existing.number as string);
@@ -101,15 +103,36 @@ export async function PATCH(
         { status: 400 }
       );
     }
+    if (newAcType && !(VALID_AC_TYPES as readonly string[]).includes(newAcType)) {
+      return NextResponse.json({ error: "AC type must be AC or Non-AC" }, { status: 400 });
+    }
     if (newStatus && !validStatuses.includes(newStatus)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    await pool.execute(
-      `UPDATE rooms SET number = ?, floor = ?, type = ?, capacity = ?, rent = ?, status = ?
-       WHERE id = ?`,
-      [newNumber, newFloor, newType, newCapacity, newRent, newStatus, roomId]
-    );
+    try {
+      await pool.execute(
+        `UPDATE rooms SET number = ?, floor = ?, type = ?, ac_type = ?, capacity = ?, rent = ?, status = ?
+         WHERE id = ?`,
+        [newNumber, newFloor, newType, newAcType, newCapacity, newRent, newStatus, roomId]
+      );
+    } catch (updateErr) {
+      const mysqlErr = updateErr as { code?: string; errno?: number; message?: string };
+      const isUnknownColumn =
+        mysqlErr.code === "ER_BAD_FIELD_ERROR" ||
+        mysqlErr.errno === 1054 ||
+        (typeof mysqlErr.message === "string" &&
+          (mysqlErr.message.includes("ac_type") || mysqlErr.message.includes("Unknown column")));
+      if (isUnknownColumn) {
+        await pool.execute(
+          `UPDATE rooms SET number = ?, floor = ?, type = ?, capacity = ?, rent = ?, status = ?
+           WHERE id = ?`,
+          [newNumber, newFloor, newType, newCapacity, newRent, newStatus, roomId]
+        );
+      } else {
+        throw updateErr;
+      }
+    }
 
     await pool.execute(
       `UPDATE rooms r

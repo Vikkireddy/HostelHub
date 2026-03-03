@@ -10,7 +10,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { RequiredLabel } from "@/components/ui/required-label";
 import {
   Select,
   SelectContent,
@@ -91,7 +91,7 @@ export function RecordPaymentDialog({
           <div className="space-y-4">
             {/* Student Select */}
             <Box className="space-y-2">
-              <Label htmlFor="record-student">Student *</Label>
+              <RequiredLabel htmlFor="record-student">Student</RequiredLabel>
               <Select
                 value={form.student_id}
                 onValueChange={handleStudentChange}
@@ -114,7 +114,7 @@ export function RecordPaymentDialog({
 
             {/* Amount */}
             <Box className="space-y-2">
-              <Label htmlFor="record-amount">Amount (₹) *</Label>
+              <RequiredLabel htmlFor="record-amount">Amount (₹)</RequiredLabel>
               <Input
                 id="record-amount"
                 min={1}
@@ -129,7 +129,7 @@ export function RecordPaymentDialog({
 
             {/* Month */}
             <Box className="space-y-2">
-              <Label htmlFor="record-month">Month *</Label>
+              <RequiredLabel htmlFor="record-month">Month</RequiredLabel>
               <Select
                 value={form.month}
                 onValueChange={(v) => handleFieldChange("month", v)}
@@ -149,7 +149,7 @@ export function RecordPaymentDialog({
 
             {/* Year */}
             <Box className="space-y-2">
-              <Label htmlFor="record-year">Year *</Label>
+              <RequiredLabel htmlFor="record-year">Year</RequiredLabel>
               <Input
                 id="record-year"
                 min={2020}
