@@ -187,6 +187,7 @@ export const en = {
   BRANDING_REQUIRES_HOSTEL: "You must be logged in to a hostel account to update branding.",
   PAYMENT_HISTORY_LOAD_FAILED: "Failed to load payment history",
   APPEARAMCE_SETTINGS:"Appearance",
+  SAVE_PREFERENCE:"Save Preferences"
 } as const;
 
 export type EnKeys = keyof typeof en;
