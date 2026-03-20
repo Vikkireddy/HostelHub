@@ -360,7 +360,7 @@ export default function SettingsPage() {
                   </Box>
                 </Box>
                 <Button type="submit" className="mt-6">
-                  {notifSaved ? "Saved" : "Save Preferences"}
+                  {notifSaved ? "Saved" : t("SAVE_PREFERENCE")}
                 </Button>
               </form>
             </CardContent>
