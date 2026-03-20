@@ -1,8 +1,8 @@
 "use client";
 
 import { TableCell, TableHead, TableRow } from "@mui/material";
-import { HEADER_CELL_SX } from "@/components/dashboard/dashboard-table.constants";
-import { TABLE_COLUMNS } from "./payments-table.constants";
+import { HEADER_CELL_SX } from "@/components/dashboard/DashboardTableConstants";
+import { TABLE_COLUMNS } from "./PaymentsTableConstants";
 
 export function PaymentTableHeader() {
   return (

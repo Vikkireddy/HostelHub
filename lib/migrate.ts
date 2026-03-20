@@ -25,7 +25,7 @@ export async function runMigrations() {
     console.log("[Migration] Seed data applied");
   } catch (error) {
     console.error("[Migration] Failed to run migrations:", error);
-    throw error;
+    console.error("[Migration] Ensure DB_HOST, DB_USER, DB_PASSWORD in .env.local match your MySQL setup.");
   } finally {
     await connection?.end();
   }

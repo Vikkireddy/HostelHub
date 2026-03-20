@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuthStore } from "@/lib/auth-store";
-import { fetchWithHostel } from "@/lib/api-client";
+import { useAuthStore } from "@/lib/AuthStore";
+import { fetchWithHostel } from "@/lib/ApiClient";
 import {
   Dialog,
   DialogContent,

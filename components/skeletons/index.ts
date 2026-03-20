@@ -1,5 +1,5 @@
-export { DashboardSkeleton } from "./dashboard-skeleton";
-export { StudentsSkeleton } from "./students-skeleton";
-export { PaymentsSkeleton } from "./payments-skeleton";
-export { RoomsSkeleton } from "./rooms-skeleton";
-export { SettingsSkeleton } from "./settings-skeleton";
+export { DashboardSkeleton } from "./DashboardSkeleton";
+export { StudentsSkeleton } from "./StudentsSkeleton";
+export { PaymentsSkeleton } from "./PaymentsSkeleton";
+export { RoomsSkeleton } from "./RoomsSkeleton";
+export { SettingsSkeleton } from "./SettingsSkeleton";

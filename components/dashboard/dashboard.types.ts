@@ -57,6 +57,18 @@ type DashboardStatsSummaryProps = {
   maintenanceRooms: number;
   pendingBills: number;
   pendingBillsAmount: number;
+  totalExpensesThisMonth?: number;
+  monthlyRevenueThisMonth?: number;
+  profitThisMonth?: number;
+  /** Difference in students added: current month - last month */
+  studentsAddedDiff?: number;
+};
+
+type IncomeVsExpensesDataPoint = {
+  month: string;
+  income: number;
+  expenses: number;
+  profit: number;
 };
 
 type DashboardStatsProps = {
@@ -64,6 +76,7 @@ type DashboardStatsProps = {
   payments: PaymentProps[];
   revenue: RevenueDataProps[];
   roomDistribution: RoomDistributionDataProps[];
+  incomeVsExpenses?: IncomeVsExpensesDataPoint[];
   stats: DashboardStatsSummaryProps;
   pendingBillsList?: PendingBillProps[];
 };
@@ -118,6 +131,7 @@ export type {
   PaymentItemProps,
   RevenueDataProps,
   RoomDistributionDataProps,
+  IncomeVsExpensesDataPoint,
   DashboardStatsSummaryProps,
   DashboardStatsProps,
   StatCardProps,

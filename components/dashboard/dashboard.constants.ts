@@ -1,14 +1,15 @@
 import type { LucideIcon } from "lucide-react";
-import { Users, Building2, Receipt } from "lucide-react";
+import { Users, Building2, Receipt, Wallet } from "lucide-react";
 import type { EnKeys } from "@/lib/i18n";
 import type { DashboardStatsSummaryProps } from "./dashboard.types";
 
 export const RECENT_ITEMS_DISPLAY_LIMIT = 4;
 
 export type StatCardSubtitleConfig =
-  | { type: "plusTwo" }
+  | { type: "studentsAddedDiff"; diffKey: keyof DashboardStatsSummaryProps }
   | { type: "occupied"; countKey: keyof DashboardStatsSummaryProps }
-  | { type: "dueAmount"; amountKey: keyof DashboardStatsSummaryProps };
+  | { type: "dueAmount"; amountKey: keyof DashboardStatsSummaryProps }
+  | { type: "profit"; profitKey: keyof DashboardStatsSummaryProps };
 
 export type StatCardConfig = {
   id: string;
@@ -19,6 +20,7 @@ export type StatCardConfig = {
   iconBgClass: string;
   iconColorClass: string;
   hasAction?: boolean;
+  actionHref?: string;
 };
 
 export const STAT_CARD_CONFIG = [
@@ -26,7 +28,7 @@ export const STAT_CARD_CONFIG = [
     id: "totalStudents",
     titleKey: "TOTAL_STUDENTS" as const,
     valueKey: "totalStudents",
-    subtitle: { type: "plusTwo" },
+    subtitle: { type: "studentsAddedDiff", diffKey: "studentsAddedDiff" },
     icon: Users,
     iconBgClass: "bg-blue-100",
     iconColorClass: "text-blue-600",
@@ -49,5 +51,16 @@ export const STAT_CARD_CONFIG = [
     iconBgClass: "bg-orange-100",
     iconColorClass: "text-orange-600",
     hasAction: true,
+  },
+  {
+    id: "adminExpenses",
+    titleKey: "ADMIN_EXPENSES" as const,
+    valueKey: "totalExpensesThisMonth",
+    subtitle: { type: "profit", profitKey: "profitThisMonth" },
+    icon: Wallet,
+    iconBgClass: "bg-violet-100",
+    iconColorClass: "text-violet-600",
+    hasAction: true,
+    actionHref: "/dashboard/expenses",
   },
 ] satisfies StatCardConfig[];

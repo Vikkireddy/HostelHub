@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Box } from "@/components/ui/box";
 import { toast } from "sonner";
 import { PaymentsSkeleton } from "@/components/skeletons";
@@ -9,12 +10,18 @@ import {
   PaymentsTable,
   RecordPaymentDialog,
   PaymentBreakdownDialog,
+  PaymentHistoryDialog,
   usePaymentsData,
   getDefaultMonthYear,
   type PaymentTableRowProps,
 } from "@/components/dashboard/payments";
 
 export default function PaymentsPage() {
+  const [historyStudent, setHistoryStudent] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
+
   const {
     isLoading,
     error,
@@ -70,6 +77,10 @@ export default function PaymentsPage() {
     toast.info("Delete payment is not available. Contact admin for corrections.");
   };
 
+  const handleOpenHistory = (row: PaymentTableRowProps) => {
+    setHistoryStudent({ id: row.studentId, name: row.studentName });
+  };
+
   if (isLoading) return <PaymentsSkeleton />;
   if (error) return <Box className="p-8 text-red-600">Failed to load payments</Box>;
 
@@ -94,6 +105,7 @@ export default function PaymentsPage() {
         rows={tableRows}
         onMarkPaid={(studentId) => bulkMarkPaid.mutate(studentId)}
         onViewDetails={handleViewDetails}
+        onOpenHistory={handleOpenHistory}
         onEditPayment={handleEditPayment}
         onSendReminder={handleSendReminder}
         onDelete={handleDelete}
@@ -117,6 +129,13 @@ export default function PaymentsPage() {
         onOpenChange={(open) => !open && setInfoDialogGroup(null)}
         group={infoDialogGroup}
         onPayNow={openPayNow}
+      />
+
+      <PaymentHistoryDialog
+        open={!!historyStudent}
+        onOpenChange={(open) => !open && setHistoryStudent(null)}
+        studentId={historyStudent?.id ?? null}
+        studentName={historyStudent?.name}
       />
     </Box>
   );

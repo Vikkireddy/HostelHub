@@ -1,8 +1,9 @@
 export { PaymentStatsGrid } from "./PaymentStatsGrid";
-export { PaymentFiltersBar } from "./payment-filters-bar";
+export { PaymentFiltersBar } from "./PaymentFiltersBar";
 export { PaymentsTable } from "./PaymentsTable";
 export { RecordPaymentDialog } from "./RecordPaymentDialog";
-export { PaymentBreakdownDialog } from "./payment-breakdown-dialog";
+export { PaymentBreakdownDialog } from "./PaymentBreakdownDialog";
+export { PaymentHistoryDialog } from "./PaymentHistoryDialog";
 export { usePaymentsData } from "./UsePaymentsData";
 export type {
   PaymentStatusFilterProps,

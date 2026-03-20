@@ -4,9 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { StudentsOverviewTable } from "./students-overview/StudentsOverviewTable";
-import { COLUMN_CONFIG, type ColumnId } from "./students-overview/students-overview.constants";
+import { COLUMN_CONFIG, type ColumnId } from "./students-overview/StudentsOverviewConstants";
 import type { StudentsOverviewProps } from "./dashboard.types";
 import { t } from "@/lib/i18n";
 

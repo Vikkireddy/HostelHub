@@ -22,10 +22,10 @@ import {
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { arrayMove, horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import { useTablePagination } from "@/components/dashboard/useTablePagination";
-import { PAGINATION_SX } from "@/components/dashboard/dashboard-table.constants";
+import { PAGINATION_SX } from "@/components/dashboard/DashboardTableConstants";
 import { StudentsOverviewDraggableHeader } from "./StudentsOverviewDraggableHeader";
 import { StudentsOverviewTableRow } from "./StudentsOverviewTableRow";
-import { COLUMN_CONFIG, type ColumnId } from "./students-overview.constants";
+import { COLUMN_CONFIG, type ColumnId } from "./StudentsOverviewConstants";
 import type { StudentProps } from "@/components/dashboard/dashboard.types";
 
 interface StudentsOverviewTableProps {

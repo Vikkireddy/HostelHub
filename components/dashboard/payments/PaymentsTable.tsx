@@ -7,29 +7,19 @@ import {
   TableContainer,
   TablePagination,
 } from "@mui/material";
-import { PAGINATION_SX } from "@/components/dashboard/dashboard-table.constants";
+import { PAGINATION_SX } from "@/components/dashboard/DashboardTableConstants";
 import { Receipt } from "lucide-react";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { PaymentTableHeader } from "./PaymentTableHeader";
 import { PaymentTableRow } from "./PaymentTableRow";
 import { useTablePagination } from "@/components/dashboard/useTablePagination";
-import type { PaymentTableRowProps } from "@/components/dashboard/payments/payments.types";
-
-interface PaymentsTableProps {
-  rows: PaymentTableRowProps[];
-  onMarkPaid: (studentId: number) => void;
-  onViewDetails: (row: PaymentTableRowProps) => void;
-  onEditPayment?: (row: PaymentTableRowProps) => void;
-  onSendReminder?: (row: PaymentTableRowProps) => void;
-  onDelete?: (row: PaymentTableRowProps) => void;
-  isMarkingPaid?: boolean;
-  markingPaidStudentId?: number;
-}
+import type { PaymentsTableProps } from "@/components/dashboard/payments/payments.types";
 
 export function PaymentsTable({
   rows,
   onMarkPaid,
   onViewDetails,
+  onOpenHistory,
   onEditPayment,
   onSendReminder,
   onDelete,
@@ -71,6 +61,7 @@ export function PaymentsTable({
                 row={row}
                 onMarkPaid={onMarkPaid}
                 onViewDetails={onViewDetails}
+                onOpenHistory={onOpenHistory}
                 onEditPayment={onEditPayment}
                 onSendReminder={onSendReminder}
                 onDelete={onDelete}

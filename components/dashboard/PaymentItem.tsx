@@ -1,7 +1,7 @@
 "use client";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { StatusChip } from "@/components/ui/status-chip";
+import { StatusChip } from "@/components/ui/StatusChip";
 import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
 import type { PaymentItemProps } from "./dashboard.types";

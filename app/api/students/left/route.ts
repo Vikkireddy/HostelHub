@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
-import { getHostelIdFromRequest } from "@/lib/get-hostel-id";
+import { getHostelIdFromRequest } from "@/lib/GetHostelId";
+import { requireSubscription } from "@/lib/subscription/RequireSubscription";
 
 const CREATE_TABLE_IF_NOT_EXISTS = `
   CREATE TABLE IF NOT EXISTS students_left (
@@ -23,6 +24,9 @@ const CREATE_TABLE_IF_NOT_EXISTS = `
 
 export async function GET(request: NextRequest) {
   try {
+    const subErr = await requireSubscription(request);
+    if (subErr) return subErr;
+
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
       return NextResponse.json([], { status: 200 });

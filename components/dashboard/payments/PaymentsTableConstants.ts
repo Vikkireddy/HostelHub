@@ -11,4 +11,4 @@ export const HEADER_CELL_SX = {
   borderBottom: "1px solid rgb(226 232 240)",
 };
 
-export const TABLE_COLUMNS = ["Name", "Period", "Due Info", "Amount", "Status", "Actions"] as const;
+export const TABLE_COLUMNS = ["Name", "Period", "Due Info", "Amount", "Status", "History", "Actions"] as const;

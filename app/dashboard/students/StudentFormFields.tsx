@@ -1,17 +1,11 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { RequiredLabel } from "@/components/ui/required-label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { RequiredLabel } from "@/components/ui/RequiredLabel";
+import { Dropdown } from "@/components/ui/dropdown";
 import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
-import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { DEFAULT_AC_TYPE } from "@/app/dashboard/rooms/rooms.constants";
 import {
   ID_PROOF_OPTIONS,
@@ -118,24 +112,14 @@ export function StudentFormFields({
       </Box>
       <Box className="space-y-2">
         <RequiredLabel htmlFor={id("id_proof_type")}>ID Proof Type</RequiredLabel>
-        <Select
+        <Dropdown
           value={form.id_proof_type || ""}
           onValueChange={(v) =>
             onChange((f) => ({ ...f, id_proof_type: v, id_proof_number: "" }))
           }
-          required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select ID proof type" />
-          </SelectTrigger>
-          <SelectContent>
-            {ID_PROOF_OPTIONS.map((opt) => (
-              <SelectItem key={opt} value={opt}>
-                {opt}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          options={ID_PROOF_OPTIONS.map((opt) => ({ value: opt, label: opt }))}
+          placeholder="Select ID proof type"
+        />
       </Box>
       <Box className="space-y-2">
         <RequiredLabel htmlFor={id("id_proof_number")}>ID Proof Number</RequiredLabel>
@@ -181,22 +165,15 @@ export function StudentFormFields({
       </Box>
       <Box className="space-y-2 sm:col-span-2">
         <RequiredLabel htmlFor={id("room")}>Assign to Room</RequiredLabel>
-        <Select
+        <Dropdown
           value={form.room_id || ""}
           onValueChange={(v) => onChange((f) => ({ ...f, room_id: v }))}
-          required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={idPrefix ? "Select room" : "Select which room this student belongs to"} />
-          </SelectTrigger>
-          <SelectContent>
-            {rooms.map((r) => (
-              <SelectItem key={r.id} value={String(r.id)}>
-                Room {r.number} (Floor {r.floor}, {r.type}, {r.ac_type || DEFAULT_AC_TYPE}) — ₹{Number(r.rent || 0).toLocaleString()}/mo
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          options={rooms.map((r) => ({
+            value: String(r.id),
+            label: `Room ${r.number} (Floor ${r.floor}, ${r.type}, ${r.ac_type || DEFAULT_AC_TYPE}) — ₹${Number(r.rent || 0).toLocaleString()}/mo`,
+          }))}
+          placeholder={idPrefix ? "Select room" : "Select which room this student belongs to"}
+        />
         {roomCaption && (
           <Typography variant="caption">{roomCaption}</Typography>
         )}
@@ -213,30 +190,13 @@ export function StudentFormFields({
           required
         />
       </Box>
-      <Box className="space-y-2">
-        <RequiredLabel htmlFor={id("join_date")}>Join Date</RequiredLabel>
-        <DesktopDatePicker
-          value={form.join_date ? new Date(form.join_date + "T00:00:00") : null}
-          onChange={(date) =>
-            onChange((f) => ({
-              ...f,
-              join_date: date ? date.toISOString().slice(0, 10) : "",
-            }))
-          }
-          slotProps={{
-            textField: {
-              id: id("join_date"),
-              required: true,
-              size: "small",
-              fullWidth: true,
-            },
-            popper: {
-              disablePortal: true,
-              sx: { zIndex: 9999 },
-            },
-          }}
-        />
-      </Box>
+      <DatePicker
+        id={id("join_date")}
+        value={form.join_date ?? ""}
+        onChange={(v) => onChange((f) => ({ ...f, join_date: v }))}
+        label={<RequiredLabel htmlFor={id("join_date")}>Join Date</RequiredLabel>}
+        required
+      />
     </Box>
   );
 }
