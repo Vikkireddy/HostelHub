@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
-import { getHostelIdFromRequest } from "@/lib/get-hostel-id";
-import { updateOverduePayments, ensureBillsForStudents, getPendingDuesSql } from "@/lib/payment-utils";
+import { getHostelIdFromRequest } from "@/lib/GetHostelId";
+import { updateOverduePayments, ensureBillsForStudents, getPendingDuesSql } from "@/lib/PaymentUtils";
+import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+import { checkStudentLimit } from "@/lib/subscription/CheckFeature";
 
 export async function GET(request: NextRequest) {
   try {
+    const subErr = await requireSubscription(request);
+    if (subErr) return subErr;
+
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
       return NextResponse.json([], { status: 200 });
@@ -49,6 +54,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
+    const subErr = await requireSubscription(request);
+    if (subErr) return subErr;
+
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -75,6 +83,11 @@ export async function POST(request: Request) {
         { error: `All fields are required. Missing: ${fields}` },
         { status: 400 }
       );
+    }
+
+    const limitErr = await checkStudentLimit(hostelId);
+    if (limitErr) {
+      return NextResponse.json(limitErr.body, { status: limitErr.status });
     }
 
     if (room_id) {

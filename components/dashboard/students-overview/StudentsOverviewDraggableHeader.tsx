@@ -5,8 +5,8 @@ import { GripVertical } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Box } from "@/components/ui/box";
-import { HEADER_CELL_SX } from "@/components/dashboard/dashboard-table.constants";
-import type { ColumnId } from "./students-overview.constants";
+import { HEADER_CELL_SX } from "@/components/dashboard/DashboardTableConstants";
+import type { ColumnId } from "./StudentsOverviewConstants";
 
 interface StudentsOverviewDraggableHeaderProps {
   id: ColumnId;

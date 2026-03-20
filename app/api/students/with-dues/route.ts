@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
-import { getHostelIdFromRequest } from "@/lib/get-hostel-id";
-import { updateOverduePayments, ensureBillsForStudents, getPendingDuesSql } from "@/lib/payment-utils";
+import { getHostelIdFromRequest } from "@/lib/GetHostelId";
+import { updateOverduePayments, ensureBillsForStudents, getPendingDuesSql } from "@/lib/PaymentUtils";
+import { requireSubscription } from "@/lib/subscription/RequireSubscription";
 
 /**
  * Returns only students with pending/outstanding balances (for payment dropdown).
@@ -9,6 +10,9 @@ import { updateOverduePayments, ensureBillsForStudents, getPendingDuesSql } from
  */
 export async function GET(request: NextRequest) {
   try {
+    const subErr = await requireSubscription(request);
+    if (subErr) return subErr;
+
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
       return NextResponse.json([], { status: 200 });

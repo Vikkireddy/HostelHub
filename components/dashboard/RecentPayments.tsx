@@ -4,16 +4,16 @@ import { useState } from "react";
 import { Receipt } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Box } from "@/components/ui/box";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { PaymentItem } from "./payment-item";
+import { PaymentItem } from "./PaymentItem";
 import { RECENT_ITEMS_DISPLAY_LIMIT } from "./dashboard.constants";
 import type { RecentPaymentsProps } from "./dashboard.types";
 import { t } from "@/lib/i18n";

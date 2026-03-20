@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
-import { getHostelIdFromRequest } from "@/lib/get-hostel-id";
+import { getHostelIdFromRequest } from "@/lib/GetHostelId";
+import { requireSubscription } from "@/lib/subscription/RequireSubscription";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -13,10 +14,13 @@ import {
   updateOverduePayments,
   hasPartialPaymentColumns,
   ensureBillsForStudents,
-} from "@/lib/payment-utils";
+} from "@/lib/PaymentUtils";
 
 export async function GET(request: NextRequest) {
   try {
+    const subErr = await requireSubscription(request);
+    if (subErr) return subErr;
+
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
       return NextResponse.json([], { status: 200 });
@@ -24,13 +28,33 @@ export async function GET(request: NextRequest) {
 
     await updateOverduePayments(hostelId);
 
-    const [rows] = await pool.execute(
-      `SELECT p.*, s.name as student_name, s.join_date as student_join_date FROM payments p 
-       JOIN students s ON p.student_id = s.id 
-       WHERE (p.hostel_id = ? OR s.hostel_id = ?)
-       ORDER BY p.year DESC, FIELD(p.month, 'January','February','March','April','May','June','July','August','September','October','November','December') DESC, p.created_at DESC LIMIT 100`,
-      [hostelId, hostelId]
-    );
+    let rows: unknown;
+    try {
+      [rows] = await pool.execute(
+        `SELECT p.*, s.name as student_name, s.join_date as student_join_date,
+          (
+            SELECT MAX(pt.recorded_at)
+            FROM payment_transactions pt
+            WHERE pt.student_id = p.student_id
+          ) as last_payment_at
+         FROM payments p 
+         JOIN students s ON p.student_id = s.id 
+         WHERE (p.hostel_id = ? OR s.hostel_id = ?)
+         ORDER BY p.year DESC, FIELD(p.month, 'January','February','March','April','May','June','July','August','September','October','November','December') DESC, p.created_at DESC LIMIT 100`,
+        [hostelId, hostelId]
+      );
+    } catch (error) {
+      const err = error as { code?: string };
+      if (err.code !== "ER_NO_SUCH_TABLE") throw error;
+      [rows] = await pool.execute(
+        `SELECT p.*, s.name as student_name, s.join_date as student_join_date, p.paid_at as last_payment_at
+         FROM payments p 
+         JOIN students s ON p.student_id = s.id 
+         WHERE (p.hostel_id = ? OR s.hostel_id = ?)
+         ORDER BY p.year DESC, FIELD(p.month, 'January','February','March','April','May','June','July','August','September','October','November','December') DESC, p.created_at DESC LIMIT 100`,
+        [hostelId, hostelId]
+      );
+    }
 
     const result = (rows as Array<Record<string, unknown>>).map((row) => {
       const status = row.status as string;
@@ -76,6 +100,8 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: Request) {
   try {
+    const subErr = await requireSubscription(request);
+    if (subErr) return subErr;
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -58,7 +58,12 @@ A complete hostel management solution built with React, Next.js, Tailwind CSS, R
    npm run dev
    ```
 
-6. Open [http://localhost:3000](http://localhost:3000)
+6. Run the subscription migration (required for subscription enforcement):
+   ```bash
+   mysql -u root -p hostelhub < scripts/migrate-subscriptions.sql
+   ```
+
+7. Open [http://localhost:3000](http://localhost:3000)
 
 Login with:
 - **Email:** admin@hostel.com

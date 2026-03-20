@@ -8,16 +8,40 @@ export const en = {
   // Stats grid
   TOTAL_STUDENTS: "Total Students",
   PLUS_TWO_THIS_MONTH: "+2 this month",
+  STUDENTS_PLUS_THIS_MONTH: "+{count} this month",
+  STUDENTS_MINUS_THIS_MONTH: "-{count} this month",
+  STUDENTS_SAME_AS_LAST_MONTH: "Same as last month",
   AVAILABLE_ROOMS: "Available Rooms",
   OCCUPIED: "occupied",
   PENDING_BILLS: "Pending Bills",
   DUE_AMOUNT: "Due Amount",
   VIEW_ALL: "View All →",
+  ADMIN_EXPENSES: "Admin Expenses",
+  PROFIT: "Profit",
+  LOSS: "Loss",
+  MANAGE_EXPENSES: "Manage →",
+  INCOME_VS_EXPENSES: "Income vs Expenses",
+  INCOME: "Income",
+  EXPENSES: "Expenses",
 
   // Pending bills modal
   PENDING_BILLS_MODAL_TITLE: "Pending Bills",
   PENDING_BILLS_DESCRIPTION: "Students with pending or overdue payments. Total due: ₹{amount}",
+  PAYMENT_HISTORY_STUDENT_FALLBACK: "Student",
+  PAYMENT_HISTORY: "Payment History",
+  PAYMENT_HISTORY_CLOSE: "Close",
+  PAYMENT_HISTORY_LOADING: "Loading payment history...",
+  PAYMENT_HISTORY_NO_DATA: "No payment history found",
+  PAYMENT_HISTORY_LAST_PAYMENT: "Last Payment",
+  PAYMENT_HISTORY_TOTAL_COLLECTED: "Total Collected",
   ROOM: "Room",
+  PAYMENT_HISTORY_PENDING: "Pending",
+  PAYMENT_HISTORY_CURRENT_DUE: "Current Due",
+  PAYMENT_HISTORY_TOTAL: "Total",
+  PAYMENT_HISTORY_STATUS_PARTIAL: "Partial",
+  PAYMENT_HISTORY_STATUS_PAID: "Paid",
+  PAYMENT_HISTORY_RECORDED: "Recorded",
+  PAYMENT_HISTORY_DOWNLOAD_RECEIPT: "Download Receipt",
 
   // Revenue chart
   REVENUE_OVERVIEW: "Revenue Overview",
@@ -146,6 +170,22 @@ export const en = {
   SIGNUP_ERROR_CONFIRM_REQUIRED: "Confirm password is required",
   SIGNUP_ERROR_TERMS_REQUIRED: "You must accept the Terms & Conditions",
   SIGNUP_ERROR_PASSWORDS_MISMATCH: "Passwords do not match",
+
+  // Settings - Branding
+  BRANDING: "Branding",
+  BRANDING_TITLE: "Hostel Branding",
+  BRANDING_DESCRIPTION: "Customize your hostel name and logo in the app header",
+  HOSTEL_NAME: "Hostel Name",
+  HOSTEL_NAME_PLACEHOLDER: "e.g. Sunrise Hostel",
+  HOSTEL_LOGO: "Hostel Logo",
+  UPLOAD_LOGO: "Upload Logo",
+  LOGO_PREVIEW: "Logo Preview",
+  SAVE_BRANDING: "Save",
+  BRANDING_SAVED: "Branding saved successfully",
+  LOGO_TOO_LARGE: "Logo must be under 500KB. Please choose a smaller image.",
+  REMOVE_LOGO: "Remove logo",
+  BRANDING_REQUIRES_HOSTEL: "You must be logged in to a hostel account to update branding.",
+  PAYMENT_HISTORY_LOAD_FAILED: "Failed to load payment history",
 } as const;
 
 export type EnKeys = keyof typeof en;

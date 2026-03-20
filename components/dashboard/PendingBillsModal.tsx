@@ -9,8 +9,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { StatusChip } from "@/components/ui/status-chip";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { StatusChip } from "@/components/ui/StatusChip";
+import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
 import { Button } from "@/components/ui/button";

@@ -4,12 +4,12 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { BedDouble, DoorOpen, Users, Wrench, Plus, Inbox, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { StatusChip } from "@/components/ui/status-chip";
+import { StatusChip } from "@/components/ui/StatusChip";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RequiredLabel } from "@/components/ui/required-label";
+import { RequiredLabel } from "@/components/ui/RequiredLabel";
 import {
   Dialog,
   DialogContent,
@@ -18,20 +18,14 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Dropdown } from "@/components/ui/dropdown";
 import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { RoomsSkeleton } from "@/components/skeletons";
-import { useSearchStore } from "@/lib/search-store";
-import { useAuthStore } from "@/lib/auth-store";
-import { fetchWithHostel } from "@/lib/api-client";
+import { useSearchStore } from "@/lib/SearchStore";
+import { useAuthStore } from "@/lib/AuthStore";
+import { fetchWithHostel } from "@/lib/ApiClient";
 import { VALID_AC_TYPES, DEFAULT_AC_TYPE } from "./rooms.constants";
 
 interface Room {
@@ -319,35 +313,25 @@ export default function RoomsPage() {
               </Box>
               <Box className="space-y-2">
                 <RequiredLabel htmlFor="edit-type">Type</RequiredLabel>
-                <Select
+                <Dropdown
                   value={editForm.type}
                   onValueChange={(v) => setEditForm((f) => ({ ...f, type: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Single">Single</SelectItem>
-                    <SelectItem value="Double">Double</SelectItem>
-                    <SelectItem value="Triple">Triple</SelectItem>
-                  </SelectContent>
-                </Select>
+                  options={[
+                    { value: "Single", label: "Single" },
+                    { value: "Double", label: "Double" },
+                    { value: "Triple", label: "Triple" },
+                  ]}
+                  placeholder="Select type"
+                />
               </Box>
               <Box className="space-y-2">
                 <RequiredLabel htmlFor="edit-ac-type">AC / Non-AC</RequiredLabel>
-                <Select
+                <Dropdown
                   value={editForm.ac_type}
                   onValueChange={(v) => setEditForm((f) => ({ ...f, ac_type: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {VALID_AC_TYPES.map((t) => (
-                      <SelectItem key={t} value={t}>{t}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  options={VALID_AC_TYPES.map((t) => ({ value: t, label: t }))}
+                  placeholder="Select"
+                />
               </Box>
               <Box className="space-y-2">
                 <RequiredLabel htmlFor="edit-capacity">Capacity</RequiredLabel>
@@ -380,18 +364,15 @@ export default function RoomsPage() {
               </Box>
               <Box className="space-y-2">
                 <Label htmlFor="edit-status">Status</Label>
-                <Select
+                <Dropdown
                   value={editForm.status}
                   onValueChange={(v) => setEditForm((f) => ({ ...f, status: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="available">Available</SelectItem>
-                    <SelectItem value="maintenance">Maintenance</SelectItem>
-                  </SelectContent>
-                </Select>
+                  options={[
+                    { value: "available", label: "Available" },
+                    { value: "maintenance", label: "Maintenance" },
+                  ]}
+                  placeholder="Select status"
+                />
               </Box>
               <DialogFooter>
                 <Button
@@ -470,35 +451,25 @@ export default function RoomsPage() {
               </Box>
               <Box className="space-y-2">
                 <RequiredLabel htmlFor="type">Type</RequiredLabel>
-                <Select
+                <Dropdown
                   value={form.type}
                   onValueChange={(v) => setForm((f) => ({ ...f, type: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Single">Single</SelectItem>
-                    <SelectItem value="Double">Double</SelectItem>
-                    <SelectItem value="Triple">Triple</SelectItem>
-                  </SelectContent>
-                </Select>
+                  options={[
+                    { value: "Single", label: "Single" },
+                    { value: "Double", label: "Double" },
+                    { value: "Triple", label: "Triple" },
+                  ]}
+                  placeholder="Select type"
+                />
               </Box>
               <Box className="space-y-2">
                 <RequiredLabel htmlFor="ac-type">AC / Non-AC</RequiredLabel>
-                <Select
+                <Dropdown
                   value={form.ac_type}
                   onValueChange={(v) => setForm((f) => ({ ...f, ac_type: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {VALID_AC_TYPES.map((t) => (
-                      <SelectItem key={t} value={t}>{t}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  options={VALID_AC_TYPES.map((t) => ({ value: t, label: t }))}
+                  placeholder="Select"
+                />
               </Box>
               <Box className="space-y-2">
                 <RequiredLabel htmlFor="capacity">Capacity</RequiredLabel>
@@ -526,18 +497,15 @@ export default function RoomsPage() {
               </Box>
               <Box className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                <Select
+                <Dropdown
                   value={form.status}
                   onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="available">Available</SelectItem>
-                    <SelectItem value="maintenance">Maintenance</SelectItem>
-                  </SelectContent>
-                </Select>
+                  options={[
+                    { value: "available", label: "Available" },
+                    { value: "maintenance", label: "Maintenance" },
+                  ]}
+                  placeholder="Select status"
+                />
               </Box>
               <DialogFooter>
                 <Button

@@ -5,14 +5,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { t } from "@/lib/i18n";
-import { useAuthStore } from "@/lib/auth-store";
-import { fetchWithHostel } from "@/lib/api-client";
+import { useAuthStore } from "@/lib/AuthStore";
+import { fetchWithHostel } from "@/lib/ApiClient";
 import { Box } from "@/components/ui/box";
 
 import {  type InactiveStudent, type Student } from "./columns";
-import { StudentCheckoutModal } from "./student-checkout-modal";
+import { StudentCheckoutModal } from "./StudentCheckoutModal";
 import { StudentsSkeleton } from "@/components/skeletons";
-import { useSearchStore } from "@/lib/search-store";
+import { useSearchStore } from "@/lib/SearchStore";
 
 import { AddStudentDialog } from "./AddStudentDialog";
 import { EditStudentDialog } from "./EditStudentDialog";
@@ -92,11 +92,16 @@ export default function StudentsPage() {
   }, [searchFiltered, filterRoom, filterPaymentStatus]);
   const filteredInactive = useMemo(() => filterStudents(inactiveStudents, query), [inactiveStudents, query]);
 
-  const { data: rooms = [] } = useQuery<Room[]>({
+  const { data: roomsData } = useQuery<Room[]>({
     queryKey: ["rooms", hostelId],
-    queryFn: () =>
-      fetchWithHostel("/api/rooms", hostelId).then((r) => r.json()),
+    queryFn: async () => {
+      const r = await fetchWithHostel("/api/rooms", hostelId);
+      const json = await r.json();
+      if (!r.ok) return [];
+      return Array.isArray(json) ? json : [];
+    },
   });
+  const rooms = Array.isArray(roomsData) ? roomsData : [];
 
   const markAsLeft = useMutation({
     mutationFn: async (student: Student) => {

@@ -3,8 +3,8 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useAuthStore } from "@/lib/auth-store";
-import { fetchWithHostel } from "@/lib/api-client";
+import { useAuthStore } from "@/lib/AuthStore";
+import { fetchWithHostel } from "@/lib/ApiClient";
 import type {
   PaymentProps,
   PaymentStatusFilterProps,
@@ -43,6 +43,19 @@ function filterBySearch<
       String(p.amount_due ?? "").includes(q) ||
       String(p.amount_paid ?? "").includes(q)
   );
+}
+
+/** Money actually received on a bill row (partial or full). Legacy: only `paid` rows count full `amount`. */
+function amountReceivedTowardBill(p: PaymentProps): number {
+  const paid = p.amount_paid;
+  if (paid != null && !Number.isNaN(Number(paid))) {
+    const n = Number(paid);
+    if (n > 0) return n;
+  }
+  if (p.status === "paid") {
+    return Number(p.amount_paid ?? p.amount ?? p.amount_due ?? 0);
+  }
+  return 0;
 }
 
 export function usePaymentsData() {
@@ -146,9 +159,7 @@ export function usePaymentsData() {
     const currentMonth = MONTHS[now.getMonth()];
     const currentYear = now.getFullYear();
 
-    const collected = payments
-      .filter((p) => p.status === "paid")
-      .reduce((sum, p) => sum + Number(p.amount_paid ?? p.amount ?? 0), 0);
+    const collected = payments.reduce((sum, p) => sum + amountReceivedTowardBill(p), 0);
 
     const pending = payments
       .filter((p) => p.status === "pending")
@@ -165,13 +176,8 @@ export function usePaymentsData() {
     const overdueCount = payments.filter((p) => p.status === "overdue").length;
 
     const thisMonth = payments
-      .filter(
-        (p) =>
-          p.status === "paid" &&
-          p.month === currentMonth &&
-          Number(p.year) === currentYear
-      )
-      .reduce((sum, p) => sum + Number(p.amount_paid ?? p.amount ?? 0), 0);
+      .filter((p) => p.month === currentMonth && Number(p.year) === currentYear)
+      .reduce((sum, p) => sum + amountReceivedTowardBill(p), 0);
 
     return { collected, pending, overdueCount, thisMonth };
   }, [payments]);
@@ -223,6 +229,7 @@ export function usePaymentsData() {
         monthRange,
         hasOverdue: items.some((p) => p.status === "overdue"),
         monthBreakdown,
+        last_payment_at: first.last_payment_at ?? null,
       });
     });
     return result;
@@ -242,6 +249,7 @@ export function usePaymentsData() {
         amount: group.totalBalance,
         amountLabel: `₹${group.totalBalance.toLocaleString()} due`,
         status: group.hasOverdue ? "overdue" : "pending",
+        lastPaymentAt: group.last_payment_at ?? null,
         paymentIds: group.paymentIds,
         totalBalance: group.totalBalance,
         monthBreakdown: group.monthBreakdown,
@@ -259,6 +267,7 @@ export function usePaymentsData() {
         amount: paidAmount,
         amountLabel: `₹${paidAmount.toLocaleString()} paid`,
         status: "paid",
+        lastPaymentAt: payment.last_payment_at ?? payment.paid_at ?? null,
       });
     });
     return rows;

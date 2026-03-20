@@ -2,22 +2,16 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Box } from "@/components/ui/box";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Users } from "lucide-react";
 import { t } from "@/lib/i18n";
-import { useSearchStore } from "@/lib/search-store";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { StudentsMuiTable } from "./students-mui-table";
+import { useSearchStore } from "@/lib/SearchStore";
+import { Dropdown } from "@/components/ui/dropdown";
+import { StudentsMuiTable } from "./StudentsMuiTable";
 import { getStudentColumns, getInactiveStudentColumns, type Student, type InactiveStudent } from "./columns";
 
 interface Room {
@@ -72,10 +66,10 @@ export function StudentsTabs({
           <Box className="flex flex-wrap items-center gap-4 px-6 pt-6 pb-4 border-b border-slate-100">
             <TabsList className="h-9 rounded-lg bg-slate-100 p-1 shrink-0">
               <TabsTrigger value="present" className="rounded-md px-4 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                {t("PRESENT")} ({filteredStudents.length})
+                {t("PRESENT")} ({filteredStudents.length ?? 0})
               </TabsTrigger>
               <TabsTrigger value="inactive" className="rounded-md px-4 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                {t("INACTIVE")} ({filteredInactive.length})
+                {t("INACTIVE")} ({filteredInactive.length ?? 0})
               </TabsTrigger>
             </TabsList>
             <Box className="relative flex-1 min-w-[200px] max-w-md">
@@ -87,30 +81,31 @@ export function StudentsTabs({
                 onChange={(e) => setQuery(e.target.value)}
               />
             </Box>
-            <Select value={filterRoom} onValueChange={onFilterRoomChange}>
-              <SelectTrigger className="h-9 w-[140px] rounded-lg border-slate-200 bg-white">
-                <SelectValue placeholder={t("ALL_ROOMS")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("ALL_ROOMS")}</SelectItem>
-                {rooms.map((r) => (
-                  <SelectItem key={r.id} value={String(r.id)}>
-                    {r.number} {r.type && `(${r.type})`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={filterPaymentStatus} onValueChange={onFilterPaymentStatusChange}>
-              <SelectTrigger className="h-9 w-[140px] rounded-lg border-slate-200 bg-white">
-                <SelectValue placeholder={t("ALL_STATUS")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("ALL_STATUS")}</SelectItem>
-                <SelectItem value="No Due Amount">No Due Amount</SelectItem>
-                <SelectItem value="Pending">{t("PENDING")}</SelectItem>
-                <SelectItem value="Overdue">{t("OVERDUE")}</SelectItem>
-              </SelectContent>
-            </Select>
+            <Dropdown
+              value={filterRoom}
+              onValueChange={onFilterRoomChange}
+              options={[
+                { value: "all", label: t("ALL_ROOMS") },
+                ...rooms.map((r) => ({
+                  value: String(r.id),
+                  label: `${r.number}${r.type ? ` (${r.type})` : ""}`,
+                })),
+              ]}
+              placeholder={t("ALL_ROOMS")}
+              triggerClassName="h-9 w-[140px] rounded-lg border-slate-200 bg-white"
+            />
+            <Dropdown
+              value={filterPaymentStatus}
+              onValueChange={onFilterPaymentStatusChange}
+              options={[
+                { value: "all", label: t("ALL_STATUS") },
+                { value: "No Due Amount", label: "No Due Amount" },
+                { value: "Pending", label: t("PENDING") },
+                { value: "Overdue", label: t("OVERDUE") },
+              ]}
+              placeholder={t("ALL_STATUS")}
+              triggerClassName="h-9 w-[140px] rounded-lg border-slate-200 bg-white"
+            />
           </Box>
           <TabsContent value="present" className="mt-0 p-6 pt-4">
             {students.length === 0 ? (

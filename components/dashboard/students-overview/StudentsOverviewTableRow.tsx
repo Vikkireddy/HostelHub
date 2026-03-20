@@ -2,9 +2,9 @@
 
 import { TableCell, TableRow } from "@mui/material";
 import { Box } from "@/components/ui/box";
-import { ROW_CELL_SX } from "@/components/dashboard/dashboard-table.constants";
+import { ROW_CELL_SX } from "@/components/dashboard/DashboardTableConstants";
 import type { StudentProps } from "@/components/dashboard/dashboard.types";
-import type { ColumnId } from "./students-overview.constants";
+import type { ColumnId } from "./StudentsOverviewConstants";
 
 interface StudentsOverviewTableRowProps {
   student: StudentProps;

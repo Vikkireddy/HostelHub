@@ -10,14 +10,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { RequiredLabel } from "@/components/ui/required-label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { RequiredLabel } from "@/components/ui/RequiredLabel";
+import { Dropdown } from "@/components/ui/dropdown";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
@@ -92,24 +86,17 @@ export function RecordPaymentDialog({
             {/* Student Select */}
             <Box className="space-y-2">
               <RequiredLabel htmlFor="record-student">Student</RequiredLabel>
-              <Select
+              <Dropdown
+                id="record-student"
                 value={form.student_id}
                 onValueChange={handleStudentChange}
+                options={studentsWithDues.map((s) => ({
+                  value: String(s.id),
+                  label: `${s.name}${s.room_rent > 0 ? ` (₹${s.room_rent.toLocaleString()}/mo)` : ""}`,
+                }))}
+                placeholder="Select student"
                 disabled={studentsWithDues.length === 0}
-              >
-                <SelectTrigger id="record-student">
-                  <SelectValue placeholder="Select student" />
-                </SelectTrigger>
-                <SelectContent>
-                  {studentsWithDues.map((s) => (
-                    <SelectItem key={s.id} value={String(s.id)}>
-                      {s.name}
-                      {s.room_rent > 0 &&
-                        ` (₹${s.room_rent.toLocaleString()}/mo)`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             </Box>
 
             {/* Amount */}
@@ -130,21 +117,13 @@ export function RecordPaymentDialog({
             {/* Month */}
             <Box className="space-y-2">
               <RequiredLabel htmlFor="record-month">Month</RequiredLabel>
-              <Select
+              <Dropdown
+                id="record-month"
                 value={form.month}
                 onValueChange={(v) => handleFieldChange("month", v)}
-              >
-                <SelectTrigger id="record-month">
-                  <SelectValue placeholder="Select month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTHS.map((m) => (
-                    <SelectItem key={m} value={m}>
-                      {m}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={MONTHS.map((m) => ({ value: m, label: m }))}
+                placeholder="Select month"
+              />
             </Box>
 
             {/* Year */}

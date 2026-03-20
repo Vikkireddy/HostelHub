@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
-import { getHostelIdFromRequest } from "@/lib/get-hostel-id";
-import { getPendingDuesSql } from "@/lib/payment-utils";
+import { getHostelIdFromRequest } from "@/lib/GetHostelId";
+import { getPendingDuesSql } from "@/lib/PaymentUtils";
+import { requireSubscription } from "@/lib/subscription/RequireSubscription";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const subErr = await requireSubscription(request);
+    if (subErr) return subErr;
+
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
       return NextResponse.json({ amount: 0, hasPending: false });

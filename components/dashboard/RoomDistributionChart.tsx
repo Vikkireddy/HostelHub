@@ -4,7 +4,7 @@ import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from "recharts";
 import { PieChart as PieChartIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Box } from "@/components/ui/box";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@/components/ui/EmptyState";
 import type { RoomDistributionChartProps } from "./dashboard.types";
 import { t } from "@/lib/i18n";
 

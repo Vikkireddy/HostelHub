@@ -1,20 +1,10 @@
 "use client";
 
-import { Avatar, Box, Chip, TableCell, TableRow, Typography } from "@mui/material";
+import { Avatar, Box, Chip, IconButton, TableCell, TableRow, Typography } from "@mui/material";
+import { History } from "lucide-react";
 import { PaymentRowActions } from "./PaymentRowActions";
-import { STATUS_CHIP_STYLES } from "./payments-table.constants";
-import type { PaymentTableRowProps } from "@/components/dashboard/payments/payments.types";
-
-interface PaymentTableRowComponentProps {
-  row: PaymentTableRowProps;
-  onMarkPaid: (studentId: number) => void;
-  onViewDetails: (row: PaymentTableRowProps) => void;
-  onEditPayment?: (row: PaymentTableRowProps) => void;
-  onSendReminder?: (row: PaymentTableRowProps) => void;
-  onDelete?: (row: PaymentTableRowProps) => void;
-  isMarkingPaid?: boolean;
-  markingPaidStudentId?: number;
-}
+import { STATUS_CHIP_STYLES } from "./PaymentsTableConstants";
+import type { PaymentTableRowComponentProps } from "@/components/dashboard/payments/payments.types";
 
 function getInitials(name: string): string {
   return name
@@ -29,6 +19,7 @@ export function PaymentTableRow({
   row,
   onMarkPaid,
   onViewDetails,
+  onOpenHistory,
   onEditPayment,
   onSendReminder,
   onDelete,
@@ -38,6 +29,9 @@ export function PaymentTableRow({
   const chipStyle = STATUS_CHIP_STYLES[row.status] ?? STATUS_CHIP_STYLES.pending;
   const initials = getInitials(row.studentName);
   const isOverdue = row.status === "overdue" || row.dueInfo.includes("overdue");
+  const lastPaymentLabel = row.lastPaymentAt
+    ? new Date(row.lastPaymentAt).toLocaleString()
+    : "No payment yet";
 
   return (
     <TableRow
@@ -98,6 +92,21 @@ export function PaymentTableRow({
             fontSize: "0.75rem",
           }}
         />
+      </TableCell>
+      <TableCell>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          <IconButton
+            size="small"
+            onClick={() => onOpenHistory(row)}
+            aria-label={`View payment history for ${row.studentName}`}
+            sx={{ color: "rgb(71 85 105)" }}
+          >
+            <History size={16} />
+          </IconButton>
+          <Typography variant="caption" sx={{ color: "rgb(100 116 139)" }}>
+            {lastPaymentLabel}
+          </Typography>
+        </Box>
       </TableCell>
       <TableCell>
         <PaymentRowActions
