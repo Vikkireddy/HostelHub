@@ -372,7 +372,7 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Palette className="h-5 w-5" />
-                Appearance
+                {t("APPEARAMCE_SETTINGS")}
               </CardTitle>
               <CardDescription>Customize how the app looks</CardDescription>
             </CardHeader>
