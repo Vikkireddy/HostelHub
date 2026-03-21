@@ -14,6 +14,7 @@ import { SUBSCRIPTION_PLANS } from "@/lib/subscription/constants";
 import { useSubscriptionStore } from "@/lib/SubscriptionStore";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { t } from "@/lib/i18n";
 
 declare global {
   interface Window {
@@ -133,7 +134,7 @@ export default function SubscriptionPage() {
                   isOwner: true,
                   bannerType: null,
                 });
-                toast.success("Payment successful! Subscription activated.");
+                toast.success(t("PAYMENT_SUCCESS"));
                 router.push("/dashboard");
               } else {
                 toast.error(verifyData.message || "Payment verification failed");
