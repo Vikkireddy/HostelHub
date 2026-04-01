@@ -15,25 +15,7 @@ import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
 import { AlertCircle } from "lucide-react";
 import { t } from "@/lib/i18n";
-
-export interface Student {
-  id: string | number;
-  name: string;
-  email?: string;
-  room_number?: string;
-  room_id?: number;
-  course?: string;
-  join_date?: string;
-  phone: string;
-}
-
-type StudentCheckoutModalProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  student: Student | null;
-  onConfirm: (student: Student) => void;
-  isPending: boolean;
-};
+import type { StudentCheckoutModalProps } from "./students.types";
 
 export function StudentCheckoutModal({
   open,
@@ -62,7 +44,10 @@ export function StudentCheckoutModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent
+        className="max-w-md"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Box className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100">

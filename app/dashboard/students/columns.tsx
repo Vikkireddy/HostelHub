@@ -7,27 +7,7 @@ import { Box } from "@/components/ui/box";
 import { LogOut, Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { IconButton, Menu, MenuItem } from "@mui/material";
-
-export interface Student {
-  id: string | number;
-  name: string;
-  email?: string;
-  room_number?: string;
-  room_id?: number;
-  course?: string;
-  join_date?: string;
-  phone: string;
-  id_proof_type?: string;
-  id_proof_number?: string;
-  address?: string;
-  pending_dues?: number;
-  payment_status?: "Overdue" | "No Due Amount" | "Pending";
-  payment_count?: number;
-}
-
-export interface InactiveStudent extends Student {
-  left_date?: string;
-}
+import type { InactiveStudent, Student } from "./students.types";
 
 function ActionsMenu({
   student,

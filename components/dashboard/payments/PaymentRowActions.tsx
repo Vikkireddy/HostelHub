@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Box, IconButton, Menu, MenuItem } from "@mui/material";
 import { Check, Eye, MoreHorizontal, Pencil, Bell, Trash2 } from "lucide-react";
 import { t } from "@/lib/i18n";
-import type { PaymentTableRowProps } from "@/components/dashboard/payments/payments.types";
+import type { ActionItem, PaymentTableRowProps } from "@/components/dashboard/payments/payments.types";
 
 interface PaymentRowActionsProps {
   row: PaymentTableRowProps;
@@ -44,6 +44,43 @@ export function PaymentRowActions({
     fn();
     handleMenuClose();
   };
+
+
+
+  const menuActions: ActionItem[] = [
+    {
+      key: "view",
+      label: "View Details",
+      icon: Eye,
+      onClick: () => runAndClose(() => onViewDetails(row)),
+      sx: { gap: 1 },
+    },
+    {
+      key: "edit",
+      label: "Edit Payment",
+      icon: Pencil,
+      onClick: onEditPayment ? () => runAndClose(() => onEditPayment(row)) : undefined,
+      hidden: !onEditPayment,
+      sx: { gap: 1 },
+    },
+    {
+      key: "reminder",
+      label: "Send Reminder",
+      icon: Bell,
+      disabled: true,
+      hidden: !onSendReminder || isPaid,
+      title: "Notifications are not implemented yet",
+      sx: { gap: 1, opacity: 0.5, cursor: "not-allowed" },
+    },
+    {
+      key: "delete",
+      label: "Delete",
+      icon: Trash2,
+      onClick: onDelete ? () => runAndClose(() => onDelete(row)) : undefined,
+      hidden: !onDelete,
+      sx: { gap: 1, color: "rgb(185 28 28)" },
+    },
+  ];
 
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -88,31 +125,23 @@ export function PaymentRowActions({
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <MenuItem onClick={() => runAndClose(() => onViewDetails(row))} sx={{ gap: 1 }}>
-          <Eye size={16} />
-          View Details
-        </MenuItem>
-        {onEditPayment && (
-          <MenuItem onClick={() => runAndClose(() => onEditPayment(row))} sx={{ gap: 1 }}>
-            <Pencil size={16} />
-            Edit Payment
-          </MenuItem>
-        )}
-        {onSendReminder && !isPaid && (
-          <MenuItem onClick={() => runAndClose(() => onSendReminder(row))} sx={{ gap: 1 }}>
-            <Bell size={16} />
-            Send Reminder
-          </MenuItem>
-        )}
-        {onDelete && (
-          <MenuItem
-            onClick={() => runAndClose(() => onDelete(row))}
-            sx={{ gap: 1, color: "rgb(185 28 28)" }}
-          >
-            <Trash2 size={16} />
-            Delete
-          </MenuItem>
-        )}
+        {menuActions
+          .filter((action) => !action.hidden)
+          .map((action) => {
+            const Icon = action.icon;
+            return (
+              <MenuItem
+                key={action.key}
+                onClick={action.onClick}
+                disabled={action.disabled}
+                sx={action.sx}
+                title={action.title}
+              >
+                <Icon size={16} />
+                {action.label}
+              </MenuItem>
+            );
+          })}
       </Menu>
     </Box>
   );

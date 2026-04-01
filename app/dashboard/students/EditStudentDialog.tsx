@@ -11,33 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { StudentFormFields } from "./StudentFormFields";
-import type { StudentFormValues } from "./students.constants";
-import type { Student } from "./columns";
-
-interface Room {
-  id: number;
-  number: string;
-  floor: number;
-  type: string;
-  rent?: number;
-  status?: string;
-  capacity?: number;
-  occupancy?: number;
-}
-
-interface EditStudentDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  student: Student | null;
-  form: StudentFormValues;
-  onFormChange: (updater: (prev: StudentFormValues) => StudentFormValues) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  isPending: boolean;
-  error?: Error | null;
-  roomsForEdit: (currentRoomId?: number) => Room[];
-  idProofError?: string | null;
-  phoneError?: string | null;
-}
+import type { EditStudentDialogProps } from "./students.types";
 
 export function EditStudentDialog({
   open,
@@ -54,7 +28,10 @@ export function EditStudentDialog({
 }: EditStudentDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent
+        className="max-w-2xl"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Edit Student</DialogTitle>
           <DialogDescription>

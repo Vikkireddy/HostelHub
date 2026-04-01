@@ -2,30 +2,40 @@
 
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { Box } from "@/components/ui/box";
 import { useAuthStore } from "@/lib/AuthStore";
 import { fetchWithHostel } from "@/lib/ApiClient";
-import {
-  StatsGrid,
-  RevenueChart,
-  RoomDistributionChart,
-  RecentPayments,
-  IncomeVsExpensesChart,
-  StudentsOverview,
-} from "@/components/dashboard";
 import type { DashboardStatsProps } from "@/components/dashboard";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { t } from "@/lib/i18n";
 import { useSearchStore } from "@/lib/SearchStore";
 
+const StatsGrid = dynamic(() =>
+  import("@/components/dashboard").then((m) => m.StatsGrid)
+);
+const RevenueChart = dynamic(() =>
+  import("@/components/dashboard").then((m) => m.RevenueChart)
+);
+const RoomDistributionChart = dynamic(() =>
+  import("@/components/dashboard").then((m) => m.RoomDistributionChart)
+);
+const RecentPayments = dynamic(() =>
+  import("@/components/dashboard").then((m) => m.RecentPayments)
+);
+const IncomeVsExpensesChart = dynamic(() =>
+  import("@/components/dashboard").then((m) => m.IncomeVsExpensesChart)
+);
+
 export default function DashboardPage() {
-  const { query } = useSearchStore();
+  const query = useSearchStore((s) => s.query);
   const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
 
   const { data, isLoading, error } = useQuery<DashboardStatsProps>({
     queryKey: ["dashboard-stats", hostelId],
     queryFn: () =>
       fetchWithHostel("/api/dashboard/stats", hostelId).then((r) => r.json()),
+    enabled: Boolean(hostelId),
   });
 
   const students = data?.students ?? [];
@@ -42,7 +52,7 @@ export default function DashboardPage() {
               (s.course ?? "").toLowerCase().includes(q) ||
               (s.phone ?? "").toLowerCase().includes(q)
           ),
-    [students, query]
+    [students, q]
   );
   const filteredPayments = useMemo(
     () =>
@@ -52,7 +62,7 @@ export default function DashboardPage() {
             (p: { student?: string }) =>
               (p.student ?? "").toLowerCase().includes(q)
           ),
-    [payments, query]
+    [payments, q]
   );
 
   if (isLoading) return <DashboardSkeleton />;

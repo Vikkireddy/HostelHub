@@ -1,18 +1,25 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { Wallet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
 import { EmptyState } from "@/components/ui/EmptyState";
-import {
-  ExpensesFiltersBar,
-  ExpensesTable,
-  AddExpenseDialog,
-  DeleteExpenseDialog,
-  useExpensesData,
-  type Expense,
-} from "./index";
+import { useExpensesData, type Expense } from "./index";
+
+const ExpensesFiltersBar = dynamic(() =>
+  import("./ExpensesFiltersBar").then((m) => m.ExpensesFiltersBar)
+);
+const ExpensesTable = dynamic(() =>
+  import("./ExpensesTable").then((m) => m.ExpensesTable)
+);
+const AddExpenseDialog = dynamic(() =>
+  import("./AddExpenseDialog").then((m) => m.AddExpenseDialog)
+);
+const DeleteExpenseDialog = dynamic(() =>
+  import("./DeleteExpenseDialog").then((m) => m.DeleteExpenseDialog)
+);
 
 export default function ExpensesPage() {
   const {

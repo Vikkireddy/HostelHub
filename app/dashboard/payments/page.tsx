@@ -1,20 +1,34 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Box } from "@/components/ui/box";
 import { toast } from "sonner";
 import { PaymentsSkeleton } from "@/components/skeletons";
 import {
-  PaymentStatsGrid,
-  PaymentFiltersBar,
-  PaymentsTable,
-  RecordPaymentDialog,
-  PaymentBreakdownDialog,
-  PaymentHistoryDialog,
   usePaymentsData,
   getDefaultMonthYear,
   type PaymentTableRowProps,
 } from "@/components/dashboard/payments";
+
+const PaymentStatsGrid = dynamic(() =>
+  import("@/components/dashboard/payments").then((m) => m.PaymentStatsGrid)
+);
+const PaymentFiltersBar = dynamic(() =>
+  import("@/components/dashboard/payments").then((m) => m.PaymentFiltersBar)
+);
+const PaymentsTable = dynamic(() =>
+  import("@/components/dashboard/payments").then((m) => m.PaymentsTable)
+);
+const RecordPaymentDialog = dynamic(() =>
+  import("@/components/dashboard/payments").then((m) => m.RecordPaymentDialog)
+);
+const PaymentBreakdownDialog = dynamic(() =>
+  import("@/components/dashboard/payments").then((m) => m.PaymentBreakdownDialog)
+);
+const PaymentHistoryDialog = dynamic(() =>
+  import("@/components/dashboard/payments").then((m) => m.PaymentHistoryDialog)
+);
 
 export default function PaymentsPage() {
   const [historyStudent, setHistoryStudent] = useState<{

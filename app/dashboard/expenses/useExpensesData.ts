@@ -26,6 +26,7 @@ export function useExpensesData() {
         `/api/expenses?month=${filterMonth}&year=${filterYear}`,
         hostelId
       ).then((r) => r.json()),
+    enabled: Boolean(hostelId),
   });
 
   const createExpense = useMutation({

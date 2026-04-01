@@ -1,3 +1,4 @@
+import { LucideIcon } from "lucide-react";
 import type { FormEvent } from "react";
 
 type PaymentStatusFilterProps = "all" | "pending" | "overdue" | "paid";
@@ -160,7 +161,19 @@ export type RecordPaymentDialogProps = {
   error?: Error | null;
 };
 
+ type ActionItem = {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+  onClick?: () => void;
+  disabled?: boolean;
+  hidden?: boolean;
+  title?: string;
+  sx?: Record<string, string | number>;
+};
+
 export type { 
+  ActionItem,
     PaymentStatusFilterProps,
     PaymentProps,
     MonthBreakdownItemProps,

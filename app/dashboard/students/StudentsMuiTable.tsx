@@ -10,13 +10,7 @@ import {
   TablePagination,
   TableRow,
 } from "@mui/material";
-import type { ColumnDef } from "@tanstack/react-table";
-
-interface StudentsMuiTableProps<T> {
-  columns: ColumnDef<T, unknown>[];
-  data: T[];
-  getRowId: (row: T) => string | number;
-}
+import type { StudentsMuiTableProps } from "./students.types";
 
 export function StudentsMuiTable<T>({ columns, data, getRowId }: StudentsMuiTableProps<T>) {
   const [page, setPage] = useState(0);

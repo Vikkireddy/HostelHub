@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import { Box } from "@/components/ui/box";
 import { Typography } from "@/components/ui/typography";
@@ -56,22 +57,26 @@ export default function SubscriptionPage() {
     bannerType?: string | null;
   } | null>(null);
 
+  const { data: subscriptionStatus } = useQuery({
+    queryKey: ["subscription-status", hostelId],
+    enabled: Boolean(hostelId),
+    queryFn: () =>
+      fetchWithHostel("/api/subscription/status", hostelId).then((r) => r.json()),
+  });
+
   useEffect(() => {
-    if (!hostelId) return;
-    fetchWithHostel("/api/subscription/status", hostelId)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success) {
-          setStatus(data);
-          setStatusLocal({
-            hasActiveSubscription: data.hasActiveSubscription,
-            expiresAt: data.expiresAt,
-            bannerType: data.bannerType,
-          });
-        }
-      })
-      .catch(() => setStatusLocal({ hasActiveSubscription: false, expiresAt: null }));
-  }, [hostelId, setStatus]);
+    if (!subscriptionStatus) return;
+    if (subscriptionStatus.success) {
+      setStatus(subscriptionStatus);
+      setStatusLocal({
+        hasActiveSubscription: subscriptionStatus.hasActiveSubscription,
+        expiresAt: subscriptionStatus.expiresAt,
+        bannerType: subscriptionStatus.bannerType,
+      });
+      return;
+    }
+    setStatusLocal({ hasActiveSubscription: false, expiresAt: null });
+  }, [subscriptionStatus, setStatus]);
 
   const openRazorpayCheckout = useCallback(
     async (planId: string) => {

@@ -1,13 +1,4 @@
-type SearchableStudent = {
-  name?: string;
-  email?: string;
-  phone?: string;
-  room_number?: string;
-  course?: string;
-  id_proof_type?: string;
-  id_proof_number?: string;
-  address?: string;
-};
+import type { SearchableStudent } from "./students.types";
 
 export function filterStudents<T extends SearchableStudent>(items: T[], query: string): T[] {
   const q = query.trim().toLowerCase();
