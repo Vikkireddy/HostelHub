@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { t } from "@/lib/i18n";
@@ -9,19 +10,12 @@ import { useAuthStore } from "@/lib/AuthStore";
 import { fetchWithHostel } from "@/lib/ApiClient";
 import { Box } from "@/components/ui/box";
 
-import {  type InactiveStudent, type Student } from "./columns";
-import { StudentCheckoutModal } from "./StudentCheckoutModal";
+import type { InactiveStudent, Student, StudentFormValues, StudentRoom } from "./students.types";
 import { StudentsSkeleton } from "@/components/skeletons";
 import { useSearchStore } from "@/lib/SearchStore";
 
-import { AddStudentDialog } from "./AddStudentDialog";
-import { EditStudentDialog } from "./EditStudentDialog";
-import { DeleteStudentDialog } from "./DeleteStudentDialog";
-import { StudentsTabs } from "./StudentsTabs";
-
 import {
   initialStudentForm,
-  type StudentFormValues,
   validateIdProof,
   normalizeIdProof,
   validatePhone,
@@ -29,20 +23,25 @@ import {
 } from "./students.constants";
 import { filterStudents } from "./students.utils";
 
-interface Room {
-  id: number;
-  number: string;
-  floor: number;
-  type: string;
-  capacity: number;
-  occupancy?: number;
-  status: string;
-  rent?: number;
-}
+const AddStudentDialog = dynamic(
+  () => import("./AddStudentDialog").then((m) => m.AddStudentDialog)
+);
+const EditStudentDialog = dynamic(
+  () => import("./EditStudentDialog").then((m) => m.EditStudentDialog)
+);
+const DeleteStudentDialog = dynamic(
+  () => import("./DeleteStudentDialog").then((m) => m.DeleteStudentDialog)
+);
+const StudentCheckoutModal = dynamic(
+  () => import("./StudentCheckoutModal").then((m) => m.StudentCheckoutModal)
+);
+const StudentsTabs = dynamic(
+  () => import("./StudentsTabs").then((m) => m.StudentsTabs)
+);
 
 export default function StudentsPage() {
   const queryClient = useQueryClient();
-  const { query } = useSearchStore();
+  const query = useSearchStore((s) => s.query);
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -65,6 +64,7 @@ export default function StudentsPage() {
     queryKey: ["students", hostelId],
     queryFn: () =>
       fetchWithHostel("/api/students", hostelId).then((r) => r.json()),
+    enabled: Boolean(hostelId),
   });
 
   const { data: inactiveData, isLoading: inactiveLoading } = useQuery<InactiveStudent[] | { error?: string }>({
@@ -75,6 +75,7 @@ export default function StudentsPage() {
       if (!res.ok) throw new Error(json.error || "Failed to fetch");
       return json;
     },
+    enabled: Boolean(hostelId),
   });
 
   const inactiveStudents = Array.isArray(inactiveData) ? inactiveData : [];
@@ -92,7 +93,7 @@ export default function StudentsPage() {
   }, [searchFiltered, filterRoom, filterPaymentStatus]);
   const filteredInactive = useMemo(() => filterStudents(inactiveStudents, query), [inactiveStudents, query]);
 
-  const { data: roomsData } = useQuery<Room[]>({
+  const { data: roomsData } = useQuery<StudentRoom[]>({
     queryKey: ["rooms", hostelId],
     queryFn: async () => {
       const r = await fetchWithHostel("/api/rooms", hostelId);
@@ -100,6 +101,7 @@ export default function StudentsPage() {
       if (!r.ok) return [];
       return Array.isArray(json) ? json : [];
     },
+    enabled: Boolean(hostelId),
   });
   const rooms = Array.isArray(roomsData) ? roomsData : [];
 

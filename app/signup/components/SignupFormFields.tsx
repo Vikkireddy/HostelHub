@@ -43,7 +43,7 @@ export function SignupFormFields({
     <>
       {SIGNUP_SECTIONS.map((section, index) => (
         <div key={section.id}>
-          {index === 2 && <Divider sx={{ my: 2 }} />}
+          {index === 2 && <Divider sx={{ my: 2, borderColor: "rgba(148, 163, 184, 0.22)" }} />}
           <SignupFormSection icon={section.icon} title={t(section.titleKey)} columns={section.columns}>
             {section.fields.map((field) => (
               <SignupFormField
@@ -64,7 +64,7 @@ export function SignupFormFields({
         </div>
       ))}
 
-      <Typography variant="caption" color="#64748b" sx={{ display: "block", mb: 2 }}>
+      <Typography variant="caption" color="rgba(148, 163, 184, 0.95)" sx={{ display: "block", mb: 2 }}>
         {t("SIGNUP_PASSWORD_HINT")}
       </Typography>
 
@@ -80,12 +80,12 @@ export function SignupFormFields({
                 onChange={(e) => field.onChange(e.target.checked)}
                 sx={{
                   color: "#94a3b8",
-                  "&.Mui-checked": { color: "#18222e" },
+                  "&.Mui-checked": { color: "#60a5fa" },
                 }}
               />
             }
             label={
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ color: "rgba(226, 232, 240, 0.9)" }}>
                 {t("SIGNUP_ACCEPT_TERMS")}
               </Typography>
             }
@@ -94,7 +94,7 @@ export function SignupFormFields({
         )}
       />
       {errors.acceptTerms && (
-        <Typography variant="caption" color="error" sx={{ display: "block", mb: 2 }}>
+        <Typography variant="caption" sx={{ color: "#fca5a5", display: "block", mb: 2 }}>
           {errors.acceptTerms.message}
         </Typography>
       )}
@@ -106,13 +106,16 @@ export function SignupFormFields({
         size="large"
         disabled={isSubmitting}
         sx={{
-          bgcolor: "#18222e",
-          "&:hover": { bgcolor: "#243a5c" },
+          bgcolor: "#3b82f6",
+          "&:hover": { bgcolor: "#2563eb" },
           py: 1.5,
           borderRadius: "12px",
+          textTransform: "none",
+          fontWeight: 700,
+          fontSize: "1rem",
         }}
       >
-        {isSubmitting ? t("SIGNUP_CREATING_ACCOUNT") : t("SIGNUP_BUTTON")}
+        {isSubmitting ? t("SIGNUP_CREATING_ACCOUNT") : "Create Account"}
       </Button>
     </>
   );

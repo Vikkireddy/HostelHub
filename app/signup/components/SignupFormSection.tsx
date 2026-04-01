@@ -33,7 +33,10 @@ export function SignupFormSection({
         }}
       >
         {icon}
-        <Typography variant="overline" color="#64748b" fontWeight={600}>
+        <Typography
+          variant="overline"
+          sx={{ color: "rgba(191, 219, 254, 0.95)", fontWeight: 700, letterSpacing: "0.08em" }}
+        >
           {title}
         </Typography>
       </Box>

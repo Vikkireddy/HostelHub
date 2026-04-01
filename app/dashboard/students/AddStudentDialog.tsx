@@ -10,33 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
-import { Box } from "@/components/ui/box";
 import { StudentFormFields } from "./StudentFormFields";
-import { initialStudentForm, type StudentFormValues } from "./students.constants";
-
-interface Room {
-  id: number;
-  number: string;
-  floor: number;
-  type: string;
-  rent?: number;
-  status?: string;
-  capacity?: number;
-  occupancy?: number;
-}
-
-interface AddStudentDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  form: StudentFormValues;
-  onFormChange: (updater: (prev: StudentFormValues) => StudentFormValues) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  isPending: boolean;
-  error?: Error | null;
-  availableRooms: Room[];
-  idProofError?: string | null;
-  phoneError?: string | null;
-}
+import type { AddStudentDialogProps } from "./students.types";
 
 export function AddStudentDialog({
   open,
@@ -52,7 +27,10 @@ export function AddStudentDialog({
 }: AddStudentDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent
+        className="max-w-2xl"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Add Student</DialogTitle>
           <DialogDescription>

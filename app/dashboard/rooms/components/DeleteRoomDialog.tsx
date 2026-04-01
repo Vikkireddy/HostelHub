@@ -1,33 +1,35 @@
-"use client";
-
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { DeleteStudentDialogProps } from "./students.types";
+import { Room } from "./types";
 
-export function DeleteStudentDialog({
+export function DeleteRoomDialog({
   open,
   onOpenChange,
-  student,
+  roomToDelete,
   onConfirm,
   isPending,
-}: DeleteStudentDialogProps) {
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  roomToDelete: Room | null;
+  onConfirm: () => void;
+  isPending: boolean;
+}) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="max-w-md"
-        onInteractOutside={(e) => e.preventDefault()}
-      >
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Delete Student</DialogTitle>
+          <DialogTitle>Delete Room</DialogTitle>
           <DialogDescription>
-            Are you sure you want to permanently delete {student?.name}? This cannot be undone.
+            Are you sure you want to permanently delete Room {roomToDelete?.number}? This cannot be
+            undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

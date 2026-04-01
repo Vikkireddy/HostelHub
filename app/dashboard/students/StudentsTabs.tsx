@@ -12,32 +12,8 @@ import { t } from "@/lib/i18n";
 import { useSearchStore } from "@/lib/SearchStore";
 import { Dropdown } from "@/components/ui/dropdown";
 import { StudentsMuiTable } from "./StudentsMuiTable";
-import { getStudentColumns, getInactiveStudentColumns, type Student, type InactiveStudent } from "./columns";
-
-interface Room {
-  id: number;
-  number: string;
-  floor: number;
-  type: string;
-  rent?: number;
-}
-
-interface StudentsTabsProps {
-  students: Student[];
-  filteredStudents: Student[];
-  inactiveStudents: InactiveStudent[];
-  filteredInactive: InactiveStudent[];
-  inactiveLoading: boolean;
-  rooms: Room[];
-  filterRoom: string;
-  filterPaymentStatus: string;
-  onFilterRoomChange: (value: string) => void;
-  onFilterPaymentStatusChange: (value: string) => void;
-  onCheckOut: (student: Student) => void;
-  onEdit: (student: Student) => void;
-  onDelete: (student: Student) => void;
-  canDeleteStudent: (student: Student) => boolean;
-}
+import { getStudentColumns, getInactiveStudentColumns } from "./columns";
+import type { InactiveStudent, Student, StudentsTabsProps } from "./students.types";
 
 export function StudentsTabs({
   students,

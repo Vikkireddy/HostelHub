@@ -71,12 +71,14 @@ export function usePaymentsData() {
     queryKey: ["payments", hostelId],
     queryFn: () =>
       fetchWithHostel("/api/payments", hostelId).then((r) => r.json()),
+    enabled: Boolean(hostelId),
   });
 
   const { data: studentsWithDues = [] } = useQuery({
     queryKey: ["students-with-dues", hostelId],
     queryFn: () =>
       fetchWithHostel("/api/students/with-dues", hostelId).then((r) => r.json()),
+    enabled: Boolean(hostelId),
   });
 
   const bulkMarkPaid = useMutation({

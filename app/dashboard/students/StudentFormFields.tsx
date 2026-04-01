@@ -13,26 +13,7 @@ import {
   normalizeIdProof,
   normalizePhone,
 } from "./students.constants";
-import type { StudentFormValues } from "./students.constants";
-
-interface Room {
-  id: number;
-  number: string;
-  floor: number;
-  type: string;
-  ac_type?: string;
-  rent?: number;
-}
-
-interface StudentFormFieldsProps {
-  form: StudentFormValues;
-  onChange: (updater: (prev: StudentFormValues) => StudentFormValues) => void;
-  rooms: Room[];
-  idPrefix?: string;
-  roomCaption?: string;
-  idProofError?: string | null;
-  phoneError?: string | null;
-}
+import type { StudentFormFieldsProps } from "./students.types";
 
 const textareaClassName =
   "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";

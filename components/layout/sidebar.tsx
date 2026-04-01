@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
@@ -17,6 +17,8 @@ import { Box } from "@/components/ui/box";
 import { useSettingsStore } from "@/lib/SettingsStore";
 import { useAuthStore } from "@/lib/AuthStore";
 
+const DEFAULT_HOSTEL_LOGO_URL = "/branding/default-logo.png";
+
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/students", label: "Students", icon: Users },
@@ -29,21 +31,24 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
-  const { getBranding } = useSettingsStore();
-  const { hostelName, hostelLogoUrl } = getBranding(hostelId);
+  const brandingByHostelId = useSettingsStore((s) => s.brandingByHostelId);
+  const branding = hostelId != null ? brandingByHostelId[hostelId] : undefined;
+  const hostelName = branding?.hostelName ?? "";
+  const hostelLogoUrl = branding?.hostelLogoUrl ?? null;
   const displayName = hostelName?.trim() || "HostelHub";
-  const displayLogo = hostelLogoUrl;
+  const displayLogo = hostelLogoUrl?.trim() || DEFAULT_HOSTEL_LOGO_URL;
+
+  const prefetchRoute = (href: string) => {
+    router.prefetch(href);
+  };
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-primary text-white">
       <Box className="flex h-16 items-center gap-2 border-b border-white/10 px-4">
-        <Box className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-amber-500">
-          {displayLogo ? (
-            <img src={displayLogo} alt="" className="h-full w-full object-contain" />
-          ) : (
-            <BedDouble className="h-6 w-6 text-white" />
-          )}
+        <Box className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-transparent">
+          <img src={displayLogo} alt="branding-logo" className="h-full w-full object-contain" />
         </Box>
         <Box className="min-w-0 flex-1">
           <Typography className="truncate font-semibold text-white">{displayName}</Typography>
@@ -61,6 +66,9 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch
+              onMouseEnter={() => prefetchRoute(item.href)}
+              onFocus={() => prefetchRoute(item.href)}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive

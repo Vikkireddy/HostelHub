@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Search, Bell, LogOut, Settings } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -25,16 +26,33 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle }: HeaderProps) {
-  const { user, logout } = useAuthStore();
-  const { name, email } = useSettingsStore();
-  const { query, setQuery } = useSearchStore();
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const name = useSettingsStore((s) => s.name);
+  const email = useSettingsStore((s) => s.email);
+  const query = useSearchStore((s) => s.query);
+  const setQuery = useSearchStore((s) => s.setQuery);
   const router = useRouter();
+  const [searchInput, setSearchInput] = useState(query);
   const displayName = name || user?.name || "Admin";
   const displayEmail = email || user?.email || "admin@hostel.com";
+
+  useEffect(() => {
+    setSearchInput(query);
+  }, [query]);
+
+  useEffect(() => {
+    const id = setTimeout(() => setQuery(searchInput), 150);
+    return () => clearTimeout(id);
+  }, [searchInput, setQuery]);
 
   const handleLogout = () => {
     logout();
     router.push("/");
+  };
+
+  const handleSettingsClick = () => {
+    router.push("/dashboard/settings");
   };
 
   return (
@@ -51,8 +69,8 @@ export function Header({ title, subtitle }: HeaderProps) {
           <Input
             placeholder="Search students, rooms, payments..."
             className="w-64 rounded-lg border-border bg-muted pl-9 focus:bg-background"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
         </Box>
         <Button variant="ghost" size="icon" className="relative">
@@ -80,7 +98,7 @@ export function Header({ title, subtitle }: HeaderProps) {
               </Box>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push("/dashboard/settings")} className="gap-2">
+            <DropdownMenuItem onClick={handleSettingsClick} className="gap-2">
               <Settings className="h-4 w-4" />
               Settings
             </DropdownMenuItem>
