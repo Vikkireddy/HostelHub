@@ -3,6 +3,7 @@ import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { hasPartialPaymentColumns } from "@/lib/PaymentUtils";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function PATCH(
   request: NextRequest,

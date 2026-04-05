@@ -4,6 +4,7 @@ import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { updateOverduePayments, ensureBillsForStudents, getPendingDuesSql } from "@/lib/PaymentUtils";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
 import { checkStudentLimit } from "@/lib/subscription/CheckFeature";
+export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function GET(request: NextRequest) {
   try {

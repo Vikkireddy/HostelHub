@@ -3,6 +3,7 @@ import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { VALID_AC_TYPES, DEFAULT_AC_TYPE } from "@/app/dashboard/rooms/rooms.constants";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function DELETE(
   request: NextRequest,

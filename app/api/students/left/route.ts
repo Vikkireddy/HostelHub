@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+export { dynamic } from "@/lib/forceDynamicRoute";
 
 const CREATE_TABLE_IF_NOT_EXISTS = `
   CREATE TABLE IF NOT EXISTS students_left (

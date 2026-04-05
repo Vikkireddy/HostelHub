@@ -15,6 +15,7 @@ import {
   hasPartialPaymentColumns,
   ensureBillsForStudents,
 } from "@/lib/PaymentUtils";
+export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function GET(request: NextRequest) {
   try {

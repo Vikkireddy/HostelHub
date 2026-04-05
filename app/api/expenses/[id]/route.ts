@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { requireAdvancedPlan } from "@/lib/subscription/planFeatures.server";
+export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function DELETE(
   _request: NextRequest,
