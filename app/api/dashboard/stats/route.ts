@@ -3,6 +3,9 @@ import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { updateOverduePayments, getDueDate, getDaysInfo, getPendingDuesSql } from "@/lib/PaymentUtils";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+import { validateHostelSubscription } from "@/lib/subscription/validate";
+import { planHasAdvancedFeatures } from "@/lib/subscription/planFeatures";
+import { SUBSCRIPTION_PLANS } from "@/lib/subscription/constants";
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,8 +42,13 @@ export async function GET(request: NextRequest) {
           studentsAddedDiff: 0,
         },
         pendingBillsList: [],
+        studentCapacity: null,
+        planCapabilities: { advancedAnalytics: false },
       });
     }
+
+    const { status: subStatus } = await validateHostelSubscription(hostelId);
+    const advancedAnalytics = planHasAdvancedFeatures(subStatus?.planId);
 
     await updateOverduePayments(hostelId);
     const { unpaidWhere, unpaidWhereNoAlias, revenueSelect, pendingBillsSelect } = await getPendingDuesSql();
@@ -166,66 +174,88 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    const [revenueRows] = await pool.execute(
-      `SELECT SUBSTRING(month, 1, 3) as month_short, month as month_name, year, ${revenueSelect} as revenue
-       FROM payments WHERE status = 'paid' AND (hostel_id = ? OR hostel_id IS NULL)
-       GROUP BY year, month
-       ORDER BY year DESC, FIELD(month, 'December','November','October','September','August','July','June','May','April','March','February','January') DESC
-       LIMIT 6`,
-      [hostelId]
-    );
-    const revenueData = (revenueRows as Array<Record<string, unknown>>)
-      .map((r) => ({ month: String(r.month_short || ""), revenue: Number(r.revenue) || 0 }))
-      .reverse();
+    const EMPTY_REVENUE = [
+      { month: "Jan", revenue: 0 },
+      { month: "Feb", revenue: 0 },
+    ];
+    const EMPTY_INCOME_VS_EXP = [
+      { month: "Jan", income: 0, expenses: 0, profit: 0 },
+      { month: "Feb", income: 0, expenses: 0, profit: 0 },
+    ];
+    const EMPTY_ROOM_DIST = [
+      { name: "Single", value: 0, color: "var(--primary)" },
+      { name: "Double", value: 0, color: "#f97316" },
+      { name: "Triple", value: 0, color: "#22c55e" },
+    ];
 
-    // Income vs Expenses: monthly income, expenses, profit for chart
-    const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    let incomeVsExpenses: Array<{ month: string; income: number; expenses: number; profit: number }> = [];
-    try {
-      const revRows = revenueRows as Array<Record<string, unknown>>;
+    let revenueData: Array<{ month: string; revenue: number }>;
+    let incomeVsExpenses: Array<{ month: string; income: number; expenses: number; profit: number }>;
+    let roomDistribution: Array<{ name: string; value: number; color: string }>;
 
-      const [expenseRows] = await pool.execute(
-        `SELECT MONTH(expense_date) as m, YEAR(expense_date) as y, COALESCE(SUM(amount), 0) as total
-         FROM admin_expenses WHERE hostel_id = ?
-         GROUP BY y, m`,
+    if (advancedAnalytics) {
+      const [revenueRows] = await pool.execute(
+        `SELECT SUBSTRING(month, 1, 3) as month_short, month as month_name, year, ${revenueSelect} as revenue
+         FROM payments WHERE status = 'paid' AND (hostel_id = ? OR hostel_id IS NULL)
+         GROUP BY year, month
+         ORDER BY year DESC, FIELD(month, 'December','November','October','September','August','July','June','May','April','March','February','January') DESC
+         LIMIT 6`,
         [hostelId]
       );
-      const expenseByMonth = new Map<string, number>();
-      for (const row of expenseRows as Array<Record<string, unknown>>) {
-        const key = `${row.y}-${row.m}`;
-        expenseByMonth.set(key, Number(row.total ?? 0));
+      revenueData = (revenueRows as Array<Record<string, unknown>>)
+        .map((r) => ({ month: String(r.month_short || ""), revenue: Number(r.revenue) || 0 }))
+        .reverse();
+
+      const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      incomeVsExpenses = [];
+      try {
+        const revRows = revenueRows as Array<Record<string, unknown>>;
+
+        const [expenseRows] = await pool.execute(
+          `SELECT MONTH(expense_date) as m, YEAR(expense_date) as y, COALESCE(SUM(amount), 0) as total
+           FROM admin_expenses WHERE hostel_id = ?
+           GROUP BY y, m`,
+          [hostelId]
+        );
+        const expenseByMonth = new Map<string, number>();
+        for (const row of expenseRows as Array<Record<string, unknown>>) {
+          const key = `${row.y}-${row.m}`;
+          expenseByMonth.set(key, Number(row.total ?? 0));
+        }
+
+        incomeVsExpenses = revRows.map((r) => {
+          const monthName = String(r.month_name || "");
+          const monthNum = MONTH_ORDER.indexOf(monthName) + 1 || 1;
+          const year = Number(r.year) || new Date().getFullYear();
+          const monthShort = String(r.month_short || MONTH_SHORT[monthNum - 1]);
+          const income = Number(r.revenue) || 0;
+          const expenses = expenseByMonth.get(`${year}-${monthNum}`) ?? 0;
+          const profit = income - expenses;
+          return { month: monthShort, income, expenses, profit };
+        }).reverse();
+      } catch {
+        incomeVsExpenses = (revenueData as Array<{ month: string; revenue: number }>).map((r) => ({
+          month: r.month,
+          income: r.revenue,
+          expenses: 0,
+          profit: r.revenue,
+        }));
       }
 
-      incomeVsExpenses = revRows.map((r) => {
-        const monthName = String(r.month_name || "");
-        const monthNum = MONTH_ORDER.indexOf(monthName) + 1 || 1;
-        const year = Number(r.year) || new Date().getFullYear();
-        const monthShort = String(r.month_short || MONTH_SHORT[monthNum - 1]);
-        const income = Number(r.revenue) || 0;
-        const expenses = expenseByMonth.get(`${year}-${monthNum}`) ?? 0;
-        const profit = income - expenses;
-        return { month: monthShort, income, expenses, profit };
-      }).reverse();
-    } catch {
-      // admin_expenses may not exist
-      incomeVsExpenses = (revenueData as Array<{ month: string; revenue: number }>).map((r) => ({
-        month: r.month,
-        income: r.revenue,
-        expenses: 0,
-        profit: r.revenue,
-      }));
+      roomDistribution = (roomsList as Array<Record<string, unknown>>).reduce(
+        (acc: Array<{ name: string; value: number; color: string }>, r) => {
+          const type = String(r.type || "Unknown");
+          const existing = acc.find((x) => x.name === type);
+          if (existing) existing.value++;
+          else acc.push({ name: type, value: 1, color: type === "Single" ? "var(--primary)" : type === "Double" ? "#f97316" : "#22c55e" });
+          return acc;
+        },
+        []
+      );
+    } else {
+      revenueData = [...EMPTY_REVENUE];
+      incomeVsExpenses = [...EMPTY_INCOME_VS_EXP];
+      roomDistribution = [...EMPTY_ROOM_DIST];
     }
-
-    const roomDistribution = (roomsList as Array<Record<string, unknown>>).reduce(
-      (acc: Array<{ name: string; value: number; color: string }>, r) => {
-        const type = String(r.type || "Unknown");
-        const existing = acc.find((x) => x.name === type);
-        if (existing) existing.value++;
-        else acc.push({ name: type, value: 1, color: type === "Single" ? "var(--primary)" : type === "Double" ? "#f97316" : "#22c55e" });
-        return acc;
-      },
-      []
-    );
 
     const totalRooms = roomsList.length;
     const available = roomsList.filter((r) => r.status === "available").length;
@@ -252,25 +282,38 @@ export async function GET(request: NextRequest) {
 
     let totalExpensesThisMonth = 0;
     let monthlyRevenueThisMonth = 0;
-    try {
-      const [expenseRows] = await pool.execute(
-        `SELECT COALESCE(SUM(amount), 0) as total FROM admin_expenses 
-         WHERE hostel_id = ? AND MONTH(expense_date) = ? AND YEAR(expense_date) = ?`,
-        [hostelId, currentMonth, currentYear]
+    if (advancedAnalytics) {
+      try {
+        const [expenseRows] = await pool.execute(
+          `SELECT COALESCE(SUM(amount), 0) as total FROM admin_expenses 
+           WHERE hostel_id = ? AND MONTH(expense_date) = ? AND YEAR(expense_date) = ?`,
+          [hostelId, currentMonth, currentYear]
+        );
+        totalExpensesThisMonth = Number((expenseRows as Array<Record<string, unknown>>)[0]?.total ?? 0);
+      } catch {
+        // admin_expenses table may not exist yet
+      }
+      const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      const currentMonthName = monthNames[currentMonth - 1];
+      const [revenueThisMonthRows] = await pool.execute(
+        `SELECT COALESCE(${revenueSelect}, 0) as revenue
+         FROM payments WHERE status = 'paid' AND month = ? AND year = ? AND (hostel_id = ? OR hostel_id IS NULL)`,
+        [currentMonthName, currentYear, hostelId]
       );
-      totalExpensesThisMonth = Number((expenseRows as Array<Record<string, unknown>>)[0]?.total ?? 0);
-    } catch {
-      // admin_expenses table may not exist yet
+      monthlyRevenueThisMonth = Number((revenueThisMonthRows as Array<Record<string, unknown>>)[0]?.revenue ?? 0);
     }
-    const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    const currentMonthName = monthNames[currentMonth - 1];
-    const [revenueThisMonthRows] = await pool.execute(
-      `SELECT COALESCE(${revenueSelect}, 0) as revenue
-       FROM payments WHERE status = 'paid' AND month = ? AND year = ? AND (hostel_id = ? OR hostel_id IS NULL)`,
-      [currentMonthName, currentYear, hostelId]
-    );
-    monthlyRevenueThisMonth = Number((revenueThisMonthRows as Array<Record<string, unknown>>)[0]?.revenue ?? 0);
     const profitThisMonth = monthlyRevenueThisMonth - totalExpensesThisMonth;
+
+    const planMeta = SUBSCRIPTION_PLANS.find((p) => p.id === subStatus?.planId);
+    const planStudentCap = planMeta?.max_students;
+    const studentCapacity =
+      planStudentCap == null
+        ? null
+        : {
+            max: planStudentCap,
+            current: studentsList.length,
+            remaining: Math.max(0, planStudentCap - studentsList.length),
+          };
 
     return NextResponse.json({
       students: studentsList.map((s) => ({
@@ -317,6 +360,8 @@ export async function GET(request: NextRequest) {
         studentsAddedDiff,
       },
       pendingBillsList,
+      studentCapacity,
+      planCapabilities: { advancedAnalytics },
     });
   } catch (error) {
     console.error("Dashboard stats error:", error);

@@ -16,8 +16,10 @@ import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
 import { useSettingsStore } from "@/lib/SettingsStore";
 import { useAuthStore } from "@/lib/AuthStore";
+import { useSubscriptionStore } from "@/lib/SubscriptionStore";
+import { planHasAdvancedFeatures } from "@/lib/subscription/planFeatures";
 
-const DEFAULT_HOSTEL_LOGO_URL = "/branding/default-logo.png";
+const DEFAULT_HOSTEL_LOGO_URL = "/img/logo-transparent.png";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -33,11 +35,13 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
+  const planId = useSubscriptionStore((s) => s.status?.planId);
+  const showExpensesNav = planId == null || planHasAdvancedFeatures(planId);
   const brandingByHostelId = useSettingsStore((s) => s.brandingByHostelId);
   const branding = hostelId != null ? brandingByHostelId[hostelId] : undefined;
   const hostelName = branding?.hostelName ?? "";
   const hostelLogoUrl = branding?.hostelLogoUrl ?? null;
-  const displayName = hostelName?.trim() || "HostelHub";
+  const displayName = hostelName?.trim() || "Admin HostelHub";
   const displayLogo = hostelLogoUrl?.trim() || DEFAULT_HOSTEL_LOGO_URL;
 
   const prefetchRoute = (href: string) => {
@@ -46,20 +50,27 @@ export function Sidebar() {
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-primary text-white">
-      <Box className="flex h-16 items-center gap-2 border-b border-white/10 px-4">
+      <Link
+        href="/"
+        prefetch={false}
+        className="flex h-16 items-center gap-2 border-b border-white/10 px-4 transition-colors hover:bg-white/5"
+        title="Go to website home"
+      >
         <Box className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-transparent">
-          <img src={displayLogo} alt="branding-logo" className="h-full w-full object-contain" />
+          <img src={displayLogo} alt="" aria-hidden className="h-full w-full object-contain" />
         </Box>
         <Box className="min-w-0 flex-1">
           <Typography className="truncate font-semibold text-white">{displayName}</Typography>
           <Typography className="text-xs text-slate-400">Management System</Typography>
         </Box>
-      </Box>
+      </Link>
       <nav className="space-y-1 p-4">
         <Typography className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
           Menu
         </Typography>
-        {navItems.map((item) => {
+        {navItems
+          .filter((item) => item.href !== "/dashboard/expenses" || showExpensesNav)
+          .map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
           return (

@@ -16,7 +16,7 @@ export async function checkStudentLimit(
       `SELECT hs.plan_id, sp.max_students
        FROM hostel_subscriptions hs
        LEFT JOIN subscription_plans sp ON sp.id = hs.plan_id
-       WHERE hs.hostel_id = ? AND hs.status = 'active'`,
+       WHERE hs.hostel_id = ? AND hs.status IN ('active', 'trial', 'grace_period')`,
       [hostelId]
     );
     const subs = subRows as { plan_id: string; max_students: number | null }[];

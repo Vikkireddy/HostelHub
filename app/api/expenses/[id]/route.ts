@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
-import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+import { requireAdvancedPlan } from "@/lib/subscription/planFeatures.server";
 
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const subErr = await requireSubscription(_request);
+    const subErr = await requireAdvancedPlan(_request);
     if (subErr) return subErr;
 
     const hostelId = getHostelIdFromRequest(_request);

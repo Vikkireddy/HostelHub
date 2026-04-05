@@ -44,7 +44,7 @@ export default function SettingsPage() {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   // Branding form
-  const [brandingHostelName, setBrandingHostelName] = useState(hostelName || "HostelHub");
+  const [brandingHostelName, setBrandingHostelName] = useState(hostelName || "Admin HostelHub");
   const [brandingLogoFile, setBrandingLogoFile] = useState<File | null>(null);
   const [brandingLogoPreview, setBrandingLogoPreview] = useState<string | null>(
     hostelLogoUrl ?? DEFAULT_HOSTEL_LOGO_URL
@@ -58,7 +58,7 @@ export default function SettingsPage() {
   }, [name, email, user?.name, user?.email]);
 
   useEffect(() => {
-    setBrandingHostelName(hostelName || "HostelHub");
+    setBrandingHostelName(hostelName || "Admin HostelHub");
     setBrandingLogoPreview(hostelLogoUrl ?? DEFAULT_HOSTEL_LOGO_URL);
   }, [hostelName, hostelLogoUrl]);
 
@@ -163,7 +163,7 @@ export default function SettingsPage() {
       return;
     }
     setBrandingError("");
-    const nameToSave = brandingHostelName.trim() || "HostelHub";
+    const nameToSave = brandingHostelName.trim() || "Admin HostelHub";
     if (brandingLogoFile) {
       const reader = new FileReader();
       reader.onload = () => {

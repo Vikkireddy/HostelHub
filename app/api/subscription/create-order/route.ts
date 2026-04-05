@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
-import { SUBSCRIPTION_PLANS } from "@/lib/subscription/constants";
+import { isPlanAvailableForPurchase, SUBSCRIPTION_PLANS } from "@/lib/subscription/constants";
 
 const VALID_PLANS = ["basic", "pro", "enterprise"];
 
@@ -36,9 +36,9 @@ export async function POST(request: NextRequest) {
     }
 
     const plan = SUBSCRIPTION_PLANS.find((p) => p.id === planId);
-    if (!plan) {
+    if (!plan || !isPlanAvailableForPurchase(planId)) {
       return NextResponse.json(
-        { success: false, message: "Plan not found" },
+        { success: false, message: "This plan is not available yet." },
         { status: 400 }
       );
     }
@@ -72,8 +72,25 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Create order error:", error);
+    const err = error as {
+      statusCode?: number;
+      error?: { description?: string; code?: string };
+    };
+    if (err.statusCode === 401) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Razorpay authentication failed. Verify NEXT_PUBLIC_RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET (same mode: test or live).",
+        },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
-      { success: false, message: "Failed to create payment order" },
+      {
+        success: false,
+        message: err.error?.description || "Failed to create payment order",
+      },
       { status: 500 }
     );
   }

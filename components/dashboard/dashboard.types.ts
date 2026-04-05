@@ -71,6 +71,12 @@ type IncomeVsExpensesDataPoint = {
   profit: number;
 };
 
+type StudentCapacityProps = {
+  max: number;
+  current: number;
+  remaining: number;
+};
+
 type DashboardStatsProps = {
   students: StudentProps[];
   payments: PaymentProps[];
@@ -79,6 +85,9 @@ type DashboardStatsProps = {
   incomeVsExpenses?: IncomeVsExpensesDataPoint[];
   stats: DashboardStatsSummaryProps;
   pendingBillsList?: PendingBillProps[];
+  planCapabilities?: { advancedAnalytics: boolean };
+  /** Present when the plan has a student cap (Basic / Pro) */
+  studentCapacity?: StudentCapacityProps | null;
 };
 
 type StatCardProps = {
@@ -94,6 +103,8 @@ type StatCardProps = {
 type StatsGridProps = {
   stats: DashboardStatsSummaryProps;
   pendingBillsList?: PendingBillProps[];
+  /** When false, hides admin expenses / profit card (Basic plan) */
+  showExpenseMetrics?: boolean;
 };
 
 type PendingBillsModalProps = {
@@ -141,4 +152,5 @@ export type {
   RoomDistributionChartProps,
   RecentPaymentsProps,
   StudentsOverviewProps,
+  StudentCapacityProps,
 };

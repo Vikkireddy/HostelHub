@@ -103,3 +103,147 @@
 .animate-out {
   animation: exit 150ms ease-in;
 }
+
+/* Landing page — animated mesh + motion (respect reduced motion) */
+@keyframes landing-gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes landing-float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(8px, -14px) scale(1.02);
+  }
+  66% {
+    transform: translate(-10px, 8px) scale(0.98);
+  }
+}
+
+@keyframes landing-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-pulse-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes landing-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.landing-bg-mesh {
+  background: linear-gradient(
+    130deg,
+    #e0f2fe 0%,
+    #fae8ff 22%,
+    #fef9c3 42%,
+    #cffafe 62%,
+    #ddd6fe 82%,
+    #bae6fd 100%
+  );
+  background-size: 280% 280%;
+  animation: landing-gradient-shift 16s ease-in-out infinite;
+}
+
+.landing-blob {
+  animation: landing-float 12s ease-in-out infinite;
+}
+
+.landing-blob-delay-1 {
+  animation-delay: -4s;
+}
+
+.landing-blob-delay-2 {
+  animation-delay: -8s;
+}
+
+.landing-fade-up {
+  opacity: 0;
+  animation: landing-fade-up 0.75s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-bg-mesh,
+  .landing-blob,
+  .landing-blob-delay-1,
+  .landing-blob-delay-2,
+  .landing-fade-up {
+    animation: none !important;
+  }
+
+  .landing-fade-up {
+    opacity: 1;
+    transform: none;
+  }
+
+  .animate-accordion-down,
+  .animate-accordion-up,
+  .radix-accordion-content[data-state="open"],
+  .radix-accordion-content[data-state="closed"] {
+    animation: none !important;
+  }
+}
+
+/* Radix accordion height animation (used by components/ui/accordion.tsx) */
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+.animate-accordion-down {
+  animation: accordion-down 0.2s ease-out;
+}
+
+.animate-accordion-up {
+  animation: accordion-up 0.2s ease-out;
+}
+
+.radix-accordion-content[data-state="open"] {
+  animation: accordion-down 0.2s ease-out;
+}
+
+.radix-accordion-content[data-state="closed"] {
+  animation: accordion-up 0.2s ease-out;
+}

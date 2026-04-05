@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
-import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+import { requireAdvancedPlan } from "@/lib/subscription/planFeatures.server";
 
 export async function GET(request: NextRequest) {
   try {
-    const subErr = await requireSubscription(request);
+    const subErr = await requireAdvancedPlan(request);
     if (subErr) return subErr;
 
     const hostelId = getHostelIdFromRequest(request);
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const subErr = await requireSubscription(request);
+    const subErr = await requireAdvancedPlan(request);
     if (subErr) return subErr;
 
     const hostelId = getHostelIdFromRequest(request);

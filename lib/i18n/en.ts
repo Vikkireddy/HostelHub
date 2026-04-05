@@ -186,12 +186,131 @@ export const en = {
   REMOVE_LOGO: "Remove logo",
   BRANDING_REQUIRES_HOSTEL: "You must be logged in to a hostel account to update branding.",
   PAYMENT_HISTORY_LOAD_FAILED: "Failed to load payment history",
-  APPEARAMCE_SETTINGS:"Appearance",
-  SAVE_PREFERENCE:"Save Preferences",
+  APPEARAMCE_SETTINGS: "Appearance",
+  SAVE_PREFERENCE: "Save Preferences",
 
-//subscription Page
-PAYMENT_SUCCESS:"Payment successful! Subscription activated."
+  // Landing — header & nav
+  LANDING_HEADER_LOGO_ALT: "Admin HostelHub",
+  LANDING_HEADER_NAV_ARIA: "Page sections",
+  LANDING_NAV_FEATURES: "Features",
+  LANDING_NAV_HOW_IT_WORKS: "How it works",
+  LANDING_NAV_ABOUT: "About",
+  LANDING_NAV_FAQ: "FAQ",
+  LANDING_NAV_CONTACT: "Contact",
 
+  // Landing — auth CTAs
+  LANDING_AUTH_GO_TO_DASHBOARD: "Go to Dashboard",
+  LANDING_AUTH_SIGN_IN: "Sign In",
+  LANDING_AUTH_GET_STARTED: "Get Started",
+  LANDING_AUTH_START_FREE_TRIAL: "Start Free Trial",
+
+  // Landing — hero visual (mock)
+  LANDING_HERO_PREVIEW_ALT: "Admin HostelHub preview",
+  LANDING_HERO_MOCK_LIVE_OVERVIEW: "Live overview",
+  LANDING_HERO_MOCK_ROOMS: "Rooms",
+  LANDING_HERO_MOCK_STUDENTS: "Students",
+  LANDING_HERO_MOCK_OCCUPANCY: "Occupancy",
+
+  // Landing — trust strip
+  LANDING_TRUST_ARIA: "Why teams choose Admin HostelHub",
+  LANDING_TRUST_TRIAL_TITLE: "7-day full trial",
+  LANDING_TRUST_TRIAL_TEXT:
+    "Use real workflows before you commit—rooms, students, payments, and reports.",
+  LANDING_TRUST_NO_CARD_TITLE: "No card for trial",
+  LANDING_TRUST_NO_CARD_TEXT: "Start exploring without payment details. Subscribe only when you're ready.",
+  LANDING_TRUST_SECURE_TITLE: "Secure by design",
+  LANDING_TRUST_SECURE_TEXT: "HTTPS, access controls, and sensible defaults so sensitive data stays protected.",
+  LANDING_TRUST_EXPORT_TITLE: "Export-friendly",
+  LANDING_TRUST_EXPORT_TEXT: "Clear ledgers and summaries you can share with accountants or auditors.",
+
+  // Landing — how it works
+  LANDING_HOW_KICKER: "How it works",
+  LANDING_HOW_HEADING_BEFORE: "From signup to",
+  LANDING_HOW_HEADING_ACCENT: "smooth operations",
+  LANDING_HOW_SUBTITLE:
+    "A clear path for owners and managers—no consultants required. Adjust steps as your hostel grows.",
+  LANDING_HOW_STEP_01: "01",
+  LANDING_HOW_STEP_01_TITLE: "Create your workspace",
+  LANDING_HOW_STEP_01_BODY:
+    "Sign up, add your hostel profile, branding, and key contacts so everything stays organized in one place.",
+  LANDING_HOW_STEP_02: "02",
+  LANDING_HOW_STEP_02_TITLE: "Map rooms & students",
+  LANDING_HOW_STEP_02_BODY:
+    "Define floors, room types, and beds, then onboard students with profiles, documents, and fee rules.",
+  LANDING_HOW_STEP_03: "03",
+  LANDING_HOW_STEP_03_TITLE: "Run operations daily",
+  LANDING_HOW_STEP_03_BODY:
+    "Track occupancy, record payments, monitor dues, and review insights from a single admin dashboard.",
+  LANDING_HOW_CTA_TRIAL: "Start your free trial",
+
+  // Landing — FAQ
+  LANDING_FAQ_KICKER: "FAQ",
+  LANDING_FAQ_HEADING_BEFORE: "Questions,",
+  LANDING_FAQ_HEADING_ACCENT: "answered",
+  LANDING_FAQ_INTRO_BEFORE_LINK:
+    "Tap a question to expand. Still stuck? Visit our",
+  LANDING_FAQ_CONTACT_LINK: "contact page",
+  LANDING_FAQ_INTRO_AFTER_LINK: "or use the details in the footer.",
+  LANDING_FAQ_Q1: "What's included in the 7-day trial?",
+  LANDING_FAQ_A1:
+    "Full access to core Admin HostelHub features for your hostel: rooms, students, payments, and reporting. No credit card required to start.",
+  LANDING_FAQ_Q2: "Can I change or cancel my plan later?",
+  LANDING_FAQ_A2:
+    "Yes. Upgrade anytime as you grow, or adjust your subscription from the dashboard. Contact us for enterprise terms or custom billing.",
+  LANDING_FAQ_Q3: "Do you support multiple hostels or branches?",
+  LANDING_FAQ_A3:
+    "Yes. Higher tiers support multiple properties so you can switch context in one admin workspace and keep data separated per hostel.",
+  LANDING_FAQ_Q4: "How is my data kept secure?",
+  LANDING_FAQ_A4:
+    "We use industry-standard practices: encrypted connections, secure hosting, and access controls so your team only sees what they need.",
+  LANDING_FAQ_Q5: "How do student payments and fees work?",
+  LANDING_FAQ_A5:
+    "Record fees, track dues, and mark payments as paid. Integrations and gateways depend on your plan—ask us for your region.",
+
+  // Landing — about
+  LANDING_ABOUT_BADGE: "About Admin HostelHub",
+  LANDING_ABOUT_HEADING_BEFORE: "Simplifying",
+  LANDING_ABOUT_HEADING_ACCENT: "student housing",
+  LANDING_ABOUT_HEADING_AFTER: "operations",
+  LANDING_ABOUT_LEAD:
+    "Admin HostelHub is built for owners and managers who run tight ships—one place to track beds, students, dues, and month-end numbers without chasing spreadsheets.",
+  LANDING_ABOUT_STAT1_VALUE: "1",
+  LANDING_ABOUT_STAT1_LABEL: "Unified workspace",
+  LANDING_ABOUT_STAT1_SUB: "Rooms, students & payments together",
+  LANDING_ABOUT_STAT2_VALUE: "7",
+  LANDING_ABOUT_STAT2_LABEL: "Day trial",
+  LANDING_ABOUT_STAT2_SUB: "Explore the full workflow risk-free",
+  LANDING_ABOUT_STAT3_VALUE: "Multi",
+  LANDING_ABOUT_STAT3_LABEL: "Hostel ready",
+  LANDING_ABOUT_STAT3_SUB: "Switch properties without extra logins",
+  LANDING_ABOUT_STAT4_VALUE: "256-bit",
+  LANDING_ABOUT_STAT4_LABEL: "TLS in transit",
+  LANDING_ABOUT_STAT4_SUB: "Role-aware access for your team",
+  LANDING_ABOUT_DRIVES_TITLE: "What drives us",
+  LANDING_ABOUT_DRIVES_SUB:
+    "How we think about product decisions—so Admin HostelHub stays practical for real teams on the ground.",
+  LANDING_ABOUT_PILLAR_MISSION_TITLE: "Our mission",
+  LANDING_ABOUT_PILLAR_MISSION_BODY:
+    "Help hostel operators digitize day-to-day work—allocation, fees, records, and reporting—so teams spend less time on paperwork and more time on residents.",
+  LANDING_ABOUT_PILLAR_VISION_TITLE: "Our vision",
+  LANDING_ABOUT_PILLAR_VISION_BODY:
+    "Become the trusted standard for student housing admin: clear occupancy, predictable cash flow, and transparency owners and parents can rely on.",
+  LANDING_ABOUT_PILLAR_VALUES_TITLE: "Our values",
+  LANDING_ABOUT_PILLAR_VALUES_BODY:
+    "We prioritize reliability, data security, honest pricing, and listening to real hostel teams when we design every screen and report.",
+  LANDING_ABOUT_CTA_WORKSPACE: "Create your workspace",
+
+  // Landing — footer social
+  LANDING_FOLLOW_US: "Follow us",
+  LANDING_SOCIAL_EMAIL: "Email",
+  LANDING_SOCIAL_INSTAGRAM: "Instagram",
+  LANDING_SOCIAL_FACEBOOK: "Facebook",
+  LANDING_SOCIAL_X: "X",
+  LANDING_SOCIAL_YOUTUBE: "YouTube",
+  LANDING_SOCIAL_LINKEDIN: "LinkedIn",
+
+  //subscription Page
+  PAYMENT_SUCCESS: "Payment successful! Subscription activated.",
 } as const;
 
 export type EnKeys = keyof typeof en;

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Bell, LogOut, Settings } from "lucide-react";
+import { Search, Bell, LogOut, Settings, Home } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useQuery } from "@tanstack/react-query";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,9 +17,12 @@ import {
 import { useAuthStore } from "@/lib/AuthStore";
 import { useSettingsStore } from "@/lib/SettingsStore";
 import { useSearchStore } from "@/lib/SearchStore";
+import { fetchWithHostel } from "@/lib/ApiClient";
 import { useRouter } from "next/navigation";
 import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
+import { SUBSCRIPTION_PAGE_PATH } from "@/lib/subscription/constants";
+import { useSubscriptionStore } from "@/lib/SubscriptionStore";
 
 interface HeaderProps {
   title: string;
@@ -28,6 +32,7 @@ interface HeaderProps {
 export function Header({ title, subtitle }: HeaderProps) {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const hostelId = user?.hostelId ?? null;
   const name = useSettingsStore((s) => s.name);
   const email = useSettingsStore((s) => s.email);
   const query = useSearchStore((s) => s.query);
@@ -53,6 +58,37 @@ export function Header({ title, subtitle }: HeaderProps) {
 
   const handleSettingsClick = () => {
     router.push("/dashboard/settings");
+  };
+
+  const handleHomeClick = () => {
+    router.push("/");
+  };
+
+  const { status: subscriptionStatus, setStatus } = useSubscriptionStore();
+  const { data: subscriptionApiData, isLoading: subscriptionLoading } = useQuery({
+    queryKey: ["subscription-status", hostelId],
+    enabled: Boolean(hostelId) && !subscriptionStatus,
+    queryFn: () =>
+      fetchWithHostel("/api/subscription/status", hostelId).then((r) => r.json()),
+  });
+
+  useEffect(() => {
+    if (!subscriptionApiData?.success) return;
+    setStatus(subscriptionApiData);
+  }, [subscriptionApiData, setStatus]);
+
+  const currentSubscription = subscriptionStatus ?? (subscriptionApiData?.success ? subscriptionApiData : null);
+
+  const trialEndsAt = currentSubscription?.trialEndsAt
+    ? new Date(currentSubscription.trialEndsAt)
+    : null;
+  const daysLeft =
+    trialEndsAt != null
+      ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+      : null;
+
+  const handleManageSubscription = () => {
+    router.push(SUBSCRIPTION_PAGE_PATH);
   };
 
   return (
@@ -90,7 +126,7 @@ export function Header({ title, subtitle }: HeaderProps) {
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="p-2">
             <DropdownMenuLabel>
               <Box className="flex flex-col space-y-1">
                 <Typography className="text-sm font-medium">{displayName}</Typography>
@@ -98,10 +134,65 @@ export function Header({ title, subtitle }: HeaderProps) {
               </Box>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleHomeClick} className="gap-2">
+              <Home className="h-4 w-4" />
+              Website home
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleSettingsClick} className="gap-2">
               <Settings className="h-4 w-4" />
               Settings
             </DropdownMenuItem>
+            <Box className="border-b border-t border-border p-4">
+              <Typography variant="caption" className="text-muted-foreground">
+                Plan
+              </Typography>
+
+              {subscriptionLoading || !currentSubscription ? (
+                <Typography className="mt-2 text-sm text-muted-foreground">Loading...</Typography>
+              ) : currentSubscription.isTrial ? (
+                <>
+                  <Box className="mt-2 flex items-center justify-between gap-3">
+                    <Typography className="text-sm font-semibold">Trial</Typography>
+                    {daysLeft != null && (
+                      <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                        {daysLeft} days left
+                      </span>
+                    )}
+                  </Box>
+
+                  <Typography className="mt-2 text-sm text-muted-foreground">
+                    Your trial expires in {daysLeft ?? 0} days. Upgrade now to continue.
+                  </Typography>
+
+                  <Button size="sm" className="mt-3 w-full" onClick={handleManageSubscription}>
+                    Manage Subscription
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Box className="mt-2 flex items-center justify-between gap-3">
+                    <Typography className="text-sm font-semibold">
+                      {currentSubscription.planName ?? "Plan"}
+                    </Typography>
+                    <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium text-foreground">
+                      {currentSubscription.hasActiveSubscription ? "Active" : "Required"}
+                    </span>
+                  </Box>
+
+                  <Typography className="mt-2 text-sm text-muted-foreground">
+                    {currentSubscription.bannerType === "subscription_required" ||
+                    currentSubscription.bannerType === "subscription_expired"
+                      ? "Choose a plan to continue."
+                      : "Subscription is active."}
+                  </Typography>
+
+                  <Button size="sm" className="mt-3 w-full" onClick={handleManageSubscription}>
+                    Manage Subscription
+                  </Button>
+                </>
+              )}
+            </Box>
+
             <DropdownMenuItem onClick={handleLogout} className="gap-2">
               <LogOut className="h-4 w-4" />
               Log out

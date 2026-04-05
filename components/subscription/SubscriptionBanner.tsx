@@ -4,7 +4,7 @@ import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { Box } from "@/components/ui/box";
 import { Typography } from "@/components/ui/typography";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { SUBSCRIPTION_PAGE_PATH } from "@/lib/subscription/constants";
 import type { SubscriptionBannerType } from "@/lib/subscription/types";
 
@@ -20,12 +20,12 @@ const BANNER_CONFIG: Record<
   { message: string; cta: string; variant: "error" | "warning" }
 > = {
   subscription_required: {
-    message: "Please choose a subscription plan to continue using HostelHub.",
+    message: "Please choose a subscription plan to continue using Admin HostelHub.",
     cta: "Choose Plan",
     variant: "error",
   },
   subscription_expired: {
-    message: "Your subscription expired. Please renew to continue using HostelHub.",
+    message: "Your subscription expired. Please renew to continue using Admin HostelHub.",
     cta: "Renew Now",
     variant: "error",
   },
@@ -35,7 +35,7 @@ const BANNER_CONFIG: Record<
     variant: "warning",
   },
   trial_expired: {
-    message: "Your trial has ended. Please choose a plan to continue using HostelHub.",
+    message: "Your trial has ended. Please choose a plan to continue using Admin HostelHub.",
     cta: "Choose Plan",
     variant: "error",
   },
@@ -78,7 +78,7 @@ export function SubscriptionBanner({
 
   let message = config.message;
   if (bannerType === "subscription_expired" && expiresAt) {
-    message = `Your subscription expired on ${formatDate(expiresAt)}. Please renew to continue using HostelHub.`;
+    message = `Your subscription expired on ${formatDate(expiresAt)}. Please renew to continue using Admin HostelHub.`;
   }
 
   return (
@@ -100,9 +100,9 @@ export function SubscriptionBanner({
       </Box>
       <Box className="flex shrink-0 items-center gap-2">
         {bannerType !== "admin_renewal_required" && (
-          <Button asChild size="sm">
-            <Link href={SUBSCRIPTION_PAGE_PATH}>{config.cta}</Link>
-          </Button>
+          <Link href={SUBSCRIPTION_PAGE_PATH} className={buttonVariants({ size: "sm" })}>
+            {config.cta}
+          </Link>
         )}
         {onDismiss && (
           <button

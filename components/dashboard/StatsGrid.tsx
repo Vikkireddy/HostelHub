@@ -11,7 +11,11 @@ import { STAT_CARD_CONFIG } from "./dashboard.constants";
 import type { StatsGridProps } from "./dashboard.types";
 import { t, type EnKeys } from "@/lib/i18n";
 
-export function StatsGrid({ stats, pendingBillsList = [] }: StatsGridProps) {
+export function StatsGrid({
+  stats,
+  pendingBillsList = [],
+  showExpenseMetrics = true,
+}: StatsGridProps) {
   const [pendingBillsModalOpen, setPendingBillsModalOpen] = useState(false);
 
   const renderSubtitle = (config: (typeof STAT_CARD_CONFIG)[number]) => {
@@ -109,7 +113,9 @@ export function StatsGrid({ stats, pendingBillsList = [] }: StatsGridProps) {
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {STAT_CARD_CONFIG.map((config) => (
+        {STAT_CARD_CONFIG.filter(
+          (config) => showExpenseMetrics || config.id !== "adminExpenses"
+        ).map((config) => (
           <StatCard
             key={config.id}
             title={t(config.titleKey as EnKeys)}

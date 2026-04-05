@@ -2,6 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import bcrypt from "bcryptjs";
 
+/** Match signup storage: 10 digits; accept +91 / leading 0 / spaces from the login field. */
+function normalizeLoginIdentifier(raw: string): { email: string | null; mobile: string | null } {
+  const trimmed = raw.trim();
+  if (trimmed.includes("@")) {
+    return { email: trimmed.toLowerCase(), mobile: null };
+  }
+  const digits = trimmed.replace(/\D/g, "");
+  let mobile: string | null = null;
+  if (digits.length === 12 && digits.startsWith("91")) {
+    mobile = digits.slice(2);
+  } else if (digits.length === 11 && digits.startsWith("0")) {
+    mobile = digits.slice(1);
+  } else if (digits.length === 10) {
+    mobile = digits;
+  } else if (digits.length > 0) {
+    mobile = digits;
+  }
+  return { email: null, mobile };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -14,14 +34,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const identifier = String(emailOrPhone).trim();
-    const isEmail = identifier.includes("@");
+    const { email, mobile } = normalizeLoginIdentifier(String(emailOrPhone));
+    const isEmail = email !== null;
+
+    if (!isEmail && (!mobile || mobile.length !== 10)) {
+      return NextResponse.json(
+        { success: false, message: "Enter a valid email or 10-digit mobile number" },
+        { status: 400 }
+      );
+    }
 
     const [rows] = await pool.execute(
       isEmail
         ? "SELECT id, email, name, password_hash, hostel_id FROM admins WHERE LOWER(email) = ?"
         : "SELECT id, email, name, password_hash, hostel_id FROM admins WHERE mobile = ?",
-      [isEmail ? identifier.toLowerCase() : identifier]
+      [isEmail ? email! : mobile!]
     );
 
     const admins = rows as {

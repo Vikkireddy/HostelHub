@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
+import { isPlanAvailableForPurchase } from "@/lib/subscription/constants";
 const VALID_PLANS = ["basic", "pro", "enterprise"];
 
 export async function POST(request: NextRequest) {
@@ -16,7 +17,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { planId } = body;
 
-    if (!planId || !VALID_PLANS.includes(planId)) {
+    if (
+      !planId ||
+      !VALID_PLANS.includes(planId) ||
+      !isPlanAvailableForPurchase(planId)
+    ) {
       return NextResponse.json(
         { success: false, message: "Invalid plan. Choose basic, pro, or enterprise." },
         { status: 400 }
