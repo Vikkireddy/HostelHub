@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
+export { dynamic } from "@/lib/forceDynamicRoute";
 
 const DEFAULT_TRIAL_PLAN_ID = "basic";
 

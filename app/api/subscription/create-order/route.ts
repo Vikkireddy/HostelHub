@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { isPlanAvailableForPurchase, SUBSCRIPTION_PLANS } from "@/lib/subscription/constants";
+export { dynamic } from "@/lib/forceDynamicRoute";
 
 const VALID_PLANS = ["basic", "pro", "enterprise"];
 

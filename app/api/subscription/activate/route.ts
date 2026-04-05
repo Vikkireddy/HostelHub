@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { isPlanAvailableForPurchase } from "@/lib/subscription/constants";
+export { dynamic } from "@/lib/forceDynamicRoute";
+
 const VALID_PLANS = ["basic", "pro", "enterprise"];
 
 export async function POST(request: NextRequest) {

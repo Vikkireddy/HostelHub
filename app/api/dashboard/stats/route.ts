@@ -6,6 +6,7 @@ import { requireSubscription } from "@/lib/subscription/RequireSubscription";
 import { validateHostelSubscription } from "@/lib/subscription/validate";
 import { planHasAdvancedFeatures } from "@/lib/subscription/planFeatures";
 import { SUBSCRIPTION_PLANS } from "@/lib/subscription/constants";
+export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function GET(request: NextRequest) {
   try {

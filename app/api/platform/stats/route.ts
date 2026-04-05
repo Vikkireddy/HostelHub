@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getPlatformStatsSecret } from "@/lib/platform/constants";
 import { authorizePlatformRequest } from "@/lib/platformAuth";
+export { dynamic } from "@/lib/forceDynamicRoute";
 
 /**
  * Platform-owner metrics. Authorize with either:

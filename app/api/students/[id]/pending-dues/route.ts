@@ -3,6 +3,7 @@ import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { getPendingDuesSql } from "@/lib/PaymentUtils";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function GET(
   request: NextRequest,
