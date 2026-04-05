@@ -36,9 +36,15 @@ const BaseButton = React.forwardRef<HTMLButtonElement, BaseButtonProps>(
         disabled={disabled}
         {...props}
       >
-        {startAdornment}
-        {children}
-        {endAdornment}
+        {asChild ? (
+          children
+        ) : (
+          <>
+            {startAdornment}
+            {children}
+            {endAdornment}
+          </>
+        )}
       </Comp>
     );
   }

@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (!_hasHydrated) return;
     if (!isAuthenticated) {
-      router.push("/");
+      router.push("/login");
     }
   }, [_hasHydrated, isAuthenticated, router]);
 

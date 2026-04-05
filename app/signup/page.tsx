@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Box, Typography } from "@mui/material";
-import { Apartment as ApartmentIcon, Check as CheckIcon } from "@mui/icons-material";
+import { Check as CheckIcon } from "@mui/icons-material";
 import { t } from "@/lib/i18n";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,12 +41,14 @@ const LEFT_FEATURES = [
   },
 ] as const;
 
-export default function SignupPage() {
+function SignupPageContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextAfterSignup = searchParams.get("next");
 
   const {
     control,
@@ -79,7 +82,15 @@ export default function SignupPage() {
       const result = await res.json();
 
       if (result.success) {
-        router.push("/?signedup=1");
+        if (
+          nextAfterSignup &&
+          nextAfterSignup.startsWith("/") &&
+          !nextAfterSignup.startsWith("//")
+        ) {
+          router.push(`/login?signedup=1&next=${encodeURIComponent(nextAfterSignup)}`);
+        } else {
+          router.push("/login?signedup=1");
+        }
       } else {
         setSubmitError(result.message || t("SIGNUP_FAILED"));
       }
@@ -126,24 +137,35 @@ export default function SignupPage() {
         >
           <Box
             sx={{
-              width: "min(356px, 100%)",
+              width: "min(400px, 100%)",
               mx: "auto",
             }}
           >
             <Box
               sx={{
-                height: 44,
-                width: 44,
-                borderRadius: 1.5,
-                border: "1px solid rgba(148, 163, 184, 0.4)",
-                display: "grid",
-                placeItems: "center",
-                color: "#e2e8f0",
-                backgroundColor: "rgba(30, 41, 59, 0.5)",
                 mb: 3.25,
+                width: "50%",
+                borderRadius: 2,
+                px: 2.25,
+                py: 2,
+                bgcolor: "rgba(248, 250, 252, 0.96)",
+                border: "1px solid rgba(148, 163, 184, 0.45)",
+                boxShadow: "0 10px 28px rgba(2, 6, 23, 0.18)",
               }}
             >
-              <ApartmentIcon sx={{ fontSize: 22 }} />
+              <Link
+                href="/"
+                className="block w-full leading-none transition-opacity hover:opacity-90"
+              >
+                <Image
+                  src="/img/AhhLogo.svg"
+                  alt="Admin Hostel Hub"
+                  width={1536}
+                  height={1024}
+                  className="h-[7rem] w-auto max-h-none max-w-full object-contain object-left sm:h-[8.5rem]"
+                  priority
+                />
+              </Link>
             </Box>
             <Box>
               <Typography
@@ -276,7 +298,16 @@ export default function SignupPage() {
 
               <Typography variant="body2" color="rgba(203, 213, 225, 0.85)" sx={{ mt: 2.5, textAlign: "center" }}>
                 {t("SIGNUP_ALREADY_HAVE_ACCOUNT")}{" "}
-                <Link href="/" style={{ color: "#60a5fa", fontWeight: 600 }}>
+                <Link
+                  href={
+                    nextAfterSignup &&
+                    nextAfterSignup.startsWith("/") &&
+                    !nextAfterSignup.startsWith("//")
+                      ? `/login?next=${encodeURIComponent(nextAfterSignup)}`
+                      : "/login"
+                  }
+                  style={{ color: "#60a5fa", fontWeight: 600 }}
+                >
                   {t("SIGNUP_SIGN_IN")}
                 </Link>
               </Typography>
@@ -285,5 +316,28 @@ export default function SignupPage() {
         </Box>
       </Box>
     </Box>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#0f172a",
+            color: "#e2e8f0",
+          }}
+        >
+          Loading…
+        </Box>
+      }
+    >
+      <SignupPageContent />
+    </Suspense>
   );
 }

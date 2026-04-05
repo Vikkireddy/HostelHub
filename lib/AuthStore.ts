@@ -7,7 +7,10 @@ interface AuthState {
   user: { email: string; name: string; hostelId: number | null } | null;
   isAuthenticated: boolean;
   _hasHydrated: boolean;
-  login: (emailOrPhone: string, password: string) => Promise<boolean>;
+  login: (
+    emailOrPhone: string,
+    password: string
+  ) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   updateUser: (updates: { name?: string; email?: string }) => void;
   setHasHydrated: (state: boolean) => void;
@@ -40,11 +43,17 @@ export const useAuthStore = create<AuthState>()(
             });
             useSettingsStore.getState().setProfile(data.user.name, data.user.email);
             useSubscriptionStore.getState().reset();
-            return true;
+            return { success: true };
           }
-          return false;
+          return {
+            success: false,
+            message:
+              typeof data?.message === "string"
+                ? data.message
+                : "Invalid email/phone or password. Please try again.",
+          };
         } catch {
-          return false;
+          return { success: false, message: "Unable to connect to server. Please try again." };
         }
       },
       logout: () => {

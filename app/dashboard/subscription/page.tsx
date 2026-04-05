@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
@@ -11,50 +10,32 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useAuthStore } from "@/lib/AuthStore";
 import { fetchWithHostel } from "@/lib/ApiClient";
-import { SUBSCRIPTION_PLANS } from "@/lib/subscription/constants";
+import {
+  ENTERPRISE_SUBSCRIPTION_ENABLED,
+  SUBSCRIPTION_PLANS,
+} from "@/lib/subscription/constants";
+import { startRazorpayCheckout } from "@/lib/subscription/startRazorpayCheckout";
 import { useSubscriptionStore } from "@/lib/SubscriptionStore";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { t } from "@/lib/i18n";
-
-declare global {
-  interface Window {
-    Razorpay?: new (options: RazorpayOptions) => RazorpayInstance;
-  }
-}
-
-interface RazorpayOptions {
-  key: string;
-  amount: number;
-  currency: string;
-  order_id: string;
-  name: string;
-  description?: string;
-  handler: (response: RazorpayPaymentResponse) => void;
-  prefill?: { name?: string; email?: string; contact?: string };
-  theme?: { color?: string };
-}
-
-interface RazorpayPaymentResponse {
-  razorpay_payment_id: string;
-  razorpay_order_id: string;
-  razorpay_signature: string;
-}
-
-interface RazorpayInstance {
-  open: () => void;
-  on: (event: string, handler: () => void) => void;
-}
 
 export default function SubscriptionPage() {
   const router = useRouter();
   const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
   const { setStatus } = useSubscriptionStore();
   const [activating, setActivating] = useState<string | null>(null);
+  const [startingTrial, setStartingTrial] = useState(false);
+  /** Visual highlight: Pro by default; hovered plan while pointer is on that card */
+  const [hoveredPlanId, setHoveredPlanId] = useState<string | null>(null);
+  const highlightedPlanId = hoveredPlanId ?? "pro";
   const [status, setStatusLocal] = useState<{
     hasActiveSubscription: boolean;
     expiresAt: string | null;
     bannerType?: string | null;
+    trialEndsAt?: string | null;
+    isTrial?: boolean;
+    planName?: string | null;
   } | null>(null);
 
   const { data: subscriptionStatus } = useQuery({
@@ -72,96 +53,102 @@ export default function SubscriptionPage() {
         hasActiveSubscription: subscriptionStatus.hasActiveSubscription,
         expiresAt: subscriptionStatus.expiresAt,
         bannerType: subscriptionStatus.bannerType,
+        trialEndsAt: subscriptionStatus.trialEndsAt,
+        isTrial: subscriptionStatus.isTrial,
+        planName: subscriptionStatus.planName,
       });
       return;
     }
-    setStatusLocal({ hasActiveSubscription: false, expiresAt: null });
+    setStatusLocal({
+      hasActiveSubscription: false,
+      expiresAt: null,
+      trialEndsAt: null,
+      isTrial: false,
+      planName: null,
+      bannerType: null,
+    });
   }, [subscriptionStatus, setStatus]);
+
+  const startFreeTrial = async () => {
+    if (!hostelId) return;
+    try {
+      setStartingTrial(true);
+      const res = await fetchWithHostel("/api/subscription/start-trial", hostelId, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!data.success) {
+        toast.error(data.message || "Failed to start trial");
+        return;
+      }
+
+      const trialEndsAtIso = data.trialEndsAt as string | undefined;
+      setStatus({
+        hasActiveSubscription: true,
+        status: "trial",
+        planId: data.planId ?? "basic",
+        planName: data.planName ?? "Basic",
+        expiresAt: null,
+        gracePeriodEndsAt: null,
+        trialEndsAt: trialEndsAtIso ?? null,
+        isInGracePeriod: false,
+        isTrial: true,
+        isPaymentFailed: false,
+        isOwner: true,
+        bannerType: null,
+      });
+
+      router.push("/dashboard");
+    } catch {
+      toast.error("Failed to start trial. Please try again.");
+    } finally {
+      setStartingTrial(false);
+    }
+  };
 
   const openRazorpayCheckout = useCallback(
     async (planId: string) => {
-      if (!hostelId || !window.Razorpay) return;
+      if (!hostelId) return;
       setActivating(planId);
-      try {
-        const orderRes = await fetchWithHostel("/api/subscription/create-order", hostelId, {
-          method: "POST",
-          body: JSON.stringify({ planId }),
-        });
-        const orderData = await orderRes.json();
-        if (!orderData.success) {
-          toast.error(orderData.message || "Failed to create order");
+      const user = useAuthStore.getState().user;
+      await startRazorpayCheckout(planId, hostelId, {
+        prefill: {
+          name: user?.name ?? undefined,
+          email: user?.email ?? undefined,
+        },
+        onDismiss: () => setActivating(null),
+        onOrderFailed: (message) => {
+          toast.error(message);
           setActivating(null);
-          return;
-        }
-
-        const { orderId, amount, currency, keyId, planName } = orderData;
-        const user = useAuthStore.getState().user;
-
-        const options: RazorpayOptions & { modal?: { ondismiss?: () => void } } = {
-          key: keyId,
-          amount,
-          currency,
-          order_id: orderId,
-          name: "HostelHub",
-          description: `${planName} Plan - Monthly Subscription`,
-          prefill: {
-            name: user?.name ?? undefined,
-            email: user?.email ?? undefined,
-          },
-          theme: { color: "#18222e" },
-          modal: {
-            ondismiss: () => setActivating(null),
-          },
-          handler: async (response: RazorpayPaymentResponse) => {
-            try {
-              const verifyRes = await fetchWithHostel("/api/subscription/verify-payment", hostelId, {
-                method: "POST",
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  planId,
-                }),
-              });
-              const verifyData = await verifyRes.json();
-              if (verifyData.success) {
-                setStatus({
-                  hasActiveSubscription: true,
-                  status: "active",
-                  planId,
-                  planName: SUBSCRIPTION_PLANS.find((p) => p.id === planId)?.name ?? null,
-                  expiresAt: verifyData.expiresAt,
-                  gracePeriodEndsAt: null,
-                  trialEndsAt: null,
-                  isInGracePeriod: false,
-                  isTrial: false,
-                  isPaymentFailed: false,
-                  isOwner: true,
-                  bannerType: null,
-                });
-                toast.success(t("PAYMENT_SUCCESS"));
-                router.push("/dashboard");
-              } else {
-                toast.error(verifyData.message || "Payment verification failed");
-              }
-            } catch {
-              toast.error("Failed to verify payment. Please contact support.");
-            } finally {
-              setActivating(null);
-            }
-          },
-        };
-
-        const rzp = new window.Razorpay(options);
-        rzp.on("payment.failed", () => {
+        },
+        onVerifyFailed: (message) => {
+          toast.error(message);
+          setActivating(null);
+        },
+        onPaymentFailed: () => {
           toast.error("Payment failed. Please try again.");
           setActivating(null);
-        });
-        rzp.open();
-      } catch {
-        toast.error("Failed to open payment. Please try again.");
-        setActivating(null);
-      }
+        },
+        onPaid: async ({ expiresAt }) => {
+          setStatus({
+            hasActiveSubscription: true,
+            status: "active",
+            planId,
+            planName: SUBSCRIPTION_PLANS.find((p) => p.id === planId)?.name ?? null,
+            expiresAt,
+            gracePeriodEndsAt: null,
+            trialEndsAt: null,
+            isInGracePeriod: false,
+            isTrial: false,
+            isPaymentFailed: false,
+            isOwner: true,
+            bannerType: null,
+          });
+          toast.success(t("PAYMENT_SUCCESS"));
+          router.push("/dashboard");
+          setActivating(null);
+        },
+      });
     },
     [hostelId, router, setStatus]
   );
@@ -190,13 +177,6 @@ export default function SubscriptionPage() {
 
   return (
     <>
-      <Script
-        src="https://checkout.razorpay.com/v1/checkout.js"
-        strategy="lazyOnload"
-        onLoad={() => {
-          // Razorpay script loaded - window.Razorpay is now available
-        }}
-      />
       <Box className="space-y-8">
       <Box>
         <Typography variant="large" as="div" className="text-2xl font-bold text-slate-900">
@@ -209,22 +189,37 @@ export default function SubscriptionPage() {
 
       {showExpiredBanner && (
         <Box className="flex items-center justify-between gap-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-          <Typography className="text-sm text-red-800">
-            {status.bannerType === "subscription_expired" && status.expiresAt
-              ? `Your subscription expired on ${new Date(status.expiresAt).toLocaleDateString("en-IN", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}. Please renew to continue using HostelHub.`
-              : status.bannerType === "payment_failed"
-                ? "Your subscription payment failed. Please retry payment to continue."
-                : status.bannerType === "trial_expired"
-                  ? "Your trial has ended. Please choose a plan to continue using HostelHub."
-                  : "Please choose a subscription plan to continue using HostelHub."}
-          </Typography>
-          <Button size="sm" onClick={() => document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" })}>
-            Renew Now
-          </Button>
+          <Box className="min-w-0">
+            <Typography className="text-sm text-red-800">
+              {status.bannerType === "subscription_required"
+                ? "Start your 7-day free trial to unlock the full dashboard experience."
+                : status.bannerType === "subscription_expired" && status.expiresAt
+                  ? `Your subscription expired on ${new Date(status.expiresAt).toLocaleDateString("en-IN", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}. Please renew to continue using Admin HostelHub.`
+                  : status.bannerType === "payment_failed"
+                    ? "Your subscription payment failed. Please retry payment to continue."
+                    : status.bannerType === "trial_expired"
+                      ? "Your trial has ended. Please choose a plan to continue using Admin HostelHub."
+                      : "Please choose a subscription plan to continue using Admin HostelHub."}
+            </Typography>
+          </Box>
+          {status.bannerType === "subscription_required" ? (
+            <Button size="sm" onClick={startFreeTrial} disabled={startingTrial}>
+              {startingTrial ? "Starting..." : "Start 7-day Trial"}
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              onClick={() =>
+                document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" })
+              }
+            >
+              Renew Now
+            </Button>
+          )}
         </Box>
       )}
 
@@ -237,13 +232,22 @@ export default function SubscriptionPage() {
       )}
 
       <Box id="plans" className="grid gap-6 md:grid-cols-3">
-        {SUBSCRIPTION_PLANS.map((plan) => (
+        {SUBSCRIPTION_PLANS.map((plan) => {
+          const enterpriseDisabled =
+            plan.id === "enterprise" && !ENTERPRISE_SUBSCRIPTION_ENABLED;
+          return (
           <Card
             key={plan.id}
             className={cn(
-              "relative flex flex-col",
-              plan.id === "pro" && "ring-2 ring-primary shadow-lg"
+              "relative flex flex-col transition-shadow",
+              plan.id === highlightedPlanId && "ring-2 ring-primary shadow-lg",
+              enterpriseDisabled && "opacity-60"
             )}
+            onMouseEnter={() => {
+              if (enterpriseDisabled) return;
+              setHoveredPlanId(plan.id);
+            }}
+            onMouseLeave={() => setHoveredPlanId(null)}
           >
             {plan.id === "pro" && (
               <Box className="absolute -top-3 right-4 rounded bg-primary px-2 py-0.5">
@@ -275,9 +279,10 @@ export default function SubscriptionPage() {
                 <Button
                   variant="outline"
                   className="w-full"
+                  disabled={enterpriseDisabled}
                   onClick={handleContactSales}
                 >
-                  Contact Sales
+                  {enterpriseDisabled ? "Coming soon" : "Contact Sales"}
                 </Button>
               ) : (
                 <Button
@@ -291,7 +296,8 @@ export default function SubscriptionPage() {
               )}
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </Box>
     </Box>
     </>

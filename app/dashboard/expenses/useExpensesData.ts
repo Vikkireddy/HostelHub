@@ -7,7 +7,13 @@ import { fetchWithHostel } from "@/lib/ApiClient";
 import { initialExpenseForm } from "./expenses.constants";
 import type { Expense, ExpenseFormValues } from "./expenses.types";
 
-export function useExpensesData() {
+type UseExpensesDataOptions = {
+  /** When false, skips listing expenses (e.g. Basic plan) */
+  queryEnabled?: boolean;
+};
+
+export function useExpensesData(options?: UseExpensesDataOptions) {
+  const queryEnabled = options?.queryEnabled !== false;
   const queryClient = useQueryClient();
   const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
   const now = new Date();
@@ -26,7 +32,7 @@ export function useExpensesData() {
         `/api/expenses?month=${filterMonth}&year=${filterYear}`,
         hostelId
       ).then((r) => r.json()),
-    enabled: Boolean(hostelId),
+    enabled: Boolean(hostelId) && queryEnabled,
   });
 
   const createExpense = useMutation({

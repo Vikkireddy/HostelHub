@@ -4,8 +4,11 @@ import { Toaster } from "sonner";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "HostelHub - Hostel Management System",
-  description: "Complete hostel management solution",
+  title: "Admin HostelHub — Hostel Management System",
+  description: "Complete hostel management solution by Admin HostelHub",
+  icons: {
+    icon: [{ url: "/img/AhhLogo.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({

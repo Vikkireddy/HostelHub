@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/lib/AuthStore";
 import { fetchWithHostel } from "@/lib/ApiClient";
@@ -12,6 +12,7 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
   const { status, setStatus } = useSubscriptionStore();
+  const [hasChecked, setHasChecked] = useState(false);
 
   const checkSubscription = useCallback(async () => {
     if (!hostelId) return;
@@ -20,9 +21,13 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
       const data = await res.json();
       if (data.success) {
         setStatus(data);
+      } else {
+        setStatus(null);
       }
     } catch {
       setStatus(null);
+    } finally {
+      setHasChecked(true);
     }
   }, [hostelId, setStatus]);
 
@@ -32,11 +37,13 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   }, [hostelId, checkSubscription]);
 
   useEffect(() => {
-    if (hostelId || pathname === SUBSCRIPTION_PAGE_PATH) return;
-    if (!status && shouldRedirectToSubscription(status)) {
+    if (!hostelId) return;
+    if (pathname === SUBSCRIPTION_PAGE_PATH) return;
+    if (!hasChecked) return;
+    if (shouldRedirectToSubscription(status)) {
       router.replace(SUBSCRIPTION_PAGE_PATH);
     }
-  }, [hostelId, pathname, status, router]);
+  }, [hostelId, pathname, status, router, hasChecked]);
 
   return <>{children}</>;
 }
