@@ -3,6 +3,8 @@ import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { updateOverduePayments, ensureBillsForStudents } from "@/lib/PaymentUtils";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+import { ensurePlannedVacateDateColumn } from "@/lib/ensurePlannedVacateDateColumn";
+import { formatSqlDateOnlyForJson } from "@/lib/dateOnly";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function DELETE(
@@ -87,6 +89,8 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid student ID" }, { status: 400 });
     }
 
+    await ensurePlannedVacateDateColumn();
+
     const body = await request.json();
     const {
       name,
@@ -95,10 +99,17 @@ export async function PATCH(
       room_id,
       course,
       join_date,
+      planned_vacate_date,
       id_proof_type,
       id_proof_number,
       address,
     } = body;
+    const plannedVacateYmd =
+      planned_vacate_date === null ||
+      planned_vacate_date === undefined ||
+      String(planned_vacate_date).trim() === ""
+        ? null
+        : String(planned_vacate_date).trim().slice(0, 10);
 
     const required = [
       ["name", name],
@@ -165,7 +176,7 @@ export async function PATCH(
     await pool.execute(
       `UPDATE students SET 
         name = ?, email = ?, phone = ?, room_id = ?, course = ?,
-        join_date = ?, id_proof_type = ?, id_proof_number = ?, address = ?
+        join_date = ?, planned_vacate_date = ?, id_proof_type = ?, id_proof_number = ?, address = ?
        WHERE id = ?`,
       [
         name,
@@ -174,6 +185,7 @@ export async function PATCH(
         newRoomId,
         course || null,
         join_date || null,
+        plannedVacateYmd,
         id_proof_type || null,
         id_proof_number || null,
         address || null,
@@ -210,7 +222,11 @@ export async function PATCH(
     );
     const updated = (updatedRows as Array<Record<string, unknown>>)[0];
 
-    return NextResponse.json(updated);
+    return NextResponse.json({
+      ...updated,
+      join_date: formatSqlDateOnlyForJson(updated.join_date),
+      planned_vacate_date: formatSqlDateOnlyForJson(updated.planned_vacate_date),
+    });
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json(

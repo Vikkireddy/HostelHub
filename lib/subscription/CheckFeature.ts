@@ -45,3 +45,40 @@ export async function checkStudentLimit(
     return null;
   }
 }
+
+/** Remaining present-student slots for the plan; `remaining: null` means no cap / unknown. */
+export async function getRemainingStudentSlots(hostelId: number): Promise<{
+  remaining: number | null;
+  max: number | null;
+  current: number;
+}> {
+  try {
+    const [subRows] = await pool.execute(
+      `SELECT hs.plan_id, sp.max_students
+       FROM hostel_subscriptions hs
+       LEFT JOIN subscription_plans sp ON sp.id = hs.plan_id
+       WHERE hs.hostel_id = ? AND hs.status IN ('active', 'trial', 'grace_period')`,
+      [hostelId]
+    );
+    const subs = subRows as { plan_id: string; max_students: number | null }[];
+    const [countRows] = await pool.execute(
+      "SELECT COUNT(*) as cnt FROM students WHERE hostel_id = ? AND status = 'present'",
+      [hostelId]
+    );
+    const current = Number((countRows as { cnt: number }[])[0]?.cnt ?? 0);
+    if (subs.length === 0) {
+      return { remaining: null, max: null, current };
+    }
+    const maxStudents = subs[0]?.max_students;
+    if (maxStudents == null) {
+      return { remaining: null, max: null, current };
+    }
+    return {
+      remaining: Math.max(0, maxStudents - current),
+      max: maxStudents,
+      current,
+    };
+  } catch {
+    return { remaining: null, max: null, current: 0 };
+  }
+}

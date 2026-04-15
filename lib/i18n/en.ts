@@ -53,6 +53,15 @@ export const en = {
   NO_ROOM_DISTRIBUTION_FOUND: "No room distribution found",
   ROOM_DISTRIBUTION_EMPTY_MESSAGE: "Add rooms from the Rooms page to see distribution",
 
+  // Planned vacates (dashboard)
+  PLANNED_VACATES_TITLE: "Upcoming vacates",
+  PLANNED_VACATES_VACATE_ON: "Vacating on",
+  PLANNED_VACATES_EMPTY_TITLE: "No upcoming vacates",
+  PLANNED_VACATES_EMPTY_MESSAGE:
+    "When a student plans to leave, set their planned vacate date on the Students page. It will show here for planning room availability.",
+  PLANNED_VACATE_DATE_LABEL: "Planned vacate date",
+  PLANNED_VACATE_DATE_OPTIONAL: "Optional — visible on the dashboard for room planning",
+
   // Recent payments
   RECENT_PAYMENTS: "Recent Payments",
   MARK_AS_PAID: "Mark as Paid",
@@ -97,6 +106,28 @@ export const en = {
   FAILED_TO_LOAD_STUDENTS: "Failed to load students",
   STUDENT_MANAGEMENT: "Student Management",
   ADD_STUDENT: "Add Student",
+  STUDENT_IMPORT_CTA: "Import CSV",
+  STUDENT_IMPORT_TITLE: "Import students from CSV",
+  STUDENT_IMPORT_DESCRIPTION:
+    "Upload a CSV with one student per row. Room numbers must match your Rooms page. Use the sample file for column names and formatting.",
+  STUDENT_IMPORT_DOWNLOAD_TEMPLATE: "Download sample CSV",
+  STUDENT_IMPORT_CHOOSE_FILE: "Choose CSV file",
+  STUDENT_IMPORT_SELECTED_FILE: "Selected file",
+  STUDENT_IMPORT_READY: "{count} row(s) ready to import",
+  STUDENT_IMPORT_HINT:
+    "id_proof_type must be one of: Aadhaar, PAN, Passport, Driving License, Voter ID, College ID, Other. Use YYYY-MM-DD for dates. planned_vacate_date is optional.",
+  STUDENT_IMPORT_RUN: "Import",
+  STUDENT_IMPORT_IMPORTING: "Importing…",
+  STUDENT_IMPORT_CSV_ONLY: "Please choose a .csv file.",
+  STUDENT_IMPORT_FAILED: "Import failed",
+  STUDENT_IMPORT_SUCCESS: "Imported {count} student(s).",
+  STUDENT_IMPORT_SOME_FAILED: "{failed} row(s) could not be imported.",
+  STUDENT_IMPORT_NOTHING: "No rows were imported.",
+  STUDENT_IMPORT_ROW: "Row",
+  STUDENT_EXPORT_CURRENT: "Download current students",
+  STUDENT_EXPORT_DOWNLOADING: "Downloading…",
+  STUDENT_EXPORT_SUCCESS: "Student CSV downloaded.",
+  STUDENT_EXPORT_FAILED: "Failed to download student CSV",
   OVERDUE: "Overdue",
   PENDING: "Pending",
   TOTAL_DUE: "Total Due",

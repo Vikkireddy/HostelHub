@@ -14,6 +14,8 @@ import {
   normalizePhone,
 } from "./students.constants";
 import type { StudentFormFieldsProps } from "./students.types";
+import { Label } from "@/components/ui/label";
+import { t } from "@/lib/i18n";
 
 const textareaClassName =
   "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
@@ -178,6 +180,22 @@ export function StudentFormFields({
         label={<RequiredLabel htmlFor={id("join_date")}>Join Date</RequiredLabel>}
         required
       />
+      <Box className="space-y-2">
+        <DatePicker
+          id={id("planned_vacate_date")}
+          value={form.planned_vacate_date ?? ""}
+          onChange={(v) => onChange((f) => ({ ...f, planned_vacate_date: v }))}
+          label={
+            <Label htmlFor={id("planned_vacate_date")} className="text-sm font-medium">
+              {t("PLANNED_VACATE_DATE_LABEL")}
+            </Label>
+          }
+          required={false}
+        />
+        <Typography variant="caption" className="text-muted-foreground">
+          {t("PLANNED_VACATE_DATE_OPTIONAL")}
+        </Typography>
+      </Box>
     </Box>
   );
 }

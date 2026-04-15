@@ -4,6 +4,8 @@ import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { updateOverduePayments, ensureBillsForStudents, getPendingDuesSql } from "@/lib/PaymentUtils";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
 import { checkStudentLimit } from "@/lib/subscription/CheckFeature";
+import { ensurePlannedVacateDateColumn } from "@/lib/ensurePlannedVacateDateColumn";
+import { formatSqlDateOnlyForJson } from "@/lib/dateOnly";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function GET(request: NextRequest) {
@@ -39,6 +41,8 @@ export async function GET(request: NextRequest) {
         pendingDues === 0 ? "No Due Amount" : overdueCount > 0 ? "Overdue" : "Pending";
       return {
         ...s,
+        join_date: formatSqlDateOnlyForJson(s.join_date),
+        planned_vacate_date: formatSqlDateOnlyForJson(s.planned_vacate_date),
         pending_dues: pendingDues,
         payment_status,
       };
@@ -64,7 +68,22 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, email, phone, room_id, course, join_date, id_proof_type, id_proof_number, address } = body;
+    const {
+      name,
+      email,
+      phone,
+      room_id,
+      course,
+      join_date,
+      planned_vacate_date,
+      id_proof_type,
+      id_proof_number,
+      address,
+    } = body;
+    const plannedVacateYmd =
+      planned_vacate_date != null && String(planned_vacate_date).trim() !== ""
+        ? String(planned_vacate_date).trim().slice(0, 10)
+        : null;
 
     const required = [
       ["name", name],
@@ -91,6 +110,8 @@ export async function POST(request: Request) {
       return NextResponse.json(limitErr.body, { status: limitErr.status });
     }
 
+    await ensurePlannedVacateDateColumn();
+
     if (room_id) {
       const [roomRows] = await pool.execute(
         `SELECT r.*, COALESCE(occ.occupancy, 0) as occupancy FROM rooms r
@@ -116,8 +137,8 @@ export async function POST(request: Request) {
 
     try {
       const [result] = await pool.execute(
-        `INSERT INTO students (hostel_id, name, email, phone, room_id, course, join_date, id_proof_type, id_proof_number, address, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'present')`,
+        `INSERT INTO students (hostel_id, name, email, phone, room_id, course, join_date, planned_vacate_date, id_proof_type, id_proof_number, address, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'present')`,
         [
           hostelId,
           name,
@@ -126,6 +147,7 @@ export async function POST(request: Request) {
           room_id ? Number(room_id) : null,
           course || null,
           join_date || null,
+          plannedVacateYmd,
           id_proof_type || null,
           id_proof_number || null,
           address || null,
@@ -173,6 +195,7 @@ export async function POST(request: Request) {
       room_id: room_id ? Number(room_id) : null,
       course: course || null,
       join_date: join_date || null,
+      planned_vacate_date: plannedVacateYmd,
       status: "present",
     });
   } catch (error) {

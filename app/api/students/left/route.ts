@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+import { formatSqlDateOnlyForJson } from "@/lib/dateOnly";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 const CREATE_TABLE_IF_NOT_EXISTS = `
@@ -39,7 +40,14 @@ export async function GET(request: NextRequest) {
       `SELECT * FROM students_left WHERE hostel_id = ? ORDER BY left_date DESC, created_at DESC`,
       [hostelId]
     );
-    return NextResponse.json(rows);
+    const list = rows as Array<Record<string, unknown>>;
+    return NextResponse.json(
+      list.map((r) => ({
+        ...r,
+        join_date: formatSqlDateOnlyForJson(r.join_date),
+        left_date: formatSqlDateOnlyForJson(r.left_date),
+      }))
+    );
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json(

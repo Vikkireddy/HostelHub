@@ -8,6 +8,8 @@ export interface Student {
   room_id?: number;
   course?: string;
   join_date?: string;
+  /** YYYY-MM-DD when student plans to vacate; shown on admin dashboard */
+  planned_vacate_date?: string | null;
   phone: string;
   id_proof_type?: string;
   id_proof_number?: string;
@@ -40,6 +42,7 @@ export interface StudentFormValues {
   room_id: string;
   course: string;
   join_date: string;
+  planned_vacate_date: string;
   id_proof_type: string;
   id_proof_number: string;
   address: string;
@@ -126,6 +129,7 @@ export interface SearchableStudent {
   id_proof_type?: string;
   id_proof_number?: string;
   address?: string;
+  planned_vacate_date?: string | null;
 }
 
 export interface StudentsMuiTableProps<T> {

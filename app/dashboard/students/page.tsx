@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { useAuthStore } from "@/lib/AuthStore";
 import { fetchWithHostel } from "@/lib/ApiClient";
@@ -38,6 +38,9 @@ const StudentCheckoutModal = dynamic(
 const StudentsTabs = dynamic(
   () => import("./StudentsTabs").then((m) => m.StudentsTabs)
 );
+const ImportStudentsDialog = dynamic(() =>
+  import("./ImportStudentsDialog").then((m) => m.ImportStudentsDialog)
+);
 
 export default function StudentsPage() {
   const queryClient = useQueryClient();
@@ -57,13 +60,20 @@ export default function StudentsPage() {
   const [editPhoneError, setEditPhoneError] = useState<string | null>(null);
   const [filterRoom, setFilterRoom] = useState<string>("all");
   const [filterPaymentStatus, setFilterPaymentStatus] = useState<string>("all");
+  const [importOpen, setImportOpen] = useState(false);
 
   const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
 
   const { data: students = [], isLoading, error } = useQuery<Student[]>({
     queryKey: ["students", hostelId],
-    queryFn: () =>
-      fetchWithHostel("/api/students", hostelId).then((r) => r.json()),
+    queryFn: async () => {
+      const res = await fetchWithHostel("/api/students", hostelId);
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error((json as { error?: string }).error || "Failed to fetch students");
+      }
+      return Array.isArray(json) ? (json as Student[]) : [];
+    },
     enabled: Boolean(hostelId),
   });
 
@@ -141,6 +151,9 @@ export default function StudentsPage() {
           room_id: data.room_id ? Number(data.room_id) : null,
           course: data.course || null,
           join_date: data.join_date || null,
+          planned_vacate_date: data.planned_vacate_date?.trim()
+            ? data.planned_vacate_date.trim().slice(0, 10)
+            : null,
           id_proof_type: data.id_proof_type || null,
           id_proof_number: data.id_proof_number || null,
           address: data.address || null,
@@ -199,6 +212,9 @@ export default function StudentsPage() {
           room_id: data.room_id ? Number(data.room_id) : null,
           course: data.course || null,
           join_date: data.join_date || null,
+          planned_vacate_date: data.planned_vacate_date?.trim()
+            ? data.planned_vacate_date.trim().slice(0, 10)
+            : null,
           id_proof_type: data.id_proof_type || null,
           id_proof_number: data.id_proof_number || null,
           address: data.address || null,
@@ -274,6 +290,9 @@ export default function StudentsPage() {
       room_id: student.room_id ? String(student.room_id) : "",
       course: student.course || "",
       join_date: student.join_date ? student.join_date.slice(0, 10) : "",
+      planned_vacate_date: student.planned_vacate_date
+        ? String(student.planned_vacate_date).slice(0, 10)
+        : "",
       id_proof_type: student.id_proof_type || "",
       id_proof_number: student.id_proof_number || "",
       address: student.address || "",
@@ -343,13 +362,32 @@ export default function StudentsPage() {
 
   return (
     <Box className="space-y-8">
-      <Box className="flex items-center justify-between">
+      <Box className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold">{t("STUDENT_MANAGEMENT")}</h2>
-        <Button onClick={() => setModalOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t("ADD_STUDENT")}
-        </Button>
+        <Box className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" />
+            {t("STUDENT_IMPORT_CTA")}
+          </Button>
+          <Button onClick={() => setModalOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t("ADD_STUDENT")}
+          </Button>
+        </Box>
       </Box>
+
+      <ImportStudentsDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        hostelId={hostelId}
+        onImported={() => {
+          queryClient.invalidateQueries({ queryKey: ["students"] });
+          queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+          queryClient.invalidateQueries({ queryKey: ["rooms"] });
+          queryClient.invalidateQueries({ queryKey: ["payments"] });
+          queryClient.invalidateQueries({ queryKey: ["students-with-dues"] });
+        }}
+      />
 
       <AddStudentDialog
         open={modalOpen}

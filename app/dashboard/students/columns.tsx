@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Box } from "@/components/ui/box";
 import { LogOut, Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import { t } from "@/lib/i18n";
+import { sqlDateOnlyToYmd } from "@/lib/dateOnly";
 import { IconButton, Menu, MenuItem } from "@mui/material";
 import type { InactiveStudent, Student } from "./students.types";
 
@@ -134,8 +135,7 @@ export const getStudentColumns = (
     accessorKey: "join_date",
     header: "Join Date",
     id: "join_date",
-    cell: ({ row }) =>
-      row.original.join_date ? new Date(row.original.join_date).toISOString().slice(0, 10) : "-",
+    cell: ({ row }) => sqlDateOnlyToYmd(row.original.join_date) || "-",
   },
   {
     id: "actions",
@@ -198,7 +198,7 @@ export const getInactiveStudentColumns = (): ColumnDef<InactiveStudent>[] => [
     id: "join_date",
     cell: ({ row }) => (
       <span className="text-slate-600">
-        {row.original.join_date ? new Date(row.original.join_date).toISOString().slice(0, 10) : "-"}
+        {sqlDateOnlyToYmd(row.original.join_date) || "-"}
       </span>
     ),
   },
@@ -208,7 +208,7 @@ export const getInactiveStudentColumns = (): ColumnDef<InactiveStudent>[] => [
     id: "left_date",
     cell: ({ row }) => (
       <span className="text-slate-600">
-        {row.original.left_date ? new Date(row.original.left_date).toISOString().slice(0, 10) : "-"}
+        {sqlDateOnlyToYmd(row.original.left_date) || "-"}
       </span>
     ),
   },
