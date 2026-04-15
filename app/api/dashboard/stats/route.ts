@@ -6,7 +6,29 @@ import { requireSubscription } from "@/lib/subscription/RequireSubscription";
 import { validateHostelSubscription } from "@/lib/subscription/validate";
 import { planHasAdvancedFeatures } from "@/lib/subscription/planFeatures";
 import { SUBSCRIPTION_PLANS } from "@/lib/subscription/constants";
+import { ensurePlannedVacateDateColumn } from "@/lib/ensurePlannedVacateDateColumn";
+import { sqlDateOnlyToYmd, todayDateOnlyLocal, formatSqlDateOnlyForJson } from "@/lib/dateOnly";
 export { dynamic } from "@/lib/forceDynamicRoute";
+
+const MONTH_SHORT_LABELS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] as const;
+
+/** Last `count` calendar months ending at `ref` (inclusive), oldest first — for continuous charts. */
+const lastCalendarMonths = (
+  count: number,
+  ref = new Date()
+): Array<{ year: number; monthNum: number; monthShort: string }> => {
+  const out: Array<{ year: number; monthNum: number; monthShort: string }> = [];
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(ref.getFullYear(), ref.getMonth() - i, 1);
+    const idx = d.getMonth();
+    out.push({
+      year: d.getFullYear(),
+      monthNum: idx + 1,
+      monthShort: MONTH_SHORT_LABELS[idx],
+    });
+  }
+  return out;
+};
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,10 +65,13 @@ export async function GET(request: NextRequest) {
           studentsAddedDiff: 0,
         },
         pendingBillsList: [],
+        plannedVacates: [],
         studentCapacity: null,
         planCapabilities: { advancedAnalytics: false },
       });
     }
+
+    await ensurePlannedVacateDateColumn();
 
     const { status: subStatus } = await validateHostelSubscription(hostelId);
     const advancedAnalytics = planHasAdvancedFeatures(subStatus?.planId);
@@ -59,6 +84,22 @@ export async function GET(request: NextRequest) {
       [hostelId]
     );
     const studentsList = students as Array<Record<string, unknown>>;
+    const todayYmd = todayDateOnlyLocal();
+    const plannedVacates = studentsList
+      .filter((s) => {
+        const ymd = sqlDateOnlyToYmd(s.planned_vacate_date);
+        if (!ymd) return false;
+        return ymd >= todayYmd;
+      })
+      .sort((a, b) =>
+        sqlDateOnlyToYmd(a.planned_vacate_date).localeCompare(sqlDateOnlyToYmd(b.planned_vacate_date))
+      )
+      .map((s) => ({
+        id: s.id,
+        studentName: String(s.name ?? ""),
+        room: (s.room_number as string) || "-",
+        plannedVacateDate: sqlDateOnlyToYmd(s.planned_vacate_date),
+      }));
 
     const [rooms] = await pool.execute(
       `SELECT r.*, COALESCE(occ.occupancy, 0) as occupancy FROM rooms r
@@ -197,50 +238,53 @@ export async function GET(request: NextRequest) {
       const [revenueRows] = await pool.execute(
         `SELECT SUBSTRING(month, 1, 3) as month_short, month as month_name, year, ${revenueSelect} as revenue
          FROM payments WHERE status = 'paid' AND (hostel_id = ? OR hostel_id IS NULL)
-         GROUP BY year, month
-         ORDER BY year DESC, FIELD(month, 'December','November','October','September','August','July','June','May','April','March','February','January') DESC
-         LIMIT 6`,
+         GROUP BY year, month`,
         [hostelId]
       );
-      revenueData = (revenueRows as Array<Record<string, unknown>>)
-        .map((r) => ({ month: String(r.month_short || ""), revenue: Number(r.revenue) || 0 }))
-        .reverse();
+      const revRows = revenueRows as Array<Record<string, unknown>>;
+      const revenueByYearMonth = new Map<string, number>();
+      for (const r of revRows) {
+        const monthName = String(r.month_name || "");
+        const monthNum = MONTH_ORDER.indexOf(monthName) + 1 || 1;
+        const year = Number(r.year) || 0;
+        if (!year) continue;
+        revenueByYearMonth.set(`${year}-${monthNum}`, Number(r.revenue) || 0);
+      }
 
-      const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-      incomeVsExpenses = [];
+      const chartMonths = lastCalendarMonths(6);
+      revenueData = chartMonths.map(({ year, monthNum, monthShort }) => ({
+        month: monthShort,
+        revenue: revenueByYearMonth.get(`${year}-${monthNum}`) ?? 0,
+      }));
+
+      let expenseByMonth = new Map<string, number>();
       try {
-        const revRows = revenueRows as Array<Record<string, unknown>>;
-
         const [expenseRows] = await pool.execute(
           `SELECT MONTH(expense_date) as m, YEAR(expense_date) as y, COALESCE(SUM(amount), 0) as total
            FROM admin_expenses WHERE hostel_id = ?
            GROUP BY y, m`,
           [hostelId]
         );
-        const expenseByMonth = new Map<string, number>();
         for (const row of expenseRows as Array<Record<string, unknown>>) {
           const key = `${row.y}-${row.m}`;
           expenseByMonth.set(key, Number(row.total ?? 0));
         }
-
-        incomeVsExpenses = revRows.map((r) => {
-          const monthName = String(r.month_name || "");
-          const monthNum = MONTH_ORDER.indexOf(monthName) + 1 || 1;
-          const year = Number(r.year) || new Date().getFullYear();
-          const monthShort = String(r.month_short || MONTH_SHORT[monthNum - 1]);
-          const income = Number(r.revenue) || 0;
-          const expenses = expenseByMonth.get(`${year}-${monthNum}`) ?? 0;
-          const profit = income - expenses;
-          return { month: monthShort, income, expenses, profit };
-        }).reverse();
       } catch {
-        incomeVsExpenses = (revenueData as Array<{ month: string; revenue: number }>).map((r) => ({
-          month: r.month,
-          income: r.revenue,
-          expenses: 0,
-          profit: r.revenue,
-        }));
+        expenseByMonth = new Map();
       }
+
+      incomeVsExpenses = chartMonths.map(({ year, monthNum, monthShort }) => {
+        const key = `${year}-${monthNum}`;
+        const income = revenueByYearMonth.get(key) ?? 0;
+        const expenses = expenseByMonth.get(key) ?? 0;
+        const yy = String(year).slice(-2);
+        return {
+          month: `${monthShort} '${yy}`,
+          income,
+          expenses,
+          profit: income - expenses,
+        };
+      });
 
       roomDistribution = (roomsList as Array<Record<string, unknown>>).reduce(
         (acc: Array<{ name: string; value: number; color: string }>, r) => {
@@ -322,7 +366,7 @@ export async function GET(request: NextRequest) {
         name: s.name,
         room: s.room_number || "-",
         course: s.course,
-        joinDate: s.join_date ? new Date(s.join_date as string).toISOString().slice(0, 10) : "",
+        joinDate: formatSqlDateOnlyForJson(s.join_date) ?? "",
         phone: s.phone,
       })),
       rooms: roomsList,
@@ -361,6 +405,7 @@ export async function GET(request: NextRequest) {
         studentsAddedDiff,
       },
       pendingBillsList,
+      plannedVacates,
       studentCapacity,
       planCapabilities: { advancedAnalytics },
     });

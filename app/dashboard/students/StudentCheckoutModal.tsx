@@ -15,6 +15,7 @@ import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
 import { AlertCircle } from "lucide-react";
 import { t } from "@/lib/i18n";
+import { formatDateOnlyLocal, sqlDateOnlyToYmd } from "@/lib/dateOnly";
 import type { StudentCheckoutModalProps } from "./students.types";
 
 export function StudentCheckoutModal({
@@ -37,10 +38,8 @@ export function StudentCheckoutModal({
 
   if (!student) return null;
 
-  const joinDate = student.join_date
-    ? new Date(student.join_date).toISOString().slice(0, 10)
-    : "-";
-  const checkoutDate = new Date().toISOString().slice(0, 10);
+  const joinDate = sqlDateOnlyToYmd(student.join_date) || "-";
+  const checkoutDate = formatDateOnlyLocal(new Date());
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

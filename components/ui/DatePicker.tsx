@@ -5,6 +5,7 @@ import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { Box } from "@/components/ui/box";
+import { formatDateOnlyLocal, parseYmdToLocalDate } from "@/lib/dateOnly";
 
 export interface DatePickerProps {
   value: string;
@@ -26,16 +27,11 @@ export function DatePicker({
   minDate,
   maxDate,
 }: DatePickerProps) {
-  const toYmdLocal = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  const dateValue = value ? new Date(value + "T00:00:00") : null;
-  const minDateObj = minDate ? new Date(minDate + "T00:00:00") : undefined;
-  const maxDateObj = maxDate ? new Date(maxDate + "T00:00:00") : undefined;
+  const dateValue = value
+    ? parseYmdToLocalDate(value) ?? (Number.isNaN(new Date(value).getTime()) ? null : new Date(value))
+    : null;
+  const minDateObj = minDate ? parseYmdToLocalDate(minDate) ?? undefined : undefined;
+  const maxDateObj = maxDate ? parseYmdToLocalDate(maxDate) ?? undefined : undefined;
 
   return (
     <Box className="space-y-2">
@@ -43,7 +39,7 @@ export function DatePicker({
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <DesktopDatePicker
           value={dateValue}
-          onChange={(date) => onChange(date ? toYmdLocal(date) : "")}
+          onChange={(date) => onChange(date ? formatDateOnlyLocal(date) : "")}
           disabled={disabled}
           minDate={minDateObj}
           maxDate={maxDateObj}

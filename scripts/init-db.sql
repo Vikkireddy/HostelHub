@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS students (
   room_id INT,
   course VARCHAR(255),
   join_date DATE,
+  planned_vacate_date DATE NULL,
   id_proof_type VARCHAR(50),
   id_proof_number VARCHAR(100),
   address TEXT,

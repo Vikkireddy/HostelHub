@@ -30,6 +30,14 @@ type StudentProps = {
   phone: string;
 };
 
+type PlannedVacateItemProps = {
+  id: string | number;
+  studentName: string;
+  room: string;
+  /** ISO date string YYYY-MM-DD */
+  plannedVacateDate: string;
+};
+
 type PaymentProps = {
   id: string | number;
   student: string;
@@ -85,6 +93,8 @@ type DashboardStatsProps = {
   incomeVsExpenses?: IncomeVsExpensesDataPoint[];
   stats: DashboardStatsSummaryProps;
   pendingBillsList?: PendingBillProps[];
+  /** Present students with a planned vacate date on or after today */
+  plannedVacates?: PlannedVacateItemProps[];
   planCapabilities?: { advancedAnalytics: boolean };
   /** Present when the plan has a student cap (Basic / Pro) */
   studentCapacity?: StudentCapacityProps | null;
@@ -130,6 +140,14 @@ type RecentPaymentsProps = {
   payments: PaymentProps[];
 };
 
+type PlannedVacateRowProps = {
+  item: PlannedVacateItemProps;
+};
+
+type PlannedVacatesCardProps = {
+  items: PlannedVacateItemProps[];
+};
+
 type StudentsOverviewProps = {
   students: StudentProps[];
   headerAction?: React.ReactNode;
@@ -151,6 +169,9 @@ export type {
   RevenueChartProps,
   RoomDistributionChartProps,
   RecentPaymentsProps,
+  PlannedVacateItemProps,
+  PlannedVacateRowProps,
+  PlannedVacatesCardProps,
   StudentsOverviewProps,
   StudentCapacityProps,
 };

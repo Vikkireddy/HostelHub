@@ -9,6 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useAuthStore } from "@/lib/AuthStore";
 import { cn } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
@@ -20,6 +28,15 @@ function LoginForm() {
   const [emailOrPhone, setEmailOrPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetIdentifier, setResetIdentifier] = useState("");
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetConfirmPassword, setResetConfirmPassword] = useState("");
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
+  const [resetError, setResetError] = useState("");
+  const [resetSuccess, setResetSuccess] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
   const [error, setError] = useState("");
   const { login } = useAuthStore();
   const router = useRouter();
@@ -37,6 +54,53 @@ function LoginForm() {
       router.push(safeNext ?? "/dashboard");
     } else {
       setError(result.message || "Invalid email/phone or password. Please try again.");
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError("");
+    setResetSuccess("");
+
+    if (!resetIdentifier.trim()) {
+      setResetError("Email or phone is required.");
+      return;
+    }
+    if (resetPassword.length < 6) {
+      setResetError("New password must be at least 6 characters.");
+      return;
+    }
+    if (resetPassword !== resetConfirmPassword) {
+      setResetError("Passwords do not match.");
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          emailOrPhone: resetIdentifier,
+          newPassword: resetPassword,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { success?: boolean; message?: string };
+      if (res.ok && data.success) {
+        setResetSuccess(
+          data.message || "Password reset successful. Sign in with your new credentials."
+        );
+        setEmailOrPhone(resetIdentifier);
+        setPassword("");
+        setResetPassword("");
+        setResetConfirmPassword("");
+        return;
+      }
+      setResetError(data.message || "Unable to reset password right now.");
+    } catch {
+      setResetError("Unable to connect to server. Please try again.");
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -115,6 +179,124 @@ function LoginForm() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </Box>
+            </Box>
+            <Box className="flex justify-end">
+              <Dialog
+                open={resetOpen}
+                onOpenChange={(open) => {
+                  setResetOpen(open);
+                  if (!open) {
+                    setResetError("");
+                    setResetSuccess("");
+                    setResetPassword("");
+                    setResetConfirmPassword("");
+                  }
+                }}
+              >
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="text-sm font-medium text-[var(--link)] underline-offset-4 hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Reset password</DialogTitle>
+                    <DialogDescription>
+                      Enter your registered email or phone and choose a new password.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleResetPassword} className="space-y-4">
+                    {resetError ? (
+                      <Typography variant="error" className="p-2">
+                        {resetError}
+                      </Typography>
+                    ) : null}
+                    {resetSuccess ? (
+                      <Typography
+                        variant="caption"
+                        className="rounded-lg border border-emerald-200 bg-emerald-50 p-2 text-emerald-800"
+                      >
+                        {resetSuccess}
+                      </Typography>
+                    ) : null}
+                    <Box className="space-y-2">
+                      <Label htmlFor="reset-identifier">Email or Phone</Label>
+                      <Input
+                        id="reset-identifier"
+                        type="text"
+                        placeholder="Email or phone number"
+                        value={resetIdentifier}
+                        onChange={(e) => setResetIdentifier(e.target.value)}
+                        required
+                      />
+                    </Box>
+                    <Box className="space-y-2">
+                      <Label htmlFor="reset-password">New Password</Label>
+                      <Box className="relative">
+                        <Input
+                          id="reset-password"
+                          type={showResetPassword ? "text" : "password"}
+                          placeholder="Enter new password"
+                          value={resetPassword}
+                          onChange={(e) => setResetPassword(e.target.value)}
+                          className="pr-10"
+                          required
+                          minLength={6}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowResetPassword((v) => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                          aria-label={showResetPassword ? "Hide new password" : "Show new password"}
+                        >
+                          {showResetPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </Box>
+                    </Box>
+                    <Box className="space-y-2">
+                      <Label htmlFor="reset-confirm-password">Confirm New Password</Label>
+                      <Box className="relative">
+                        <Input
+                          id="reset-confirm-password"
+                          type={showResetConfirmPassword ? "text" : "password"}
+                          placeholder="Confirm new password"
+                          value={resetConfirmPassword}
+                          onChange={(e) => setResetConfirmPassword(e.target.value)}
+                          className="pr-10"
+                          required
+                          minLength={6}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowResetConfirmPassword((v) => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                          aria-label={
+                            showResetConfirmPassword
+                              ? "Hide confirm password"
+                              : "Show confirm password"
+                          }
+                        >
+                          {showResetConfirmPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </Box>
+                    </Box>
+                    <Button type="submit" className="w-full" disabled={resetLoading}>
+                      {resetLoading ? "Resetting..." : "Reset password"}
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </Box>
             <Button type="submit" className="w-full">
               Sign In

@@ -28,6 +28,9 @@ const RoomDistributionChart = dynamic(() =>
 const RecentPayments = dynamic(() =>
   import("@/components/dashboard").then((m) => m.RecentPayments)
 );
+const PlannedVacatesCard = dynamic(() =>
+  import("@/components/dashboard").then((m) => m.PlannedVacatesCard)
+);
 const IncomeVsExpensesChart = dynamic(() =>
   import("@/components/dashboard").then((m) => m.IncomeVsExpensesChart)
 );
@@ -49,6 +52,7 @@ export default function DashboardPage() {
 
   const students = data?.students ?? [];
   const payments = data?.payments ?? [];
+  const plannedVacatesRaw = data?.plannedVacates ?? [];
   const q = query.trim().toLowerCase();
   const filteredStudents = useMemo(
     () =>
@@ -72,6 +76,18 @@ export default function DashboardPage() {
               (p.student ?? "").toLowerCase().includes(q)
           ),
     [payments, q]
+  );
+  const filteredPlannedVacates = useMemo(
+    () =>
+      !q
+        ? plannedVacatesRaw
+        : plannedVacatesRaw.filter(
+            (v: { studentName?: string; room?: string; plannedVacateDate?: string }) =>
+              (v.studentName ?? "").toLowerCase().includes(q) ||
+              (v.room ?? "").toLowerCase().includes(q) ||
+              (v.plannedVacateDate ?? "").toLowerCase().includes(q)
+          ),
+    [plannedVacatesRaw, q]
   );
 
   if (isLoading) return <DashboardSkeleton />;
@@ -167,26 +183,28 @@ export default function DashboardPage() {
 
       <Box className="grid gap-6 lg:grid-cols-2">
         <RecentPayments payments={filteredPayments} />
-        {advancedAnalytics ? (
-          <IncomeVsExpensesChart data={incomeVsExpenses} />
-        ) : (
-          <Box className="rounded-lg border border-dashed border-slate-200 bg-slate-50/80 p-6">
-            <Typography className="text-sm font-semibold text-slate-800">
-              Pro: Reports &amp; expense insights
-            </Typography>
-            <Typography className="mt-2 text-sm text-slate-600">
-              Revenue charts, room mix, income vs expenses, and admin expense tracking unlock on the
-              Pro plan.
-            </Typography>
-            <Link
-              href="/dashboard/subscription"
-              className="mt-4 inline-block text-sm font-medium text-primary underline-offset-2 hover:underline"
-            >
-              View plans
-            </Link>
-          </Box>
-        )}
+        <PlannedVacatesCard items={filteredPlannedVacates} />
       </Box>
+
+      {advancedAnalytics ? (
+        <IncomeVsExpensesChart data={incomeVsExpenses} />
+      ) : (
+        <Box className="rounded-lg border border-dashed border-slate-200 bg-slate-50/80 p-6">
+          <Typography className="text-sm font-semibold text-slate-800">
+            Pro: Reports &amp; expense insights
+          </Typography>
+          <Typography className="mt-2 text-sm text-slate-600">
+            Revenue charts, room mix, income vs expenses, and admin expense tracking unlock on the
+            Pro plan.
+          </Typography>
+          <Link
+            href="/dashboard/subscription"
+            className="mt-4 inline-block text-sm font-medium text-primary underline-offset-2 hover:underline"
+          >
+            View plans
+          </Link>
+        </Box>
+      )}
 
       {/* <StudentsOverview students={filteredStudents} /> */}
     </Box>

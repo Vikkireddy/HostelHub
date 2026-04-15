@@ -102,6 +102,7 @@ export const initialStudentForm = {
   room_id: "",
   course: "",
   join_date: "",
+  planned_vacate_date: "",
   id_proof_type: "",
   id_proof_number: "",
   address: "",

@@ -1,0 +1,2 @@
+name,email,phone,room_number,course,join_date,id_proof_type,id_proof_number,address,planned_vacate_date
+Sample Student,sample@example.com,9876543210,101,B.Tech CSE,2025-01-15,Aadhaar,123456789012,"Door 2, Example Street, City",
