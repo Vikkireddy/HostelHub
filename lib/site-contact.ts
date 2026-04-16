@@ -1,3 +1,6 @@
+/** Production site origin (canonical URLs, SEO). */
+export const SITE_ORIGIN = "https://adminhostelhub.com" as const;
+
 /** Public contact details (landing footer, contact page). */
 export const SITE_CONTACT = {
   inquiryEmail: "adminhostelhub@gmail.com",
@@ -14,8 +17,8 @@ export const SITE_SOCIAL_HREFS: Record<
 > = {
   email: `mailto:${SITE_CONTACT.inquiryEmail}`,
   instagram: "https://www.instagram.com/adminhostelhub",
-  facebook: "https://www.facebook.com/adminhostelhub",
-  x: "https://x.com/adminhostelhub",
+  facebook: "https://www.facebook.com/share/1GgohttkHq/",
+  x: "",
   youtube: "",
   linkedin: "",
 };
