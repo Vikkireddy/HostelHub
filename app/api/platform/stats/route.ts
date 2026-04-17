@@ -48,8 +48,17 @@ export async function GET(request: NextRequest) {
          h.pincode,
          h.created_at AS createdAt,
          (SELECT a.email FROM admins a WHERE a.hostel_id = h.id ORDER BY a.id ASC LIMIT 1) AS adminEmail,
-         (SELECT a.name FROM admins a WHERE a.hostel_id = h.id ORDER BY a.id ASC LIMIT 1) AS adminName
+         (SELECT a.name FROM admins a WHERE a.hostel_id = h.id ORDER BY a.id ASC LIMIT 1) AS adminName,
+         (SELECT a.mobile FROM admins a WHERE a.hostel_id = h.id ORDER BY a.id ASC LIMIT 1) AS adminMobile,
+         hs.status AS subscriptionStatus,
+         hs.plan_id AS planId,
+         sp.name AS planName,
+         hs.expires_at AS subscriptionExpiresAt,
+         hs.trial_ends_at AS subscriptionTrialEndsAt,
+         hs.grace_period_ends_at AS subscriptionGracePeriodEndsAt
        FROM hostels h
+       LEFT JOIN hostel_subscriptions hs ON hs.hostel_id = h.id
+       LEFT JOIN subscription_plans sp ON sp.id = hs.plan_id
        ORDER BY h.id DESC
        LIMIT 300`
     );

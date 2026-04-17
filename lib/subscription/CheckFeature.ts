@@ -22,7 +22,7 @@ export async function checkStudentLimit(
     const subs = subRows as { plan_id: string; max_students: number | null }[];
     if (subs.length === 0) return null;
     const maxStudents = subs[0]?.max_students;
-    if (maxStudents == null) return null; // Enterprise/unlimited
+    if (maxStudents == null) return null;
 
     const [countRows] = await pool.execute(
       "SELECT COUNT(*) as cnt FROM students WHERE hostel_id = ? AND status = 'present'",

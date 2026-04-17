@@ -18,6 +18,8 @@ export type SubscriptionBannerType =
 export interface SubscriptionPlan {
   id: string;
   name: string;
+  tagline: string;
+  description: string;
   price_monthly: number;
   max_students: number | null;
   features: string[];

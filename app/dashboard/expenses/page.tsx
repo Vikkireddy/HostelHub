@@ -67,8 +67,8 @@ export default function ExpensesPage() {
           Expense &amp; profit tracking is on Pro
         </Typography>
         <Typography className="mt-2 text-sm text-slate-600">
-          Your Basic plan includes room and payment management. Upgrade for admin expenses, profit
-          insights, and full dashboard analytics.
+          Your Base plan covers students, rooms, and payments. Upgrade to Pro for admin expenses,
+          profit insights, and full dashboard analytics.
         </Typography>
         <Link
           href="/dashboard/subscription"

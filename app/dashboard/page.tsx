@@ -183,7 +183,24 @@ export default function DashboardPage() {
 
       <Box className="grid gap-6 lg:grid-cols-2">
         <RecentPayments payments={filteredPayments} />
-        <PlannedVacatesCard items={filteredPlannedVacates} />
+        {advancedAnalytics ? (
+          <PlannedVacatesCard items={filteredPlannedVacates} />
+        ) : (
+          <Box className="rounded-lg border border-dashed border-slate-200 bg-slate-50/80 p-6">
+            <Typography className="text-sm font-semibold text-slate-800">
+              Planned vacates on Pro
+            </Typography>
+            <Typography className="mt-2 text-sm text-slate-600">
+              Track upcoming move-out dates on the dashboard with Pro or Pro Plus.
+            </Typography>
+            <Link
+              href="/dashboard/subscription"
+              className="mt-4 inline-block text-sm font-medium text-primary underline-offset-2 hover:underline"
+            >
+              View plans
+            </Link>
+          </Box>
+        )}
       </Box>
 
       {advancedAnalytics ? (
@@ -191,11 +208,11 @@ export default function DashboardPage() {
       ) : (
         <Box className="rounded-lg border border-dashed border-slate-200 bg-slate-50/80 p-6">
           <Typography className="text-sm font-semibold text-slate-800">
-            Pro: Reports &amp; expense insights
+            Pro: Analytics &amp; expense insights
           </Typography>
           <Typography className="mt-2 text-sm text-slate-600">
-            Revenue charts, room mix, income vs expenses, and admin expense tracking unlock on the
-            Pro plan.
+            Revenue charts, room mix, income vs expenses, planned vacates, and the admin expenses
+            module unlock on Pro or Pro Plus.
           </Typography>
           <Link
             href="/dashboard/subscription"

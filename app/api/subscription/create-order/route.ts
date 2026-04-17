@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     if (!planId || !VALID_PLANS.includes(planId)) {
       return NextResponse.json(
-        { success: false, message: "Invalid plan. Choose basic, pro, or enterprise." },
+        { success: false, message: "Invalid plan. Choose Base, Pro, or Pro Plus." },
         { status: 400 }
       );
     }

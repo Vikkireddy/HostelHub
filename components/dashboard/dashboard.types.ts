@@ -96,7 +96,7 @@ type DashboardStatsProps = {
   /** Present students with a planned vacate date on or after today */
   plannedVacates?: PlannedVacateItemProps[];
   planCapabilities?: { advancedAnalytics: boolean };
-  /** Present when the plan has a student cap (Basic / Pro) */
+  /** Present when the plan has a student cap (Base / Pro) */
   studentCapacity?: StudentCapacityProps | null;
 };
 
@@ -113,7 +113,7 @@ type StatCardProps = {
 type StatsGridProps = {
   stats: DashboardStatsSummaryProps;
   pendingBillsList?: PendingBillProps[];
-  /** When false, hides admin expenses / profit card (Basic plan) */
+  /** When false, hides admin expenses / profit card (Base plan) */
   showExpenseMetrics?: boolean;
 };
 

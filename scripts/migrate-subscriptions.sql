@@ -31,9 +31,9 @@ CREATE TABLE IF NOT EXISTS hostel_subscriptions (
 );
 
 INSERT INTO subscription_plans (id, name, price_monthly, max_students, features) VALUES
-('basic', 'Basic', 149, 14, '["Up to 14 members", "Room Management", "Payment Tracking"]'),
-('pro', 'Pro', 299, 34, '["Up to 34 members", "Reports & Analytics", "Expense & profit tracking"]'),
-('enterprise', 'Enterprise', 799, NULL, '["Unlimited members", "Multi Hostel", "Priority Support"]')
+('basic', 'Base', 399, 50, '["Up to 50 students", "Students, rooms & payments", "CSV import/export", "Dashboard overview"]'),
+('pro', 'Pro', 699, 100, '["Up to 100 students", "Income vs expenses & charts", "Planned vacates on dashboard", "Admin expenses"]'),
+('enterprise', 'Pro Plus', 999, NULL, '["Unlimited students", "Everything in Pro", "Priority support", "Multi-hostel ready"]')
 ON DUPLICATE KEY UPDATE name=VALUES(name), price_monthly=VALUES(price_monthly), max_students=VALUES(max_students), features=VALUES(features);
 
 INSERT INTO hostel_subscriptions (hostel_id, plan_id, status, expires_at)

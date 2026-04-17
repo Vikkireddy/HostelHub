@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
+import { DEFAULT_TRIAL_PLAN_ID, SUBSCRIPTION_PLANS } from "@/lib/subscription/constants";
 export { dynamic } from "@/lib/forceDynamicRoute";
-
-const DEFAULT_TRIAL_PLAN_ID = "basic";
 
 export async function POST(request: NextRequest) {
   try {
@@ -93,7 +92,10 @@ export async function POST(request: NextRequest) {
       `SELECT name FROM subscription_plans WHERE id = ? LIMIT 1`,
       [DEFAULT_TRIAL_PLAN_ID]
     );
-    const planName = (planRows as { name: string }[])[0]?.name ?? "Basic";
+    const planName =
+      (planRows as { name: string }[])[0]?.name ??
+      SUBSCRIPTION_PLANS.find((p) => p.id === DEFAULT_TRIAL_PLAN_ID)?.name ??
+      "Base";
 
     return NextResponse.json({
       success: true,
