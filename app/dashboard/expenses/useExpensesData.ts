@@ -8,7 +8,6 @@ import { initialExpenseForm } from "./expenses.constants";
 import type { Expense, ExpenseFormValues } from "./expenses.types";
 
 type UseExpensesDataOptions = {
-  /** When false, skips listing expenses (e.g. Basic plan) */
   queryEnabled?: boolean;
 };
 

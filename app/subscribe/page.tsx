@@ -8,9 +8,7 @@ import { planLabel, startRazorpayCheckout } from "@/lib/subscription/startRazorp
 import { useSubscriptionStore } from "@/lib/SubscriptionStore";
 import { toast } from "sonner";
 import { t } from "@/lib/i18n";
-import { isPlanAvailableForPurchase } from "@/lib/subscription/constants";
-
-const VALID_PLANS = new Set(["basic", "pro", "enterprise"]);
+import { isPlanAvailableForPurchase, SUBSCRIPTION_PLAN_IDS } from "@/lib/subscription/constants";
 
 function SubscribeContent() {
   const router = useRouter();
@@ -27,9 +25,7 @@ function SubscribeContent() {
   const startedRef = useRef(false);
 
   const planOk =
-    plan != null &&
-    VALID_PLANS.has(plan) &&
-    isPlanAvailableForPurchase(plan);
+    plan != null && SUBSCRIPTION_PLAN_IDS.has(plan) && isPlanAvailableForPurchase(plan);
 
   useEffect(() => {
     if (!hasHydrated) return;

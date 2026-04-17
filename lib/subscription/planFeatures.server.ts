@@ -25,7 +25,7 @@ export async function requireAdvancedPlan(
         success: false,
         code: API_SUBSCRIPTION_ERROR_CODE,
         message:
-          "Expense tracking, profit insights, and dashboard charts are part of the Pro plan. Upgrade to unlock.",
+          "Expense tracking, profit insights, and dashboard analytics are part of the Pro plan. Upgrade to unlock.",
         featureLocked: true,
       },
       { status: API_SUBSCRIPTION_ERROR_STATUS }

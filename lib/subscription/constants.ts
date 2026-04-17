@@ -2,44 +2,87 @@ import type { SubscriptionPlan } from "./types";
 
 export const SUBSCRIPTION_PAGE_PATH = "/dashboard/subscription";
 
-/** Turn on when Enterprise checkout / contact flow is ready */
-export const ENTERPRISE_SUBSCRIPTION_ENABLED = false;
+export const DEFAULT_TRIAL_PLAN_ID = "basic";
 
-/** Set to true to bypass subscription check (for testing only - revert before deploy) */
-// export const BYPASS_SUBSCRIPTION_CHECK = true;
 
 export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: "basic",
-    name: "Basic",
-    price_monthly: 149,
-    max_students: 14,
-    features: ["Up to 14 members", "Room Management", "Payment Tracking"],
+    name: "Base",
+    tagline: "Up to 50 students",
+    description:
+      "Best for small hostels moving day-to-day operations online—students, rooms, and rent in one place.",
+    price_monthly: 399,
+    max_students: 50,
+    features: [
+      "Student records with room assignment & ID proof fields",
+      "Room occupancy, maintenance status, and allocation",
+      "Rent schedules, receipts, pending dues, and overdue tracking",
+      "CSV import & export for students",
+      "Dashboard overview: occupancy, revenue totals, recent payments",
+      "Password reset and operational email flows",
+    ],
   },
   {
     id: "pro",
     name: "Pro",
-    price_monthly: 299,
-    max_students: 34,
+    tagline: "Up to 100 students",
+    description:
+      "For growing hostels that need cashflow clarity—charts, admin expenses, and planned move-outs on the dashboard.",
+    price_monthly: 699,
+    max_students: 100,
     features: [
-      "Up to 34 members",
-      "Reports & Analytics",
-      "Expense & profit tracking",
+      "Everything in Base",
+      "Income vs expenses chart and monthly profit view",
+      "Revenue & room-mix charts on the dashboard",
+      "Planned vacate dates surfaced on the dashboard",
+      "Admin expense ledger (categories, monthly rollups)",
+      "Full analytics on dashboard stats API",
     ],
   },
   {
     id: "enterprise",
-    name: "Enterprise",
-    price_monthly: 799,
+    name: "Pro Plus",
+    tagline: "Unlimited students",
+    description:
+      "For larger hostels and groups preparing for multi-branch operations—no student cap, same Pro analytics.",
+    price_monthly: 999,
     max_students: null,
-    features: ["Unlimited members", "Multi Hostel", "Priority Support"],
+    features: [
+      "Everything in Pro",
+      "Unlimited active students (no seat cap)",
+      "Highest priority support channel",
+      "Multi-hostel / platform roadmap alignment (Super Admin layer)",
+      "Best for chains coordinating finance and occupancy centrally",
+    ],
   },
 ];
+
+/** Comparison matrix for pricing UI (also documents product gates). */
+export const PLAN_COMPARISON_ROWS: {
+  feature: string;
+  basic: string;
+  pro: string;
+  enterprise: string;
+}[] = [
+  { feature: "Student limit", basic: "50", pro: "100", enterprise: "Unlimited" },
+  { feature: "Room management", basic: "Yes", pro: "Yes", enterprise: "Yes" },
+  { feature: "Payment & dues tracking", basic: "Yes", pro: "Yes", enterprise: "Yes" },
+  { feature: "CSV student import / export", basic: "Yes", pro: "Yes", enterprise: "Yes" },
+  { feature: "Dashboard revenue & occupancy overview", basic: "Yes", pro: "Yes", enterprise: "Yes" },
+  { feature: "Income vs expenses & profit", basic: "No", pro: "Yes", enterprise: "Yes" },
+  { feature: "Charts (revenue, room mix)", basic: "No", pro: "Yes", enterprise: "Yes" },
+  { feature: "Planned vacate tracking (dashboard)", basic: "No", pro: "Yes", enterprise: "Yes" },
+  { feature: "Admin expenses module", basic: "No", pro: "Yes", enterprise: "Yes" },
+  { feature: "Super Admin / multi-hostel platform", basic: "No", pro: "No", enterprise: "Yes" },
+  { feature: "Priority support", basic: "No", pro: "Yes", enterprise: "Yes" },
+];
+
+export const SUBSCRIPTION_PLAN_IDS = new Set(SUBSCRIPTION_PLANS.map((p) => p.id));
 
 export const API_SUBSCRIPTION_ERROR_CODE = "SUBSCRIPTION_REQUIRED";
 export const API_SUBSCRIPTION_ERROR_STATUS = 402;
 
 export function isPlanAvailableForPurchase(planId: string): boolean {
-  if (planId === "enterprise" && !ENTERPRISE_SUBSCRIPTION_ENABLED) return false;
   return SUBSCRIPTION_PLANS.some((p) => p.id === planId);
 }

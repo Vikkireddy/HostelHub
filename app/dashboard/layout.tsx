@@ -15,7 +15,7 @@ const pageTitles: Record<string, { title: string; subtitle?: string }> = {
   "/dashboard/payments": { title: "Payments", subtitle: "Payment tracking" },
   "/dashboard/expenses": { title: "Expenses", subtitle: "Admin expenses & profit tracking" },
   "/dashboard/settings": { title: "Settings", subtitle: "Manage your account & preferences" },
-  "/dashboard/subscription": { title: "Dashboard", subtitle: "Upgrade your plan" },
+  "/dashboard/subscription": { title: "Subscription", subtitle: "Pricing & plans" },
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
