@@ -11,7 +11,9 @@
     "migrate:students-left": "node scripts/run-migrate-students-left.js",
     "migrate:payments-partial": "node scripts/run-migrate-payments-partial.js",
     "migrate:signup": "node scripts/run-migrate-signup.js",
-    "migrate:hostel-isolation": "node scripts/run-migrate-hostel-isolation.js"
+    "migrate:hostel-isolation": "node scripts/run-migrate-hostel-isolation.js",
+    "migrate:staff-management": "node scripts/run-migrate-staff-management.js",
+    "migrate:migrate-staff-management.sql": "node scripts/run-migrate-staff-management.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

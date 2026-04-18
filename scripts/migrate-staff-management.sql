@@ -1,5 +1,6 @@
 -- Migration: Staff management + expense linkage
--- Run: mysql -u root -p hostelhub < scripts/migrate-staff-management.sql
+-- Local: mysql -u root -p hostelhub < scripts/migrate-staff-management.sql
+-- Env (e.g. Railway): DB_HOST=... DB_PORT=... DB_USER=... DB_PASSWORD=... DB_NAME=... npm run migrate:staff-management
 
 USE hostelhub;
 
