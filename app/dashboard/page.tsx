@@ -122,12 +122,12 @@ export default function DashboardPage() {
           <AlertTriangle className="h-5 w-5 shrink-0 text-red-700" aria-hidden />
           <Box className="min-w-0">
             <Typography className="text-sm font-semibold text-red-900">
-              Student limit reached
+              Resident limit reached
             </Typography>
             <Typography className="mt-1 text-sm text-red-800">
-              You are using all {studentCapacity.max} student slots on your current plan (
+              You are using all {studentCapacity.max} resident slots on your current plan (
               {studentCapacity.current} of {studentCapacity.max}). Upgrade your plan to add more
-              students.
+              residents.
             </Typography>
             <Link
               href="/dashboard/subscription"
@@ -147,13 +147,13 @@ export default function DashboardPage() {
           <AlertTriangle className="h-5 w-5 shrink-0 text-amber-800" aria-hidden />
           <Box className="min-w-0">
             <Typography className="text-sm font-semibold text-amber-950">
-              Approaching your student limit
+              Approaching your resident limit
             </Typography>
             <Typography className="mt-1 text-sm text-amber-900">
               You can add{" "}
               <strong>
                 {studentCapacity.remaining}{" "}
-                more {studentCapacity.remaining === 1 ? "student" : "students"}
+                more {studentCapacity.remaining === 1 ? "resident" : "residents"}
               </strong>{" "}
               on your current plan ({studentCapacity.current} of {studentCapacity.max} in use). After
               that, you will need to upgrade to add more.

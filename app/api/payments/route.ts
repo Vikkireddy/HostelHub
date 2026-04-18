@@ -113,7 +113,7 @@ export async function POST(request: Request) {
 
     if (!student_id || amount == null || amount === "" || !month || !year) {
       return NextResponse.json(
-        { error: "Student, amount, month, and year are required" },
+        { error: "Resident selection, amount, month, and year are required" },
         { status: 400 }
       );
     }
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
     );
     const student = (studentRows as Array<Record<string, unknown>>)[0];
     if (!student) {
-      return NextResponse.json({ error: "Student not found" }, { status: 400 });
+      return NextResponse.json({ error: "Resident not found" }, { status: 400 });
     }
 
     const roomRent = Number(student.room_rent ?? 0);
@@ -217,7 +217,7 @@ export async function POST(request: Request) {
 
     if (unpaid.length === 0) {
       return NextResponse.json(
-        { error: "No pending dues for this student. All bills are cleared." },
+        { error: "No pending dues for this resident. All bills are cleared." },
         { status: 400 }
       );
     }

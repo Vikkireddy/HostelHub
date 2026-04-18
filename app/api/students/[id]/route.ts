@@ -23,7 +23,7 @@ export async function DELETE(
     const { id } = await params;
     const studentId = Number(id);
     if (!id || isNaN(studentId)) {
-      return NextResponse.json({ error: "Invalid student ID" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid resident ID" }, { status: 400 });
     }
 
     const [studentRows] = await pool.execute(
@@ -32,7 +32,7 @@ export async function DELETE(
     );
     const student = (studentRows as Array<Record<string, unknown>>)[0];
     if (!student) {
-      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+      return NextResponse.json({ error: "Resident not found" }, { status: 404 });
     }
 
     const [paymentRows] = await pool.execute(
@@ -42,7 +42,7 @@ export async function DELETE(
     const count = Number((paymentRows as Array<Record<string, unknown>>)[0]?.cnt ?? 0);
     if (count > 0) {
       return NextResponse.json(
-        { error: "Cannot delete student with payment history. Use checkout instead." },
+        { error: "Cannot delete resident with payment history. Use checkout instead." },
         { status: 400 }
       );
     }
@@ -64,7 +64,7 @@ export async function DELETE(
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json(
-      { error: "Failed to delete student" },
+      { error: "Failed to delete resident" },
       { status: 500 }
     );
   }
@@ -86,7 +86,7 @@ export async function PATCH(
     const { id } = await params;
     const studentId = Number(id);
     if (!id || isNaN(studentId)) {
-      return NextResponse.json({ error: "Invalid student ID" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid resident ID" }, { status: 400 });
     }
 
     await ensurePlannedVacateDateColumn();
@@ -140,7 +140,7 @@ export async function PATCH(
     const existing = (existingRows as Array<Record<string, unknown>>)[0];
     if (!existing) {
       return NextResponse.json(
-        { error: "Student not found or already left" },
+        { error: "Resident not found or already left" },
         { status: 404 }
       );
     }
@@ -230,7 +230,7 @@ export async function PATCH(
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json(
-      { error: "Failed to update student" },
+      { error: "Failed to update resident" },
       { status: 500 }
     );
   }

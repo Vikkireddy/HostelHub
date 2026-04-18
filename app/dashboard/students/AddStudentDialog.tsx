@@ -32,9 +32,9 @@ export function AddStudentDialog({
         onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Add Student</DialogTitle>
+          <DialogTitle>Add Resident</DialogTitle>
           <DialogDescription>
-            Enter student details. All fields are mandatory.
+            Enter resident details. All fields are mandatory.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
@@ -48,7 +48,7 @@ export function AddStudentDialog({
             roomCaption={
               availableRooms.length === 0
                 ? "No rooms available. Add rooms from the Rooms page first."
-                : "Choose the room this student will be assigned to. Only available rooms are shown."
+                : "Choose the room this resident will be assigned to. Only available rooms are shown."
             }
           />
           <DialogFooter>
@@ -56,7 +56,7 @@ export function AddStudentDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={isPending || availableRooms.length === 0}>
-              {isPending ? "Saving..." : "Add Student"}
+              {isPending ? "Saving..." : "Add Resident"}
             </Button>
           </DialogFooter>
         </form>

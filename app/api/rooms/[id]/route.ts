@@ -38,7 +38,7 @@ export async function DELETE(
     const occupancy = Number(room.occupancy ?? 0);
     if (occupancy > 0) {
       return NextResponse.json(
-        { error: "Cannot delete room with occupants. Reassign or checkout students first." },
+        { error: "Cannot delete room with occupants. Reassign or checkout residents first." },
         { status: 400 }
       );
     }

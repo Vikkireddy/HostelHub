@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch students with dues" },
+      { error: "Failed to fetch residents with dues" },
       { status: 500 }
     );
   }

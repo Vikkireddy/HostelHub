@@ -6,7 +6,7 @@ export const en = {
   FAILED_TO_LOAD_DASHBOARD: "Failed to load dashboard",
 
   // Stats grid
-  TOTAL_STUDENTS: "Total Students",
+  TOTAL_STUDENTS: "Total Residents",
   PLUS_TWO_THIS_MONTH: "+2 this month",
   STUDENTS_PLUS_THIS_MONTH: "+{count} this month",
   STUDENTS_MINUS_THIS_MONTH: "-{count} this month",
@@ -26,8 +26,8 @@ export const en = {
 
   // Pending bills modal
   PENDING_BILLS_MODAL_TITLE: "Pending Bills",
-  PENDING_BILLS_DESCRIPTION: "Students with pending or overdue payments. Total due: ₹{amount}",
-  PAYMENT_HISTORY_STUDENT_FALLBACK: "Student",
+  PENDING_BILLS_DESCRIPTION: "Residents with pending or overdue payments. Total due: ₹{amount}",
+  PAYMENT_HISTORY_STUDENT_FALLBACK: "Resident",
   PAYMENT_HISTORY: "Payment History",
   PAYMENT_HISTORY_CLOSE: "Close",
   PAYMENT_HISTORY_LOADING: "Loading payment history...",
@@ -58,7 +58,7 @@ export const en = {
   PLANNED_VACATES_VACATE_ON: "Vacating on",
   PLANNED_VACATES_EMPTY_TITLE: "No upcoming vacates",
   PLANNED_VACATES_EMPTY_MESSAGE:
-    "When a student plans to leave, set their planned vacate date on the Students page. It will show here for planning room availability.",
+    "When a resident plans to leave, set their planned vacate date on the Residents page. It will show here for planning room availability.",
   PLANNED_VACATE_DATE_LABEL: "Planned vacate date",
   PLANNED_VACATE_DATE_OPTIONAL: "Optional — visible on the dashboard for room planning",
 
@@ -70,46 +70,46 @@ export const en = {
   NO_PAYMENTS_FOUND: "No payments found",
   PAYMENTS_EMPTY_MESSAGE: "Payment records will appear here once payments are recorded",
 
-  // Students overview
-  STUDENTS_OVERVIEW: "Students Overview",
+  // Residents overview
+  STUDENTS_OVERVIEW: "Residents Overview",
   MANAGE: "Manage →",
-  NO_STUDENTS_FOUND: "No students found",
-  STUDENTS_EMPTY_MESSAGE: "Add students from the Students page to see them here",
+  NO_STUDENTS_FOUND: "No residents found",
+  STUDENTS_EMPTY_MESSAGE: "Add residents from the Residents page to see them here",
   NAME: "Name",
   ROOM_LABEL: "Room",
   COURSE: "Course",
   JOIN_DATE: "Join Date",
   PHONE: "Phone",
 
-  // Student actions
+  // Resident actions
   MARK_AS_LEFT: "Mark as Left",
   CHECK_OUT: "Check Out",
   CHECKOUT_DISABLED_DUES: "Clear pending payments before checkout",
-  STUDENT_CHECKOUT: "Student Check-Out",
-  CHECKOUT_CONFIRM_MESSAGE: "Are you sure you want to check out this student? This will free up their room.",
-  STUDENT_LABEL: "Student",
+  STUDENT_CHECKOUT: "Resident Check-Out",
+  CHECKOUT_CONFIRM_MESSAGE: "Are you sure you want to check out this resident? This will free up their room.",
+  STUDENT_LABEL: "Resident",
   JOINED: "Joined",
   CHECKOUT_DATE: "Checkout Date",
-  PENDING_DUES_WARNING: "Pending Dues. This student has ₹{amount} in pending/overdue payments.",
+  PENDING_DUES_WARNING: "Pending Dues. This resident has ₹{amount} in pending/overdue payments.",
   CONFIRM_CHECKOUT: "Confirm Check-Out",
   CANCEL: "Cancel",
-  CONFIRM_MARK_AS_LEFT: "Are you sure this student has left the hostel? Their room will be freed and their record will be moved to Exited Students.",
-  STUDENT_MARKED_AS_LEFT: "Student marked as left successfully",
+  CONFIRM_MARK_AS_LEFT: "Are you sure this resident has left the hostel? Their room will be freed and their record will be moved to Exited Residents.",
+  STUDENT_MARKED_AS_LEFT: "Resident marked as left successfully",
 
-  // Student tabs
+  // Resident tabs
   PRESENT: "Present",
   INACTIVE: "Inactive",
   LEFT_DATE: "Left Date",
-  NO_INACTIVE_STUDENTS: "No inactive students found",
-  INACTIVE_STUDENTS_EMPTY_MESSAGE: "Students who leave the hostel will appear here",
-  LOADING_STUDENTS: "Loading students...",
-  FAILED_TO_LOAD_STUDENTS: "Failed to load students",
-  STUDENT_MANAGEMENT: "Student Management",
-  ADD_STUDENT: "Add Student",
+  NO_INACTIVE_STUDENTS: "No inactive residents found",
+  INACTIVE_STUDENTS_EMPTY_MESSAGE: "Residents who leave the hostel will appear here",
+  LOADING_STUDENTS: "Loading residents...",
+  FAILED_TO_LOAD_STUDENTS: "Failed to load residents",
+  STUDENT_MANAGEMENT: "Resident Management",
+  ADD_STUDENT: "Add Resident",
   STUDENT_IMPORT_CTA: "Import CSV",
-  STUDENT_IMPORT_TITLE: "Import students from CSV",
+  STUDENT_IMPORT_TITLE: "Import residents from CSV",
   STUDENT_IMPORT_DESCRIPTION:
-    "Upload a CSV with one student per row. Room numbers must match your Rooms page. Use the sample file for column names and formatting.",
+    "Upload a CSV with one resident per row. Room numbers must match your Rooms page. Use the sample file for column names and formatting.",
   STUDENT_IMPORT_DOWNLOAD_TEMPLATE: "Download sample CSV",
   STUDENT_IMPORT_CHOOSE_FILE: "Choose CSV file",
   STUDENT_IMPORT_SELECTED_FILE: "Selected file",
@@ -120,21 +120,21 @@ export const en = {
   STUDENT_IMPORT_IMPORTING: "Importing…",
   STUDENT_IMPORT_CSV_ONLY: "Please choose a .csv file.",
   STUDENT_IMPORT_FAILED: "Import failed",
-  STUDENT_IMPORT_SUCCESS: "Imported {count} student(s).",
+  STUDENT_IMPORT_SUCCESS: "Imported {count} resident(s).",
   STUDENT_IMPORT_SOME_FAILED: "{failed} row(s) could not be imported.",
   STUDENT_IMPORT_NOTHING: "No rows were imported.",
   STUDENT_IMPORT_ROW: "Row",
-  STUDENT_EXPORT_CURRENT: "Download current students",
+  STUDENT_EXPORT_CURRENT: "Download current residents",
   STUDENT_EXPORT_DOWNLOADING: "Downloading…",
-  STUDENT_EXPORT_SUCCESS: "Student CSV downloaded.",
-  STUDENT_EXPORT_FAILED: "Failed to download student CSV",
+  STUDENT_EXPORT_SUCCESS: "Resident CSV downloaded.",
+  STUDENT_EXPORT_FAILED: "Failed to download resident CSV",
   OVERDUE: "Overdue",
   PENDING: "Pending",
   TOTAL_DUE: "Total Due",
   DUE_OVERDUE_AMOUNT_BY_MONTH: "Due/overdue amount by month for {studentName}",
   PAYMENT_BREAKDOWN: "Payment Breakdown",
   VIEW_BREAKDOWN: "View breakdown",
-  SEARCH_STUDENTS_PLACEHOLDER: "Search name, phone, ID…",
+  SEARCH_STUDENTS_PLACEHOLDER: "Search residents by name, phone, or ID…",
   ALL_ROOMS: "All Rooms",
   ALL_STATUS: "All Status",
   COLLECTED_AMOUNT: "Collected Amount",
@@ -239,14 +239,14 @@ export const en = {
   LANDING_HERO_PREVIEW_ALT: "Admin HostelHub preview",
   LANDING_HERO_MOCK_LIVE_OVERVIEW: "Live overview",
   LANDING_HERO_MOCK_ROOMS: "Rooms",
-  LANDING_HERO_MOCK_STUDENTS: "Students",
+  LANDING_HERO_MOCK_STUDENTS: "Residents",
   LANDING_HERO_MOCK_OCCUPANCY: "Occupancy",
 
   // Landing — trust strip
   LANDING_TRUST_ARIA: "Why teams choose Admin HostelHub",
   LANDING_TRUST_TRIAL_TITLE: "7-day full trial",
   LANDING_TRUST_TRIAL_TEXT:
-    "Use real workflows before you commit—rooms, students, payments, and reports.",
+    "Use real workflows before you commit—rooms, residents, payments, and reports.",
   LANDING_TRUST_NO_CARD_TITLE: "No card for trial",
   LANDING_TRUST_NO_CARD_TEXT: "Start exploring without payment details. Subscribe only when you're ready.",
   LANDING_TRUST_SECURE_TITLE: "Secure by design",
@@ -265,9 +265,9 @@ export const en = {
   LANDING_HOW_STEP_01_BODY:
     "Sign up, add your hostel profile, branding, and key contacts so everything stays organized in one place.",
   LANDING_HOW_STEP_02: "02",
-  LANDING_HOW_STEP_02_TITLE: "Map rooms & students",
+  LANDING_HOW_STEP_02_TITLE: "Map rooms & residents",
   LANDING_HOW_STEP_02_BODY:
-    "Define floors, room types, and beds, then onboard students with profiles, documents, and fee rules.",
+    "Define floors, room types, and beds, then onboard residents with profiles, documents, and fee rules.",
   LANDING_HOW_STEP_03: "03",
   LANDING_HOW_STEP_03_TITLE: "Run operations daily",
   LANDING_HOW_STEP_03_BODY:
@@ -284,7 +284,7 @@ export const en = {
   LANDING_FAQ_INTRO_AFTER_LINK: "or use the details in the footer.",
   LANDING_FAQ_Q1: "What's included in the 7-day trial?",
   LANDING_FAQ_A1:
-    "Full access to core Admin HostelHub features for your hostel: rooms, students, payments, and reporting. No credit card required to start.",
+    "Full access to core Admin HostelHub features for your hostel: rooms, residents, payments, and reporting. No credit card required to start.",
   LANDING_FAQ_Q2: "Can I change or cancel my plan later?",
   LANDING_FAQ_A2:
     "Yes. Upgrade anytime as you grow, or adjust your subscription from the dashboard. Contact us for enterprise terms or custom billing.",
@@ -294,20 +294,20 @@ export const en = {
   LANDING_FAQ_Q4: "How is my data kept secure?",
   LANDING_FAQ_A4:
     "We use industry-standard practices: encrypted connections, secure hosting, and access controls so your team only sees what they need.",
-  LANDING_FAQ_Q5: "How do student payments and fees work?",
+  LANDING_FAQ_Q5: "How do resident rent payments and fees work?",
   LANDING_FAQ_A5:
     "Record fees, track dues, and mark payments as paid. Integrations and gateways depend on your plan—ask us for your region.",
 
   // Landing — about
   LANDING_ABOUT_BADGE: "About Admin HostelHub",
   LANDING_ABOUT_HEADING_BEFORE: "Simplifying",
-  LANDING_ABOUT_HEADING_ACCENT: "student housing",
+  LANDING_ABOUT_HEADING_ACCENT: "Resident housing",
   LANDING_ABOUT_HEADING_AFTER: "operations",
   LANDING_ABOUT_LEAD:
-    "Admin HostelHub is built for owners and managers who run tight ships—one place to track beds, students, dues, and month-end numbers without chasing spreadsheets.",
+    "Admin HostelHub is built for owners and managers who run tight ships—one place to track beds, residents, dues, and month-end numbers without chasing spreadsheets.",
   LANDING_ABOUT_STAT1_VALUE: "1",
   LANDING_ABOUT_STAT1_LABEL: "Unified workspace",
-  LANDING_ABOUT_STAT1_SUB: "Rooms, students & payments together",
+  LANDING_ABOUT_STAT1_SUB: "Rooms, residents & payments together",
   LANDING_ABOUT_STAT2_VALUE: "7",
   LANDING_ABOUT_STAT2_LABEL: "Day trial",
   LANDING_ABOUT_STAT2_SUB: "Explore the full workflow risk-free",
@@ -325,7 +325,7 @@ export const en = {
     "Help hostel operators digitize day-to-day work—allocation, fees, records, and reporting—so teams spend less time on paperwork and more time on residents.",
   LANDING_ABOUT_PILLAR_VISION_TITLE: "Our vision",
   LANDING_ABOUT_PILLAR_VISION_BODY:
-    "Become the trusted standard for student housing admin: clear occupancy, predictable cash flow, and transparency owners and parents can rely on.",
+    "Become the trusted standard for resident housing admin: clear occupancy, predictable cash flow, and transparency owners and parents can rely on.",
   LANDING_ABOUT_PILLAR_VALUES_TITLE: "Our values",
   LANDING_ABOUT_PILLAR_VALUES_BODY:
     "We prioritize reliability, data security, honest pricing, and listening to real hostel teams when we design every screen and report.",
@@ -344,7 +344,7 @@ export const en = {
   SUBSCRIPTION_HERO_BADGE: "Admin Hostel Hub pricing",
   SUBSCRIPTION_HERO_TITLE: "Simple pricing for every hostel size",
   SUBSCRIPTION_HERO_SUBTITLE:
-    "Manage rooms, students, payments, and business insights with plans designed for modern hostel operations.",
+    "Manage rooms, residents, payments, and business insights with plans designed for modern hostel operations.",
   SUBSCRIPTION_HERO_PILL_1: "No hidden charges",
   SUBSCRIPTION_HERO_PILL_2: "Easy monthly plans",
   SUBSCRIPTION_HERO_PILL_3: "Built for Indian hostels",
@@ -401,7 +401,7 @@ export const en = {
   PLATFORM_HOME: "Home",
   PLATFORM_SIGN_OUT: "Sign out",
   PLATFORM_TOTAL_HOSTELS: "Total hostels",
-  PLATFORM_TOTAL_STUDENTS: "Students (all)",
+  PLATFORM_TOTAL_STUDENTS: "Residents (all)",
   PLATFORM_TOTAL_ROOMS: "Rooms (all)",
   PLATFORM_ADMINS_LINKED: "Admins linked",
   PLATFORM_NEW_HOSTELS_THIS_MONTH: "New hostels (this month)",

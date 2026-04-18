@@ -25,7 +25,7 @@ export function DeleteStudentDialog({
         onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Delete Student</DialogTitle>
+          <DialogTitle>Delete Resident</DialogTitle>
           <DialogDescription>
             Are you sure you want to permanently delete {student?.name}? This cannot be undone.
           </DialogDescription>

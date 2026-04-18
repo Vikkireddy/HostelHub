@@ -33,9 +33,9 @@ export function EditStudentDialog({
         onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Edit Student</DialogTitle>
+          <DialogTitle>Edit Resident</DialogTitle>
           <DialogDescription>
-            Update student details. All fields are mandatory. Change room to reassign.
+            Update resident details. All fields are mandatory. Change room to reassign.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
@@ -47,7 +47,7 @@ export function EditStudentDialog({
             idPrefix="edit"
             idProofError={idProofError}
             phoneError={phoneError}
-            roomCaption="Change room to reassign the student. Current room is always available."
+            roomCaption="Change room to reassign the resident. Current room is always available."
           />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

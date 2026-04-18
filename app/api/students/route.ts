@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch students" },
+      { error: "Failed to fetch residents" },
       { status: 500 }
     );
   }
@@ -201,7 +201,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json(
-      { error: "Failed to create student" },
+      { error: "Failed to create resident" },
       { status: 500 }
     );
   }

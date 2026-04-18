@@ -10,10 +10,11 @@ import { SubscriptionGuard } from "@/components/subscription/SubscriptionGuard";
 
 const pageTitles: Record<string, { title: string; subtitle?: string }> = {
   "/dashboard": { title: "Dashboard", subtitle: "Welcome back, Admin" },
-  "/dashboard/students": { title: "Students", subtitle: "Student management" },
+  "/dashboard/students": { title: "Residents", subtitle: "Resident management" },
   "/dashboard/rooms": { title: "Rooms", subtitle: "Room allocation & status" },
   "/dashboard/payments": { title: "Payments", subtitle: "Payment tracking" },
   "/dashboard/expenses": { title: "Expenses", subtitle: "Admin expenses & profit tracking" },
+  "/dashboard/staff": { title: "Staff", subtitle: "Staff records & salary expense links" },
   "/dashboard/settings": { title: "Settings", subtitle: "Manage your account & preferences" },
   "/dashboard/subscription": { title: "Subscription", subtitle: "Pricing & plans" },
 };

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -16,8 +17,9 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
 import { t } from "@/lib/i18n";
-import { EXPENSE_CATEGORIES } from "./expenses.constants";
+import { EXPENSE_CATEGORIES, STAFF_SALARY_CATEGORY } from "./expenses.constants";
 import type { ExpenseFormValues } from "./expenses.types";
+import type { StaffOptionForExpense } from "./useExpensesData";
 
 interface AddExpenseDialogProps {
   open: boolean;
@@ -27,6 +29,8 @@ interface AddExpenseDialogProps {
   onSubmit: (e: React.FormEvent) => void;
   isPending: boolean;
   error?: Error | null;
+  staffMembers: StaffOptionForExpense[];
+  isLoadingStaff?: boolean;
 }
 
 export function AddExpenseDialog({
@@ -37,7 +41,21 @@ export function AddExpenseDialog({
   onSubmit,
   isPending,
   error,
+  staffMembers,
+  isLoadingStaff = false,
 }: AddExpenseDialogProps) {
+  const isStaffSalary = form.category === STAFF_SALARY_CATEGORY;
+  const staffOptions = staffMembers.map((s) => ({
+    value: String(s.id),
+    label: `${s.name} (₹${Number(s.monthly_salary).toLocaleString("en-IN")}/mo)`,
+  }));
+
+  const submitDisabled =
+    isPending ||
+    !form.amount?.trim() ||
+    !form.category ||
+    (isStaffSalary && (!form.staff_member_id?.trim() || staffMembers.length === 0));
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -52,6 +70,58 @@ export function AddExpenseDialog({
             <Typography variant="error">{error.message}</Typography>
           )}
           <Box className="space-y-2">
+            <Label htmlFor="category">Category *</Label>
+            <Dropdown
+              id="category"
+              value={form.category || undefined}
+              onValueChange={(v) =>
+                onFormChange((p) => {
+                  if (v === STAFF_SALARY_CATEGORY) {
+                    return { ...p, category: v, staff_member_id: "", amount: "" };
+                  }
+                  return { ...p, category: v, staff_member_id: "" };
+                })
+              }
+              options={EXPENSE_CATEGORIES.map((c) => ({ value: c, label: c }))}
+              placeholder="Select category"
+            />
+          </Box>
+
+          {isStaffSalary && (
+            <Box className="space-y-2">
+              <Label htmlFor="expense-staff">Staff member *</Label>
+              {isLoadingStaff ? (
+                <Typography variant="muted" className="text-sm">
+                  Loading staff…
+                </Typography>
+              ) : staffMembers.length === 0 ? (
+                <Typography variant="muted" className="text-sm">
+                  No active staff yet.{" "}
+                  <Link href="/dashboard/staff" className="font-medium text-link hover:underline">
+                    Add staff
+                  </Link>{" "}
+                  first, then pick them here—the amount defaults to their monthly salary.
+                </Typography>
+              ) : (
+                <Dropdown
+                  id="expense-staff"
+                  value={form.staff_member_id || undefined}
+                  onValueChange={(id) => {
+                    const staff = staffMembers.find((s) => String(s.id) === id);
+                    onFormChange((p) => ({
+                      ...p,
+                      staff_member_id: id,
+                      amount: staff != null ? String(staff.monthly_salary) : p.amount,
+                    }));
+                  }}
+                  options={staffOptions}
+                  placeholder="Select staff member"
+                />
+              )}
+            </Box>
+          )}
+
+          <Box className="space-y-2">
             <Label htmlFor="amount">Amount (₹) *</Label>
             <Input
               id="amount"
@@ -61,17 +131,15 @@ export function AddExpenseDialog({
               placeholder="0"
               value={form.amount}
               onChange={(e) => onFormChange((p) => ({ ...p, amount: e.target.value }))}
+              disabled={isStaffSalary && !form.staff_member_id}
             />
+            {isStaffSalary && form.staff_member_id ? (
+              <Typography variant="muted" className="text-xs">
+                Pre-filled from salary; you can adjust if this payout differs.
+              </Typography>
+            ) : null}
           </Box>
-          <Box className="space-y-2">
-            <Label htmlFor="category">Category *</Label>
-            <Dropdown
-              value={form.category}
-              onValueChange={(v) => onFormChange((p) => ({ ...p, category: v }))}
-              options={EXPENSE_CATEGORIES.map((c) => ({ value: c, label: c }))}
-              placeholder="Select category"
-            />
-          </Box>
+
           <Box className="space-y-2">
             <Label htmlFor="description">Description (optional)</Label>
             <Input
@@ -91,10 +159,7 @@ export function AddExpenseDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               {t("CANCEL")}
             </Button>
-            <Button
-              type="submit"
-              disabled={isPending || !form.amount || !form.category}
-            >
+            <Button type="submit" disabled={submitDisabled}>
               {isPending ? "Adding..." : "Add Expense"}
             </Button>
           </DialogFooter>

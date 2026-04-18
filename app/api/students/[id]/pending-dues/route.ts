@@ -21,7 +21,7 @@ export async function GET(
     const { id } = await params;
     const studentId = Number(id);
     if (!id || isNaN(studentId)) {
-      return NextResponse.json({ error: "Invalid student ID" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid resident ID" }, { status: 400 });
     }
 
     const [studentCheck] = await pool.execute(

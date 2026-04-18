@@ -33,13 +33,13 @@ const features = [
     icon: BedDouble,
   },
   {
-    title: "Digital student records",
+    title: "Digital resident records",
     description: "Profiles, documents, emergency contacts, and payment history in one secure place.",
     icon: Users,
   },
   {
     title: "Automated invoicing",
-    description: "Recurring fee schedules, reminders, and clear records for every student.",
+    description: "Recurring fee schedules, reminders, and clear records for every resident.",
     icon: FileText,
   },
   {
@@ -161,7 +161,7 @@ export default function LandingPage() {
                 style={{ animationDelay: "0.2s" }}
               >
                 Admin HostelHub gives you a single, powerful command center to automate bookings,
-                collect payments, and manage students with ease.
+                collect payments, and manage residents with ease.
               </Typography>
               <Box
                 className="landing-fade-up mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-5 lg:justify-start"
@@ -199,7 +199,7 @@ export default function LandingPage() {
               </Typography>
             </Typography>
             <Typography variant="muted" className="mx-auto mt-4 max-w-2xl">
-              One platform for rooms, students, money, and reporting—without juggling extra tools.
+              One platform for rooms, residents, money, and reporting—without juggling extra tools.
             </Typography>
           </Box>
           <Box className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -246,7 +246,7 @@ export default function LandingPage() {
                 </Typography>
               </Typography>
               <Typography className="mt-3 text-sm leading-relaxed text-primary-foreground/75">
-                Modern student housing operations—simple, efficient, and secure.
+                Modern resident housing operations—simple, efficient, and secure.
               </Typography>
             </Box>
             <Box>

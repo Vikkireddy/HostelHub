@@ -69,7 +69,7 @@ export function RecordPaymentDialog({
         <DialogHeader>
           <DialogTitle>Record Payment</DialogTitle>
           <DialogDescription>
-            Record a rent payment for a student. Select student, amount, and billing period.
+            Record a rent payment for a resident. Select resident, amount, and billing period.
           </DialogDescription>
         </DialogHeader>
 
@@ -78,14 +78,14 @@ export function RecordPaymentDialog({
 
           {studentsWithDues.length === 0 && (
             <Typography variant="caption" className="block">
-              All students have cleared their dues. No payment to record.
+              All residents have cleared their dues. No payment to record.
             </Typography>
           )}
 
           <div className="space-y-4">
-            {/* Student Select */}
+            {/* Resident select (form field remains student_id) */}
             <Box className="space-y-2">
-              <RequiredLabel htmlFor="record-student">Student</RequiredLabel>
+              <RequiredLabel htmlFor="record-student">Resident</RequiredLabel>
               <Dropdown
                 id="record-student"
                 value={form.student_id}
@@ -94,7 +94,7 @@ export function RecordPaymentDialog({
                   value: String(s.id),
                   label: `${s.name}${s.room_rent > 0 ? ` (₹${s.room_rent.toLocaleString()}/mo)` : ""}`,
                 }))}
-                placeholder="Select student"
+                placeholder="Select resident"
                 disabled={studentsWithDues.length === 0}
               />
             </Box>

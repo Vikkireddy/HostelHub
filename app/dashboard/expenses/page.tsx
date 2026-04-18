@@ -1,16 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { Wallet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { useSubscriptionStore } from "@/lib/SubscriptionStore";
-import { planHasAdvancedFeatures } from "@/lib/subscription/planFeatures";
 import { useAuthStore } from "@/lib/AuthStore";
-import { useExpensesData, type Expense } from "./index";
+import { useExpensesData, type Expense, STAFF_SALARY_CATEGORY } from "./index";
 
 const ExpensesFiltersBar = dynamic(() =>
   import("./ExpensesFiltersBar").then((m) => m.ExpensesFiltersBar)
@@ -27,12 +24,11 @@ const DeleteExpenseDialog = dynamic(() =>
 
 export default function ExpensesPage() {
   const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
-  const subStatus = useSubscriptionStore((s) => s.status);
-  const canQueryExpenses =
-    subStatus != null && planHasAdvancedFeatures(subStatus.planId);
 
   const {
     expenses,
+    staffForExpenses,
+    isLoadingStaffForExpense,
     isLoading,
     error,
     totalAmount,
@@ -50,39 +46,12 @@ export default function ExpensesPage() {
     setExpenseToDelete,
     createExpense,
     deleteExpense,
-  } = useExpensesData({ queryEnabled: canQueryExpenses });
-
-  if (hostelId && subStatus == null) {
-    return (
-      <Box className="flex items-center justify-center p-16">
-        <Typography variant="muted">Loading…</Typography>
-      </Box>
-    );
-  }
-
-  if (subStatus?.planId != null && !planHasAdvancedFeatures(subStatus.planId)) {
-    return (
-      <Box className="mx-auto max-w-lg rounded-xl border border-dashed border-slate-200 bg-white p-10 text-center shadow-sm">
-        <Typography className="text-lg font-semibold text-slate-900">
-          Expense &amp; profit tracking is on Pro
-        </Typography>
-        <Typography className="mt-2 text-sm text-slate-600">
-          Your Base plan covers students, rooms, and payments. Upgrade to Pro for admin expenses,
-          profit insights, and full dashboard analytics.
-        </Typography>
-        <Link
-          href="/dashboard/subscription"
-          className="mt-6 inline-block rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
-        >
-          View plans
-        </Link>
-      </Box>
-    );
-  }
+  } = useExpensesData();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.amount || !form.category) return;
+    if (!form.amount?.trim() || !form.category) return;
+    if (form.category === STAFF_SALARY_CATEGORY && !form.staff_member_id?.trim()) return;
     createExpense.mutate(form);
   };
 
@@ -90,6 +59,14 @@ export default function ExpensesPage() {
     setExpenseToDelete(expense);
     setDeleteModalOpen(true);
   };
+
+  if (!hostelId) {
+    return (
+      <Box className="flex items-center justify-center p-16">
+        <Typography variant="muted">Loading…</Typography>
+      </Box>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -164,6 +141,8 @@ export default function ExpensesPage() {
         onSubmit={handleSubmit}
         isPending={createExpense.isPending}
         error={createExpense.error}
+        staffMembers={staffForExpenses}
+        isLoadingStaff={isLoadingStaffForExpense}
       />
     </Box>
   );
