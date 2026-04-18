@@ -39,6 +39,7 @@ export function ExpensesTable({
           <TableRow>
             <TableHead>Date</TableHead>
             <TableHead>Category</TableHead>
+            <TableHead>Staff</TableHead>
             <TableHead>Description</TableHead>
             <TableHead className="text-right">Amount</TableHead>
             <TableHead className="w-[60px]" />
@@ -57,6 +58,9 @@ export function ExpensesTable({
                   : "-"}
               </TableCell>
               <TableCell>{exp.category}</TableCell>
+              <TableCell className="max-w-[140px] truncate text-slate-600">
+                {exp.staff_name?.trim() || "-"}
+              </TableCell>
               <TableCell className="max-w-[200px] truncate">
                 {exp.description || "-"}
               </TableCell>

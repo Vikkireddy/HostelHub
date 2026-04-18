@@ -103,7 +103,7 @@ export function Header({ title, subtitle }: HeaderProps) {
         <Box className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search students, rooms, payments..."
+            placeholder="Search residents, rooms, payments..."
             className="w-64 rounded-lg border-border bg-muted pl-9 focus:bg-background"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}

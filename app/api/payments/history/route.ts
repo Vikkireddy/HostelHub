@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const studentId = Number(request.nextUrl.searchParams.get("student_id"));
     if (!studentId || Number.isNaN(studentId)) {
       return NextResponse.json(
-        { error: "Valid student_id is required" },
+        { error: "A valid resident account is required" },
         { status: 400 }
       );
     }
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     );
     const student = (studentRows as Array<{ id: number; name: string; room_rent: number }>)[0];
     if (!student) {
-      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+      return NextResponse.json({ error: "Resident not found" }, { status: 404 });
     }
 
     let historyRows: Array<Record<string, unknown>> = [];

@@ -84,7 +84,7 @@ function ActionsMenu({
           onClick={handleDelete}
           disabled={!deletable}
           sx={{ gap: 1 }}
-          title={!deletable ? "Cannot delete student with payment history" : undefined}
+          title={!deletable ? "Cannot delete resident with payment history" : undefined}
         >
           <Trash2 className="h-4 w-4" />
           Delete

@@ -4,7 +4,6 @@ import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { updateOverduePayments, getDueDate, getDaysInfo, getPendingDuesSql } from "@/lib/PaymentUtils";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
 import { validateHostelSubscription } from "@/lib/subscription/validate";
-import { planHasAdvancedFeatures } from "@/lib/subscription/planFeatures";
 import { SUBSCRIPTION_PLANS } from "@/lib/subscription/constants";
 import { ensurePlannedVacateDateColumn } from "@/lib/ensurePlannedVacateDateColumn";
 import { sqlDateOnlyToYmd, todayDateOnlyLocal, formatSqlDateOnlyForJson } from "@/lib/dateOnly";
@@ -74,7 +73,7 @@ export async function GET(request: NextRequest) {
     await ensurePlannedVacateDateColumn();
 
     const { status: subStatus } = await validateHostelSubscription(hostelId);
-    const advancedAnalytics = planHasAdvancedFeatures(subStatus?.planId);
+    const advancedAnalytics = true;
 
     await updateOverduePayments(hostelId);
     const { unpaidWhere, unpaidWhereNoAlias, revenueSelect, pendingBillsSelect } = await getPendingDuesSql();

@@ -13,8 +13,8 @@ A complete hostel management solution built with React, Next.js, Tailwind CSS, R
 ## Features
 
 - **Login** - Admin authentication (admin@hostel.com / admin123)
-- **Dashboard** - Overview with metrics, revenue chart, room distribution, recent payments, complaints, students
-- **Students** - Student management with room allocation
+- **Dashboard** - Overview with metrics, revenue chart, room distribution, recent payments, complaints, residents
+- **Residents** - Resident management with room allocation
 - **Rooms** - Room cards with status, occupancy, rent
 - **Payments** - Payment tracking and records
 - **Complaints** - Complaint management (open, in-progress, resolved)

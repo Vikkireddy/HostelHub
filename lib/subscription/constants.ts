@@ -9,16 +9,16 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: "basic",
     name: "Base",
-    tagline: "Up to 50 students",
+    tagline: "Up to 50 residents",
     description:
-      "Best for small hostels moving day-to-day operations online—students, rooms, and rent in one place.",
+      "Best for small hostels moving day-to-day operations online—residents, rooms, and rent in one place.",
     price_monthly: 399,
     max_students: 50,
     features: [
-      "Student records with room assignment & ID proof fields",
+      "Resident records with room assignment & ID proof fields",
       "Room occupancy, maintenance status, and allocation",
       "Rent schedules, receipts, pending dues, and overdue tracking",
-      "CSV import & export for students",
+      "CSV import & export for residents",
       "Dashboard overview: occupancy, revenue totals, recent payments",
       "Password reset and operational email flows",
     ],
@@ -26,7 +26,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: "pro",
     name: "Pro",
-    tagline: "Up to 100 students",
+    tagline: "Up to 100 residents",
     description:
       "For growing hostels that need cashflow clarity—charts, admin expenses, and planned move-outs on the dashboard.",
     price_monthly: 699,
@@ -43,14 +43,14 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: "enterprise",
     name: "Pro Plus",
-    tagline: "Unlimited students",
+    tagline: "Unlimited residents",
     description:
-      "For larger hostels and groups preparing for multi-branch operations—no student cap, same Pro analytics.",
+      "For larger hostels and groups preparing for multi-branch operations—no resident cap, same Pro analytics.",
     price_monthly: 999,
     max_students: null,
     features: [
       "Everything in Pro",
-      "Unlimited active students (no seat cap)",
+      "Unlimited active residents (no seat cap)",
       "Highest priority support channel",
       "Multi-hostel / platform roadmap alignment (Super Admin layer)",
       "Best for chains coordinating finance and occupancy centrally",
@@ -65,10 +65,10 @@ export const PLAN_COMPARISON_ROWS: {
   pro: string;
   enterprise: string;
 }[] = [
-  { feature: "Student limit", basic: "50", pro: "100", enterprise: "Unlimited" },
+  { feature: "Resident limit", basic: "50", pro: "100", enterprise: "Unlimited" },
   { feature: "Room management", basic: "Yes", pro: "Yes", enterprise: "Yes" },
   { feature: "Payment & dues tracking", basic: "Yes", pro: "Yes", enterprise: "Yes" },
-  { feature: "CSV student import / export", basic: "Yes", pro: "Yes", enterprise: "Yes" },
+  { feature: "CSV resident import / export", basic: "Yes", pro: "Yes", enterprise: "Yes" },
   { feature: "Dashboard revenue & occupancy overview", basic: "Yes", pro: "Yes", enterprise: "Yes" },
   { feature: "Income vs expenses & profit", basic: "No", pro: "Yes", enterprise: "Yes" },
   { feature: "Charts (revenue, room mix)", basic: "No", pro: "Yes", enterprise: "Yes" },

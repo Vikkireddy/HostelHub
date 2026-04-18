@@ -35,7 +35,7 @@ export async function checkStudentLimit(
         body: {
           success: false,
           code: API_SUBSCRIPTION_ERROR_CODE,
-          message: `Your plan allows up to ${maxStudents} students. Upgrade to add more.`,
+          message: `Your plan allows up to ${maxStudents} residents. Upgrade to add more.`,
           featureLocked: true,
         },
       };

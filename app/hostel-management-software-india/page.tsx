@@ -13,13 +13,13 @@ const path = "/hostel-management-software-india";
 export const metadata: Metadata = {
   title: "Best Hostel Management Software in India | Admin Hostel Hub",
   description:
-    "Best hostel management software in India for PG & hostel owners. Track rent, students, expenses, and room vacancy. Free trial — no credit card required.",
+    "Best hostel management software in India for PG & hostel owners. Track rent, residents, expenses, and room vacancy. Free trial — no credit card required.",
   keywords: [
     "hostel management software india",
     "pg management app india",
     "hostel rent tracking app",
     "hostel admin dashboard",
-    "student hostel management",
+    "resident hostel management",
     "Admin Hostel Hub",
   ],
   alternates: {
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Best Hostel Management Software in India | Admin Hostel Hub",
     description:
-      "Best hostel management software in India for PG & hostel owners. Track rent, students, expenses, and room vacancy.",
+      "Best hostel management software in India for PG & hostel owners. Track rent, residents, expenses, and room vacancy.",
     url: `${SITE_ORIGIN}${path}`,
     siteName: "Admin Hostel Hub",
     locale: "en_IN",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 
 const whyBullets = [
   "Track rent payments and dues in real-time",
-  "Manage student data in one place",
+  "Manage resident data in one place",
   "Monitor income and expenses easily",
   "Get insights into room occupancy and vacancies",
   "Reduce manual errors and save time",
@@ -50,8 +50,8 @@ const featureBlocks = [
     body: "Track monthly rent, partial payments, and pending dues easily.",
   },
   {
-    title: "Student management",
-    body: "Store and manage student details, ID proofs, and contact information.",
+    title: "Resident management",
+    body: "Store and manage resident details, ID proofs, and contact information.",
   },
   {
     title: "Expense tracking",
@@ -63,7 +63,7 @@ const featureBlocks = [
   },
   {
     title: "CSV import",
-    body: "Upload bulk student data instantly using CSV files.",
+    body: "Upload bulk resident data instantly using CSV files.",
   },
   {
     title: "Dashboard analytics",
@@ -81,7 +81,7 @@ const benefitBullets = [
 
 const whoBullets = [
   "PG owners managing multiple tenants",
-  "Student hostel administrators",
+  "Resident hostel administrators",
   "Small and medium hostel businesses",
   "Property managers handling rental accommodations",
 ];
@@ -89,7 +89,7 @@ const whoBullets = [
 const faqs = [
   {
     q: "What is hostel management software?",
-    a: "It is a digital tool that helps hostel owners manage students, rent, expenses, and room occupancy efficiently.",
+    a: "It is a digital tool that helps hostel owners manage residents, rent, expenses, and room occupancy efficiently.",
   },
   {
     q: "Is Admin Hostel Hub suitable for small hostels?",
@@ -111,7 +111,7 @@ const blogTopicIdeas = [
   "Top 5 Problems Hostel Owners Face (And Solutions)",
   "Excel vs Hostel Management Software – Which is Better?",
   "How to Track PG Rent and Expenses Efficiently",
-  "Complete Guide to Managing a Student Hostel",
+  "Complete Guide to Managing a Resident Hostel",
   "Benefits of Digital Hostel Management Systems",
   "How to Reduce Rent Collection Issues in Hostels",
   "PG Management Tips for New Owners in India",
@@ -142,7 +142,7 @@ export default function HostelManagementSoftwareIndiaPage() {
           as="p"
           className="text-center text-xs font-semibold uppercase tracking-wider text-primary"
         >
-          India · PG &amp; student hostel operations
+          India · PG &amp; resident hostel operations
         </Typography>
 
         <Typography
@@ -157,8 +157,8 @@ export default function HostelManagementSoftwareIndiaPage() {
         <Typography variant="muted" className="mx-auto mt-6 text-center text-base leading-relaxed">
           Admin Hostel Hub is a powerful and easy-to-use{" "}
           <strong className="font-semibold text-foreground">hostel management software in India</strong>{" "}
-          designed for PG owners and student housing operators. It helps you manage rent collection,
-          student records, expenses, and room availability in one smart{" "}
+          designed for PG owners and resident housing operators. It helps you manage rent collection,
+          resident records, expenses, and room availability in one smart{" "}
           <strong className="font-semibold text-foreground">hostel admin dashboard</strong>. Whether
           you run a small hostel or multiple PG properties, Admin Hostel Hub simplifies daily
           operations and eliminates manual work.

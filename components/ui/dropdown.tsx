@@ -15,7 +15,8 @@ export interface DropdownOption {
 }
 
 export interface DropdownProps {
-  value: string;
+  /** Omit or `undefined` for no selection (placeholder). */
+  value?: string;
   onValueChange: (value: string) => void;
   options: DropdownOption[];
   placeholder?: string;
@@ -42,7 +43,12 @@ export const Dropdown = React.forwardRef<HTMLButtonElement, DropdownProps>(
     ref
   ) => {
     return (
-      <Select value={value} onValueChange={onValueChange} disabled={disabled} {...selectProps}>
+      <Select
+        value={value}
+        onValueChange={onValueChange}
+        disabled={disabled}
+        {...selectProps}
+      >
         <SelectTrigger ref={ref} id={id} className={triggerClassName}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>

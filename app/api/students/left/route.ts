@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch exited students" },
+      { error: "Failed to fetch exited residents" },
       { status: 500 }
     );
   }

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
-import { requireAdvancedPlan } from "@/lib/subscription/planFeatures.server";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function DELETE(
@@ -9,9 +8,6 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const subErr = await requireAdvancedPlan(_request);
-    if (subErr) return subErr;
-
     const hostelId = getHostelIdFromRequest(_request);
     if (hostelId == null) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

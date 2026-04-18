@@ -8,6 +8,7 @@ import {
   BedDouble,
   CreditCard,
   Wallet,
+  UserCog,
   Settings,
   Crown,
 } from "lucide-react";
@@ -16,17 +17,16 @@ import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
 import { useSettingsStore } from "@/lib/SettingsStore";
 import { useAuthStore } from "@/lib/AuthStore";
-import { useSubscriptionStore } from "@/lib/SubscriptionStore";
-import { planHasAdvancedFeatures } from "@/lib/subscription/planFeatures";
 
 const DEFAULT_HOSTEL_LOGO_URL = "/img/logo-transparent.png";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/students", label: "Students", icon: Users },
+  { href: "/dashboard/students", label: "Residents", icon: Users },
   { href: "/dashboard/rooms", label: "Rooms", icon: BedDouble },
   { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
   { href: "/dashboard/expenses", label: "Expenses", icon: Wallet },
+  { href: "/dashboard/staff", label: "Staff", icon: UserCog },
   { href: "/dashboard/subscription", label: "Subscription", icon: Crown },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
@@ -35,8 +35,6 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
-  const planId = useSubscriptionStore((s) => s.status?.planId);
-  const showExpensesNav = planId == null || planHasAdvancedFeatures(planId);
   const brandingByHostelId = useSettingsStore((s) => s.brandingByHostelId);
   const branding = hostelId != null ? brandingByHostelId[hostelId] : undefined;
   const hostelName = branding?.hostelName ?? "";
@@ -68,9 +66,7 @@ export function Sidebar() {
         <Typography className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
           Menu
         </Typography>
-        {navItems
-          .filter((item) => item.href !== "/dashboard/expenses" || showExpensesNav)
-          .map((item) => {
+        {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
           return (

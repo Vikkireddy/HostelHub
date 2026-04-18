@@ -70,7 +70,7 @@ export default function StudentsPage() {
       const res = await fetchWithHostel("/api/students", hostelId);
       const json = await res.json();
       if (!res.ok) {
-        throw new Error((json as { error?: string }).error || "Failed to fetch students");
+        throw new Error((json as { error?: string }).error || "Failed to fetch residents");
       }
       return Array.isArray(json) ? (json as Student[]) : [];
     },
@@ -124,7 +124,7 @@ export default function StudentsPage() {
       );
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Failed to mark student as left");
+        throw new Error(err.error || "Failed to mark resident as left");
       }
       return res.json();
     },
@@ -161,7 +161,7 @@ export default function StudentsPage() {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Failed to update student");
+        throw new Error(err.error || "Failed to update resident");
       }
       return res.json();
     },
@@ -186,7 +186,7 @@ export default function StudentsPage() {
       );
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Failed to delete student");
+        throw new Error(err.error || "Failed to delete resident");
       }
       return res.json();
     },
@@ -222,7 +222,7 @@ export default function StudentsPage() {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Failed to add student");
+        throw new Error(err.error || "Failed to add resident");
       }
       return res.json();
     },

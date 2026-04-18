@@ -8,7 +8,7 @@ export interface Student {
   room_id?: number;
   course?: string;
   join_date?: string;
-  /** YYYY-MM-DD when student plans to vacate; shown on admin dashboard */
+  /** YYYY-MM-DD when resident plans to vacate; shown on admin dashboard */
   planned_vacate_date?: string | null;
   phone: string;
   id_proof_type?: string;

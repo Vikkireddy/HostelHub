@@ -4,4 +4,10 @@ export { AddExpenseDialog } from "./AddExpenseDialog";
 export { DeleteExpenseDialog } from "./DeleteExpenseDialog";
 export { useExpensesData } from "./useExpensesData";
 export type { Expense, ExpenseFormValues } from "./expenses.types";
-export { EXPENSE_CATEGORIES, MONTHS, initialExpenseForm } from "./expenses.constants";
+export type { StaffOptionForExpense } from "./useExpensesData";
+export {
+  EXPENSE_CATEGORIES,
+  MONTHS,
+  initialExpenseForm,
+  STAFF_SALARY_CATEGORY,
+} from "./expenses.constants";

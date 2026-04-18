@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     if (student_id != null) {
       const studentId = Number(student_id);
       if (isNaN(studentId)) {
-        return NextResponse.json({ error: "Invalid student_id" }, { status: 400 });
+        return NextResponse.json({ error: "Invalid resident selection" }, { status: 400 });
       }
       if (hasNewColumns) {
         await pool.execute(
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       }
     } else {
       return NextResponse.json(
-        { error: "Either payment_ids array or student_id is required" },
+        { error: "Either payment_ids array or a resident billing account is required" },
         { status: 400 }
       );
     }

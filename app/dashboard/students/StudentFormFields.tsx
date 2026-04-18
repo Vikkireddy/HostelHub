@@ -50,7 +50,7 @@ export function StudentFormFields({
           type="email"
           value={form.email}
           onChange={(e) => onChange((f) => ({ ...f, email: e.target.value }))}
-          placeholder="student@example.com"
+          placeholder="name@example.com"
           required
         />
       </Box>
@@ -155,7 +155,7 @@ export function StudentFormFields({
             value: String(r.id),
             label: `Room ${r.number} (Floor ${r.floor}, ${r.type}, ${r.ac_type || DEFAULT_AC_TYPE}) — ₹${Number(r.rent || 0).toLocaleString()}/mo`,
           }))}
-          placeholder={idPrefix ? "Select room" : "Select which room this student belongs to"}
+          placeholder={idPrefix ? "Select room" : "Select which room this resident belongs to"}
         />
         {roomCaption && (
           <Typography variant="caption">{roomCaption}</Typography>

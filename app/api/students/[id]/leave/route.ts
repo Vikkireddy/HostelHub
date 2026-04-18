@@ -39,7 +39,7 @@ export async function PATCH(
     const { id } = await params;
     const studentId = Number(id);
     if (!id || isNaN(studentId)) {
-      return NextResponse.json({ error: "Invalid student ID" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid resident ID" }, { status: 400 });
     }
 
     const [studentRows] = await pool.execute(
@@ -52,7 +52,7 @@ export async function PATCH(
     const student = students[0];
     if (!student) {
       return NextResponse.json(
-        { error: "Student not found or already left" },
+        { error: "Resident not found or already left" },
         { status: 404 }
       );
     }
@@ -100,12 +100,12 @@ export async function PATCH(
 
     return NextResponse.json({
       success: true,
-      message: "Student marked as left",
+      message: "Resident marked as left",
     });
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json(
-      { error: "Failed to mark student as left" },
+      { error: "Failed to mark resident as left" },
       { status: 500 }
     );
   }

@@ -87,8 +87,8 @@ export function StudentsTabs({
             {students.length === 0 ? (
               <EmptyState
                 icon={Users}
-                title="No students found"
-                message="Add students using the Add Student button above"
+                title="No residents found"
+                message="Add residents using the Add Resident button above"
                 className="min-h-[250px]"
               />
             ) : (

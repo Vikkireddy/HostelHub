@@ -63,8 +63,8 @@ export async function POST(request: NextRequest) {
         {
           error:
             max != null
-              ? `Your plan allows up to ${max} students (${current} in use). Upgrade to add more.`
-              : "Cannot add students.",
+              ? `Your plan allows up to ${max} residents (${current} in use). Upgrade to add more.`
+              : "Cannot add residents.",
         },
         { status: 403 }
       );
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       if (slotsLeft <= 0) {
         failures.push({
           line,
-          message: `Student limit reached${max != null ? ` (max ${max})` : ""}.`,
+          message: `Resident limit reached${max != null ? ` (max ${max})` : ""}.`,
         });
         continue;
       }

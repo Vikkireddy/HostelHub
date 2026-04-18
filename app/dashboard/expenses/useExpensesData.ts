@@ -7,6 +7,12 @@ import { fetchWithHostel } from "@/lib/ApiClient";
 import { initialExpenseForm } from "./expenses.constants";
 import type { Expense, ExpenseFormValues } from "./expenses.types";
 
+export type StaffOptionForExpense = {
+  id: number;
+  name: string;
+  monthly_salary: number;
+};
+
 type UseExpensesDataOptions = {
   queryEnabled?: boolean;
 };
@@ -34,6 +40,13 @@ export function useExpensesData(options?: UseExpensesDataOptions) {
     enabled: Boolean(hostelId) && queryEnabled,
   });
 
+  const { data: staffForExpenses = [], isLoading: isLoadingStaffForExpense } =
+    useQuery<StaffOptionForExpense[]>({
+      queryKey: ["staff-members", hostelId],
+      queryFn: () => fetchWithHostel("/api/staff", hostelId).then((r) => r.json()),
+      enabled: Boolean(hostelId) && queryEnabled,
+    });
+
   const createExpense = useMutation({
     mutationFn: async (data: ExpenseFormValues) => {
       const res = await fetchWithHostel("/api/expenses", hostelId, {
@@ -44,6 +57,8 @@ export function useExpensesData(options?: UseExpensesDataOptions) {
           category: data.category,
           description: data.description || null,
           expense_date: data.expense_date || undefined,
+          staff_member_id:
+            data.staff_member_id.trim() !== "" ? Number(data.staff_member_id) : null,
         }),
       });
       if (!res.ok) {
@@ -88,6 +103,8 @@ export function useExpensesData(options?: UseExpensesDataOptions) {
 
   return {
     expenses: safeExpenses,
+    staffForExpenses: Array.isArray(staffForExpenses) ? staffForExpenses : [],
+    isLoadingStaffForExpense,
     isLoading,
     error,
     totalAmount,
