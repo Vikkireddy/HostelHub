@@ -17,6 +17,7 @@ export function NotificationsSettingsTab({
   onEmailNotificationsChange,
   onPaymentRemindersChange,
   onSubmit,
+  allowEdit = true,
 }: NotificationsSettingsTabProps) {
   return (
     <TabsContent value="notifications" className="mt-0">
@@ -38,7 +39,11 @@ export function NotificationsSettingsTab({
                     Receive updates via email
                   </Typography>
                 </Box>
-                <Switch checked={emailNotifications} onCheckedChange={onEmailNotificationsChange} />
+                <Switch
+                  checked={emailNotifications}
+                  disabled={!allowEdit}
+                  onCheckedChange={onEmailNotificationsChange}
+                />
               </Box>
               <Box className="flex items-center justify-between py-4">
                 <Box>
@@ -47,10 +52,19 @@ export function NotificationsSettingsTab({
                     Get notified about upcoming payments
                   </Typography>
                 </Box>
-                <Switch checked={paymentReminders} onCheckedChange={onPaymentRemindersChange} />
+                <Switch
+                  checked={paymentReminders}
+                  disabled={!allowEdit}
+                  onCheckedChange={onPaymentRemindersChange}
+                />
               </Box>
             </Box>
-            <Button type="submit" className="mt-6">
+            <Button
+              type="submit"
+              className="mt-6"
+              disabled={!allowEdit}
+              title={!allowEdit ? "You don't have permission to change settings" : undefined}
+            >
               {notifSaved ? "Saved" : t("SAVE_PREFERENCE")}
             </Button>
           </form>

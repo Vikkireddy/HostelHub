@@ -11,6 +11,12 @@ export interface HostelBranding {
   hostelLogoUrl: string | null;
 }
 
+/** Stable fallback so `getBranding` never returns a fresh object reference each call (avoids Zustand selector infinite re-renders). */
+const EMPTY_HOSTEL_BRANDING: HostelBranding = Object.freeze({
+  hostelName: "",
+  hostelLogoUrl: null,
+});
+
 interface SettingsState {
   name: string;
   email: string;
@@ -44,9 +50,9 @@ export const useSettingsStore = create<SettingsState>()(
           },
         })),
       getBranding: (hostelId) => {
-        if (hostelId == null) return { hostelName: "", hostelLogoUrl: null };
+        if (hostelId == null) return EMPTY_HOSTEL_BRANDING;
         const b = get().brandingByHostelId[hostelId];
-        return b ?? { hostelName: "", hostelLogoUrl: null };
+        return b ?? EMPTY_HOSTEL_BRANDING;
       },
     }),
     {

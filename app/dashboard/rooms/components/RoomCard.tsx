@@ -12,10 +12,14 @@ export function RoomCard({
   room,
   onEdit,
   onDelete,
+  canEdit = true,
+  canDelete = true,
 }: {
   room: Room;
   onEdit: (room: Room) => void;
   onDelete: (room: Room) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }) {
   const occupancyPercent = (room.occupancy / room.capacity) * 100;
   const progressVariant =
@@ -39,7 +43,10 @@ export function RoomCard({
             size="icon"
             className="h-8 w-8 text-slate-500 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-100 hover:text-slate-700"
             onClick={() => onEdit(room)}
-            title="Edit room"
+            disabled={!canEdit}
+            title={
+              !canEdit ? "You don't have permission to edit rooms" : "Edit room"
+            }
           >
             <Pencil className="h-4 w-4" />
           </Button>
@@ -48,8 +55,14 @@ export function RoomCard({
             size="icon"
             className="h-8 w-8 text-red-500 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-50 hover:text-red-700 disabled:opacity-50"
             onClick={() => onDelete(room)}
-            disabled={room.occupancy > 0}
-            title={room.occupancy > 0 ? "Cannot delete room with occupants" : "Delete room"}
+            disabled={room.occupancy > 0 || !canDelete}
+            title={
+              !canDelete
+                ? "You don't have permission to delete rooms"
+                : room.occupancy > 0
+                  ? "Cannot delete room with occupants"
+                  : "Delete room"
+            }
           >
             <Trash2 className="h-4 w-4" />
           </Button>

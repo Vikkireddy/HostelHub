@@ -12,6 +12,7 @@ interface ExpensesFiltersBarProps {
   filterYear: string;
   setFilterYear: (v: string) => void;
   onAddExpense: () => void;
+  canAddExpense?: boolean;
 }
 
 const YEARS = [
@@ -29,6 +30,7 @@ export function ExpensesFiltersBar({
   filterYear,
   setFilterYear,
   onAddExpense,
+  canAddExpense = true,
 }: ExpensesFiltersBarProps) {
   return (
     <Box className="flex items-center gap-3">
@@ -48,7 +50,13 @@ export function ExpensesFiltersBar({
           triggerClassName="w-[100px]"
         />
       </Box>
-      <Button size="sm" icon={<Plus className="h-4 w-4" />} onClick={onAddExpense}>
+      <Button
+        size="sm"
+        icon={<Plus className="h-4 w-4" />}
+        disabled={!canAddExpense}
+        title={!canAddExpense ? "You don't have permission to add expenses" : undefined}
+        onClick={onAddExpense}
+      >
         Add Expense
       </Button>
     </Box>

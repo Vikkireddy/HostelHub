@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
+import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
 import type { SubscriptionStatusResponse, SubscriptionBannerType } from "@/lib/subscription/types";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
@@ -13,6 +14,9 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const denied = await assertDashboardPermission(request, "subscription", "view");
+    if (denied) return denied;
 
     const [rows] = await pool.execute(
       `SELECT hs.id, hs.plan_id, hs.status, hs.expires_at, hs.grace_period_ends_at, hs.trial_ends_at,

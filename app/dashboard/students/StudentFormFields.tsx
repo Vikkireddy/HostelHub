@@ -8,12 +8,14 @@ import { Box } from "@/components/ui/box";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { DEFAULT_AC_TYPE } from "@/app/dashboard/rooms/rooms.constants";
 import {
+  GENDER_OPTIONS,
   ID_PROOF_OPTIONS,
   ID_PROOF_VALIDATIONS,
   normalizeIdProof,
   normalizePhone,
 } from "./students.constants";
 import type { StudentFormFieldsProps } from "./students.types";
+import { ResidentTypeFormSection } from "./ResidentTypeFormSection";
 import { Label } from "@/components/ui/label";
 import { t } from "@/lib/i18n";
 
@@ -28,11 +30,12 @@ export function StudentFormFields({
   roomCaption,
   idProofError,
   phoneError,
+  emergencyPhoneError,
 }: StudentFormFieldsProps) {
   const id = (name: string) => (idPrefix ? `${idPrefix}-${name}` : name);
 
   return (
-    <Box className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <Box className="grid grid-cols-1 gap-4 sm:grid-cols-2 pl-2">
       <Box className="space-y-2">
         <RequiredLabel htmlFor={id("name")}>Name</RequiredLabel>
         <Input
@@ -41,6 +44,16 @@ export function StudentFormFields({
           onChange={(e) => onChange((f) => ({ ...f, name: e.target.value }))}
           placeholder="Full name"
           required
+        />
+      </Box>
+      <Box className="space-y-2">
+        <RequiredLabel htmlFor={id("gender")}>Gender</RequiredLabel>
+        <Dropdown
+          id={id("gender")}
+          value={form.gender || ""}
+          onValueChange={(v) => onChange((f) => ({ ...f, gender: v }))}
+          options={GENDER_OPTIONS.map((opt) => ({ value: opt, label: opt }))}
+          placeholder="Select gender"
         />
       </Box>
       <Box className="space-y-2">
@@ -83,6 +96,35 @@ export function StudentFormFields({
           </Typography>
         )}
       </Box>
+      <Box className="space-y-2">
+        <Label htmlFor={id("emergency_contact_phone")}>Emergency contact (optional)</Label>
+        <Input
+          id={id("emergency_contact_phone")}
+          value={form.emergency_contact_phone}
+          onChange={(e) => {
+            const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+            onChange((f) => ({ ...f, emergency_contact_phone: val }));
+          }}
+          onBlur={() => {
+            if (form.emergency_contact_phone.trim()) {
+              const normalized = normalizePhone(form.emergency_contact_phone);
+              if (normalized !== form.emergency_contact_phone) {
+                onChange((f) => ({ ...f, emergency_contact_phone: normalized }));
+              }
+            }
+          }}
+          placeholder="10-digit emergency mobile"
+          inputMode="numeric"
+          maxLength={10}
+          className={emergencyPhoneError ? "border-destructive" : ""}
+        />
+        {emergencyPhoneError && (
+          <Typography variant="caption" className="text-destructive">
+            {emergencyPhoneError}
+          </Typography>
+        )}
+      </Box>
+      <ResidentTypeFormSection form={form} onChange={onChange} idPrefix={idPrefix} />
       <Box className="space-y-2">
         <RequiredLabel htmlFor={id("course")}>Course</RequiredLabel>
         <Input

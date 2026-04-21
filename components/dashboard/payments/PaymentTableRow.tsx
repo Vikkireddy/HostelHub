@@ -25,6 +25,8 @@ export function PaymentTableRow({
   onDelete,
   isMarkingPaid,
   markingPaidStudentId,
+  canMarkPaid = true,
+  canOpenPaymentHistory = true,
 }: PaymentTableRowComponentProps) {
   const chipStyle = STATUS_CHIP_STYLES[row.status] ?? STATUS_CHIP_STYLES.pending;
   const initials = getInitials(row.studentName);
@@ -93,12 +95,29 @@ export function PaymentTableRow({
           }}
         />
       </TableCell>
+      <TableCell sx={{ maxWidth: 200 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: row.billOrUtrLabel ? "rgb(51 65 85)" : "rgb(148 163 184)",
+            fontWeight: row.billOrUtrLabel ? 500 : 400,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+          title={row.billOrUtrLabel ?? undefined}
+        >
+          {row.billOrUtrLabel ?? "—"}
+        </Typography>
+      </TableCell>
       <TableCell>
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
           <IconButton
             size="small"
             onClick={() => onOpenHistory(row)}
+            disabled={!canOpenPaymentHistory}
             aria-label={`View payment history for ${row.studentName}`}
+            title={!canOpenPaymentHistory ? "You don't have permission to view payment history" : undefined}
             sx={{ color: "rgb(71 85 105)" }}
           >
             <History size={16} />
@@ -118,6 +137,7 @@ export function PaymentTableRow({
           onDelete={onDelete}
           isMarkingPaid={isMarkingPaid}
           markingPaidStudentId={markingPaidStudentId}
+          canMarkPaid={canMarkPaid}
         />
       </TableCell>
     </TableRow>

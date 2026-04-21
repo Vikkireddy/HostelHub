@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { ensureAdminRolesSchema } from "@/lib/ensureAdminRolesSchema";
+import { fullAccessMatrix, mergeEffectivePermissionMatrix } from "@/lib/permissionMatrix";
 
 /** Match signup storage: 10 digits; accept +91 / leading 0 / spaces from the login field. */
 function normalizeLoginIdentifier(raw: string): { email: string | null; mobile: string | null } {
@@ -44,10 +46,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    await ensureAdminRolesSchema();
+
     const [rows] = await pool.execute(
       isEmail
-        ? "SELECT id, email, name, password_hash, hostel_id FROM admins WHERE LOWER(email) = ?"
-        : "SELECT id, email, name, password_hash, hostel_id FROM admins WHERE mobile = ?",
+        ? `SELECT a.id, a.email, a.name, a.password_hash, a.hostel_id,
+            COALESCE(a.is_active, 1) AS is_active,
+            COALESCE(a.is_owner, 0) AS is_owner,
+            a.role_id,
+            a.permissions_override,
+            r.name AS role_name,
+            r.permissions AS role_permissions
+           FROM admins a
+           LEFT JOIN admin_roles r ON r.id = a.role_id
+           WHERE LOWER(a.email) = ?`
+        : `SELECT a.id, a.email, a.name, a.password_hash, a.hostel_id,
+            COALESCE(a.is_active, 1) AS is_active,
+            COALESCE(a.is_owner, 0) AS is_owner,
+            a.role_id,
+            a.permissions_override,
+            r.name AS role_name,
+            r.permissions AS role_permissions
+           FROM admins a
+           LEFT JOIN admin_roles r ON r.id = a.role_id
+           WHERE a.mobile = ?`,
       [isEmail ? email! : mobile!]
     );
 
@@ -57,6 +79,12 @@ export async function POST(request: NextRequest) {
       name: string;
       password_hash: string;
       hostel_id: number | null;
+      is_active: number | boolean;
+      is_owner: number | boolean;
+      role_id: number | null;
+      role_name: string | null;
+      permissions_override: unknown;
+      role_permissions: unknown;
     }[];
     if (admins.length === 0) {
       return NextResponse.json(
@@ -66,6 +94,14 @@ export async function POST(request: NextRequest) {
     }
 
     const admin = admins[0];
+    const isActive = admin.is_active === true || admin.is_active === 1;
+    if (!isActive) {
+      return NextResponse.json(
+        { success: false, message: "This account has been deactivated. Contact your hostel owner." },
+        { status: 401 }
+      );
+    }
+
     const isPlaceholder = admin.password_hash === "$2a$10$placeholder";
     const isValid = isPlaceholder
       ? password === "admin123" && admin.email === "admin@hostel.com"
@@ -78,12 +114,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const isOwner = admin.is_owner === true || admin.is_owner === 1;
+    const canManageUsersAndRoles = Boolean(isOwner && admin.hostel_id != null);
+    const legacyFullAccess = !isOwner && admin.role_id == null;
+    const permissions =
+      isOwner || legacyFullAccess
+        ? fullAccessMatrix()
+        : mergeEffectivePermissionMatrix(admin.role_permissions, admin.permissions_override);
+
     return NextResponse.json({
       success: true,
       user: {
         email: admin.email,
         name: admin.name,
         hostelId: admin.hostel_id ?? null,
+        adminId: admin.id,
+        isOwner,
+        canManageUsersAndRoles,
+        roleId: admin.role_id ?? null,
+        roleName: admin.role_name ?? null,
+        permissions,
       },
     });
   } catch (error) {

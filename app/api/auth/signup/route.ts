@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { ensureAdminRolesSchema } from "@/lib/ensureAdminRolesSchema";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -155,6 +156,8 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
+    await ensureAdminRolesSchema();
+
     await pool.execute(
       `INSERT INTO hostels (name, address, city, state, pincode)
        VALUES (?, ?, ?, ?, ?)`,
@@ -178,8 +181,8 @@ export async function POST(request: NextRequest) {
     }
 
     await pool.execute(
-      `INSERT INTO admins (hostel_id, email, mobile, password_hash, name)
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO admins (hostel_id, email, mobile, password_hash, name, is_owner, is_active)
+       VALUES (?, ?, ?, ?, ?, 1, 1)`,
       [hostelId, trimmedEmail, trimmedMobile, passwordHash, ownerName.trim()]
     );
 

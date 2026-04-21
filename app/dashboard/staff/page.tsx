@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
 import { useAuthStore } from "@/lib/AuthStore";
+import { hasDashboardPermission } from "@/lib/dashboardPermissionClient";
 import { fetchWithHostel } from "@/lib/ApiClient";
 type StaffFormState = {
   name: string;
@@ -42,7 +43,10 @@ const initialStaffForm: StaffFormState = {
 };
 
 export default function StaffManagementPage() {
-  const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
+  const user = useAuthStore((s) => s.user);
+  const hostelId = user?.hostelId ?? null;
+  const canStaffAdd = hasDashboardPermission(user, "staff", "add");
+  const canStaffDelete = hasDashboardPermission(user, "staff", "delete");
   const queryClient = useQueryClient();
   const [form, setForm] = useState<StaffFormState>(initialStaffForm);
 
@@ -113,6 +117,7 @@ export default function StaffManagementPage() {
             className="grid grid-cols-1 gap-4 md:grid-cols-2"
             onSubmit={(e) => {
               e.preventDefault();
+              if (!canStaffAdd) return;
               if (!form.name.trim() || !form.monthly_salary) return;
               createStaff.mutate(form);
             }}
@@ -122,6 +127,7 @@ export default function StaffManagementPage() {
               <Input
                 id="staff-name"
                 value={form.name}
+                disabled={!canStaffAdd}
                 onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                 placeholder="e.g. Ramesh"
               />
@@ -131,6 +137,7 @@ export default function StaffManagementPage() {
               <Input
                 id="staff-phone"
                 value={form.phone}
+                disabled={!canStaffAdd}
                 onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
                 placeholder="e.g. 9876543210"
               />
@@ -140,6 +147,7 @@ export default function StaffManagementPage() {
               <Input
                 id="staff-designation"
                 value={form.designation}
+                disabled={!canStaffAdd}
                 onChange={(e) => setForm((p) => ({ ...p, designation: e.target.value }))}
                 placeholder="e.g. Warden"
               />
@@ -152,6 +160,7 @@ export default function StaffManagementPage() {
                 min="0"
                 step="0.01"
                 value={form.monthly_salary}
+                disabled={!canStaffAdd}
                 onChange={(e) => setForm((p) => ({ ...p, monthly_salary: e.target.value }))}
                 placeholder="e.g. 18000"
               />
@@ -161,6 +170,7 @@ export default function StaffManagementPage() {
               <Input
                 id="staff-notes"
                 value={form.notes}
+                disabled={!canStaffAdd}
                 onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
                 placeholder="e.g. Night shift, joined Jan 2026"
               />
@@ -171,7 +181,11 @@ export default function StaffManagementPage() {
                   {createStaff.error.message}
                 </Typography>
               )}
-              <Button type="submit" disabled={createStaff.isPending || !form.name || !form.monthly_salary}>
+              <Button
+                type="submit"
+                disabled={!canStaffAdd || createStaff.isPending || !form.name || !form.monthly_salary}
+                title={!canStaffAdd ? "You don't have permission to add staff" : undefined}
+              >
                 {createStaff.isPending ? "Saving..." : "Add Staff"}
               </Button>
             </Box>
@@ -224,7 +238,8 @@ export default function StaffManagementPage() {
                         variant="ghost"
                         size="sm"
                         className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                        disabled={deactivateStaff.isPending}
+                        disabled={!canStaffDelete || deactivateStaff.isPending}
+                        title={!canStaffDelete ? "You don't have permission to remove staff" : undefined}
                         onClick={() => deactivateStaff.mutate(staff.id)}
                       >
                         Remove

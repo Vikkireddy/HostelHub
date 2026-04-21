@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
 import { formatSqlDateOnlyForJson } from "@/lib/dateOnly";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
@@ -11,8 +12,10 @@ const CREATE_TABLE_IF_NOT_EXISTS = `
     original_student_id INT NOT NULL,
     hostel_id INT NULL,
     name VARCHAR(255) NOT NULL,
+    gender VARCHAR(20) NULL,
     email VARCHAR(255),
     phone VARCHAR(20) NOT NULL,
+    emergency_contact_phone VARCHAR(20) NULL,
     room_number VARCHAR(20),
     course VARCHAR(255),
     join_date DATE,
@@ -28,6 +31,9 @@ export async function GET(request: NextRequest) {
   try {
     const subErr = await requireSubscription(request);
     if (subErr) return subErr;
+
+    const denied = await assertDashboardPermission(request, "residents", "view");
+    if (denied) return denied;
 
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {

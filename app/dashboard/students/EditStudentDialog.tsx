@@ -1,17 +1,12 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
+import { ModalWithHeaderFooter } from "@/components/ui/ModalWithHeaderFooter";
 import { StudentFormFields } from "./StudentFormFields";
 import type { EditStudentDialogProps } from "./students.types";
+
+const EDIT_STUDENT_FORM_ID = "edit-student-form";
 
 export function EditStudentDialog({
   open,
@@ -25,40 +20,54 @@ export function EditStudentDialog({
   roomsForEdit,
   idProofError,
   phoneError,
+  emergencyPhoneError,
 }: EditStudentDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="max-w-2xl"
-        onInteractOutside={(e) => e.preventDefault()}
-      >
-        <DialogHeader>
-          <DialogTitle>Edit Resident</DialogTitle>
-          <DialogDescription>
-            Update resident details. All fields are mandatory. Change room to reassign.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4">
+    <ModalWithHeaderFooter
+      open={open}
+      onOpenChange={onOpenChange}
+      maxWidth="2xl"
+      className="max-h-[min(90dvh,880px)] sm:max-w-2xl"
+      headerTitle="Edit Resident"
+      headerDescription={
+        <>
+          Update resident details. * fields are required. Emergency contact is optional. Change room to
+          reassign. Resident type can be changed here; type-specific profile fields are edited in{" "}
+          <strong>View details</strong>.
+        </>
+      }
+      bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden px-6 py-4"
+      children={
+        <form
+          id={EDIT_STUDENT_FORM_ID}
+          onSubmit={onSubmit}
+          className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden"
+        >
           {error && <Typography variant="error">{error.message}</Typography>}
-          <StudentFormFields
-            form={form}
-            onChange={onFormChange}
-            rooms={roomsForEdit(student?.room_id)}
-            idPrefix="edit"
-            idProofError={idProofError}
-            phoneError={phoneError}
-            roomCaption="Change room to reassign the resident. Current room is always available."
-          />
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : "Save Changes"}
-            </Button>
-          </DialogFooter>
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+            <StudentFormFields
+              form={form}
+              onChange={onFormChange}
+              rooms={roomsForEdit(student?.room_id)}
+              idPrefix="edit"
+              idProofError={idProofError}
+              phoneError={phoneError}
+              emergencyPhoneError={emergencyPhoneError}
+              roomCaption="Change room to reassign the resident. Current room is always available."
+            />
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      }
+      footerComponent={
+        <>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="submit" form={EDIT_STUDENT_FORM_ID} disabled={isPending}>
+            {isPending ? "Saving..." : "Save Changes"}
+          </Button>
+        </>
+      }
+    />
   );
 }

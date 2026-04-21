@@ -4,6 +4,8 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Box } from "@/components/ui/box";
 import { toast } from "sonner";
+import { useAuthStore } from "@/lib/AuthStore";
+import { hasDashboardPermission } from "@/lib/dashboardPermissionClient";
 import { PaymentsSkeleton } from "@/components/skeletons";
 import {
   usePaymentsData,
@@ -31,6 +33,11 @@ const PaymentHistoryDialog = dynamic(() =>
 );
 
 export default function PaymentsPage() {
+  const user = useAuthStore((s) => s.user);
+  const canPaymentsView = hasDashboardPermission(user, "payments", "view");
+  const canPaymentsAdd = hasDashboardPermission(user, "payments", "add");
+  const canPaymentsEdit = hasDashboardPermission(user, "payments", "edit");
+
   const [historyStudent, setHistoryStudent] = useState<{
     id: number;
     name: string;
@@ -55,6 +62,7 @@ export default function PaymentsPage() {
     groupedUnpaid,
     bulkMarkPaid,
     recordPayment,
+    recordPaymentSubmitError,
     openPayNow,
     handleSubmit,
   } = usePaymentsData();
@@ -76,6 +84,8 @@ export default function PaymentsPage() {
         amount: String(row.totalBalance ?? row.amount),
         month: first?.month ?? getDefaultMonthYear().month,
         year: String(first?.year ?? new Date().getFullYear()),
+        payment_mode: "online",
+        payment_reference: "",
       });
       setModalOpen(true);
     } else {
@@ -113,6 +123,7 @@ export default function PaymentsPage() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onRecordPayment={() => setModalOpen(true)}
+        canRecordPayment={canPaymentsAdd}
       />
 
       <PaymentsTable
@@ -120,11 +131,13 @@ export default function PaymentsPage() {
         onMarkPaid={(studentId) => bulkMarkPaid.mutate(studentId)}
         onViewDetails={handleViewDetails}
         onOpenHistory={handleOpenHistory}
-        onEditPayment={handleEditPayment}
+        onEditPayment={canPaymentsAdd ? handleEditPayment : undefined}
         onSendReminder={handleSendReminder}
         onDelete={handleDelete}
         isMarkingPaid={bulkMarkPaid.isPending}
         markingPaidStudentId={bulkMarkPaid.variables}
+        canMarkPaid={canPaymentsEdit}
+        canOpenPaymentHistory={canPaymentsView}
       />
 
       <RecordPaymentDialog
@@ -135,7 +148,8 @@ export default function PaymentsPage() {
         onSubmit={handleSubmit}
         studentsWithDues={studentsWithDues}
         isPending={recordPayment.isPending}
-        error={recordPayment.error}
+        submitError={recordPaymentSubmitError}
+        canSubmit={canPaymentsAdd}
       />
 
       <PaymentBreakdownDialog
@@ -143,6 +157,7 @@ export default function PaymentsPage() {
         onOpenChange={(open) => !open && setInfoDialogGroup(null)}
         group={infoDialogGroup}
         onPayNow={openPayNow}
+        payNowDisabled={!canPaymentsAdd}
       />
 
       <PaymentHistoryDialog

@@ -1,16 +1,11 @@
 import { Dispatch, FormEvent, SetStateAction } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
+import { ModalWithHeaderFooter } from "@/components/ui/ModalWithHeaderFooter";
 import { RoomFormFields } from "./RoomFormFields";
 import { RoomForm } from "./types";
+
+const ADD_ROOM_FORM_ID = "add-room-form";
 
 export function AddRoomDialog({
   open,
@@ -32,25 +27,28 @@ export function AddRoomDialog({
   isPending: boolean;
 }) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add Room</DialogTitle>
-          <DialogDescription>Create a new room. All fields are required.</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4">
+    <ModalWithHeaderFooter
+      open={open}
+      onOpenChange={onOpenChange}
+      maxWidth="md"
+      headerTitle="Add Room"
+      headerDescription="Create a new room. All fields are required."
+      children={
+        <form id={ADD_ROOM_FORM_ID} onSubmit={onSubmit} className="space-y-4">
           {isError && <Typography variant="error">{errorMessage}</Typography>}
           <RoomFormFields form={form} setForm={setForm} idPrefix="create" capacityMin={1} />
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Adding..." : "Add Room"}
-            </Button>
-          </DialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      }
+      footerComponent={
+        <>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="submit" form={ADD_ROOM_FORM_ID} disabled={isPending}>
+            {isPending ? "Adding..." : "Add Room"}
+          </Button>
+        </>
+      }
+    />
   );
 }

@@ -6,6 +6,7 @@ import { Tabs } from "@/components/ui/tabs";
 import { useSettingsStore } from "@/lib/SettingsStore";
 import { t } from "@/lib/i18n";
 import { useAuthStore } from "@/lib/AuthStore";
+import { hasDashboardPermission } from "@/lib/dashboardPermissionClient";
 import { SettingsTabsList } from "./components/SettingsTabsList";
 import { ProfileSettingsTab } from "./components/ProfileSettingsTab";
 import { SecuritySettingsTab } from "./components/SecuritySettingsTab";
@@ -19,6 +20,7 @@ export default function SettingsPage() {
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const hostelId = user?.hostelId ?? null;
+  const canSettingsEdit = hasDashboardPermission(user, "settings", "edit");
   const name = useSettingsStore((s) => s.name);
   const email = useSettingsStore((s) => s.email);
   const notifications = useSettingsStore((s) => s.notifications);
@@ -64,6 +66,7 @@ export default function SettingsPage() {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSettingsEdit) return;
     if (!user?.email) {
       setProfileError("You must be logged in to update your profile.");
       return;
@@ -97,6 +100,7 @@ export default function SettingsPage() {
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSettingsEdit) return;
     setPasswordError("");
     setPasswordSuccess(false);
     if (newPassword !== confirmPassword) {
@@ -138,11 +142,13 @@ export default function SettingsPage() {
 
   const handleSaveNotifications = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSettingsEdit) return;
     setNotifSaved(true);
     setTimeout(() => setNotifSaved(false), 2000);
   };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!canSettingsEdit) return;
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 500 * 1024) {
@@ -158,6 +164,7 @@ export default function SettingsPage() {
 
   const handleSaveBranding = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSettingsEdit) return;
     if (hostelId == null) {
       setBrandingError(t("BRANDING_REQUIRES_HOSTEL"));
       return;
@@ -202,6 +209,7 @@ export default function SettingsPage() {
           onProfileNameChange={setProfileName}
           onProfileEmailChange={setProfileEmail}
           onSubmit={handleSaveProfile}
+          allowEdit={canSettingsEdit}
         />
 
         <SecuritySettingsTab
@@ -214,6 +222,7 @@ export default function SettingsPage() {
           onNewPasswordChange={setNewPassword}
           onConfirmPasswordChange={setConfirmPassword}
           onSubmit={handleUpdatePassword}
+          allowEdit={canSettingsEdit}
         />
 
         <NotificationsSettingsTab
@@ -223,6 +232,7 @@ export default function SettingsPage() {
           onEmailNotificationsChange={(checked) => setNotifications({ emailNotifications: checked })}
           onPaymentRemindersChange={(checked) => setNotifications({ paymentReminders: checked })}
           onSubmit={handleSaveNotifications}
+          allowEdit={canSettingsEdit}
         />
 
         <AppearanceSettingsTab />
@@ -240,6 +250,7 @@ export default function SettingsPage() {
             setBrandingLogoPreview(DEFAULT_HOSTEL_LOGO_URL);
           }}
           onSubmit={handleSaveBranding}
+          allowEdit={canSettingsEdit}
         />
       </Tabs>
     </Box>

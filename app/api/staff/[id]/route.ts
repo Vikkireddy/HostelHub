@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
+import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function DELETE(
@@ -8,6 +9,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const denied = await assertDashboardPermission(request, "staff", "delete");
+    if (denied) return denied;
+
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

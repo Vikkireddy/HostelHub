@@ -9,12 +9,7 @@ import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Box } from "@/components/ui/box";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Typography } from "@/components/ui/typography";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ModalWithHeaderFooter } from "@/components/ui/ModalWithHeaderFooter";
 import { PlannedVacateItem } from "./PlannedVacateItem";
 import { RECENT_ITEMS_DISPLAY_LIMIT } from "./dashboard.constants";
 import type { PlannedVacatesCardProps } from "./dashboard.types";
@@ -70,20 +65,23 @@ export const PlannedVacatesCard = ({ items }: PlannedVacatesCardProps) => {
         </CardContent>
       </Card>
 
-      <Dialog open={viewAllOpen} onOpenChange={setViewAllOpen}>
-        <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col overflow-hidden">
-          <DialogHeader>
-            <DialogTitle>{t("PLANNED_VACATES_TITLE")}</DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="min-h-0 flex-1 -mx-6 px-6">
-            <Box className="space-y-4 pr-4 pb-2">
+      <ModalWithHeaderFooter
+        open={viewAllOpen}
+        onOpenChange={setViewAllOpen}
+        maxWidth="2xl"
+        className="max-h-[85vh]"
+        headerTitle={t("PLANNED_VACATES_TITLE")}
+        bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden !px-0 !py-0"
+        children={
+          <ScrollArea className="min-h-0 flex-1 px-6">
+            <Box className="space-y-4 pb-2 pr-4">
               {items.map((item) => (
                 <PlannedVacateItem key={String(item.id)} item={item} />
               ))}
             </Box>
           </ScrollArea>
-        </DialogContent>
-      </Dialog>
+        }
+      />
     </>
   );
 };

@@ -21,6 +21,7 @@ export function ProfileSettingsTab({
   onProfileNameChange,
   onProfileEmailChange,
   onSubmit,
+  allowEdit = true,
 }: ProfileSettingsTabProps) {
   return (
     <TabsContent value="profile" className="mt-0">
@@ -59,11 +60,16 @@ export function ProfileSettingsTab({
                 id="email"
                 type="email"
                 value={profileEmail}
+                disabled={!allowEdit}
                 onChange={(e) => onProfileEmailChange(e.target.value)}
                 placeholder="admin@hostel.com"
               />
             </Box>
-            <Button type="submit" disabled={profileLoading}>
+            <Button
+              type="submit"
+              disabled={!allowEdit || profileLoading}
+              title={!allowEdit ? "You don't have permission to change settings" : undefined}
+            >
               {profileLoading ? "Saving..." : profileSaved ? "Saved" : "Save Changes"}
             </Button>
           </form>

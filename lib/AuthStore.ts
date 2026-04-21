@@ -2,9 +2,23 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useSettingsStore } from "@/lib/SettingsStore";
 import { useSubscriptionStore } from "@/lib/SubscriptionStore";
+import type { PermissionsMatrix } from "@/lib/permissionMatrix";
+
+export type AuthUser = {
+  email: string;
+  name: string;
+  hostelId: number | null;
+  adminId?: number;
+  isOwner?: boolean;
+  canManageUsersAndRoles?: boolean;
+  roleId?: number | null;
+  roleName?: string | null;
+  /** Effective CRUD matrix; omitted on legacy persisted sessions until next login. */
+  permissions?: PermissionsMatrix;
+};
 
 interface AuthState {
-  user: { email: string; name: string; hostelId: number | null } | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   _hasHydrated: boolean;
   login: (
@@ -12,7 +26,7 @@ interface AuthState {
     password: string
   ) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
-  updateUser: (updates: { name?: string; email?: string }) => void;
+  updateUser: (updates: Partial<AuthUser>) => void;
   setHasHydrated: (state: boolean) => void;
 }
 
@@ -32,11 +46,18 @@ export const useAuthStore = create<AuthState>()(
           });
           const data = await res.json();
           if (data.success && data.user) {
+            const u = data.user as AuthUser;
             set({
               user: {
-                email: data.user.email,
-                name: data.user.name,
-                hostelId: data.user.hostelId ?? null,
+                email: u.email,
+                name: u.name,
+                hostelId: u.hostelId ?? null,
+                adminId: u.adminId,
+                isOwner: u.isOwner,
+                canManageUsersAndRoles: u.canManageUsersAndRoles,
+                roleId: u.roleId ?? null,
+                roleName: u.roleName ?? null,
+                permissions: (u as AuthUser).permissions,
               },
               isAuthenticated: true,
               _hasHydrated: true,

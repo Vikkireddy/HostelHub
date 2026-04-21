@@ -17,6 +17,9 @@ type PaymentProps = {
   days_left?: string | null;
   paid_at?: string | null;
   last_payment_at?: string | null;
+  /** Matched to the payment_transaction that settled this bill (same window as paid_at). */
+  bill_payment_mode?: string | null;
+  bill_payment_reference?: string | null;
 };
 
 type MonthBreakdownItemProps = {
@@ -37,6 +40,8 @@ type MonthBreakdownItemProps = {
   hasOverdue: boolean;
   monthBreakdown: MonthBreakdownItemProps[];
   last_payment_at?: string | null;
+  /** Latest bill/UTR from partial payments (same source as payment history). */
+  billOrUtrLabel?: string | null;
 };
 
  type StudentWithDuesProps = {
@@ -51,6 +56,8 @@ type MonthBreakdownItemProps = {
   amount: string;
   month: string;
   year: string;
+  payment_mode: "cash" | "online";
+  payment_reference: string;
 };
 
 type PaymentStatsProps = {
@@ -71,6 +78,8 @@ type PaymentTableRowProps = {
   amountLabel: string;
   status: "pending" | "overdue" | "paid";
   lastPaymentAt?: string | null;
+  /** Display e.g. "Bill · 123" / "UTR · …"; empty when unknown or not yet paid with proof. */
+  billOrUtrLabel?: string | null;
   paymentIds?: (string | number)[];
   totalBalance?: number;
   monthBreakdown?: Array<{ month: string; year: number; amount: number; status: string }>;
@@ -84,6 +93,9 @@ type PaymentHistoryItemProps = {
   period?: string | null;
   method?: string | null;
   note?: string | null;
+  /** From payment_transactions when migrated (cash / online + bill or UTR). */
+  payment_mode?: string | null;
+  payment_reference?: string | null;
 };
 
 export type PaymentHistoryDialogProps = {
@@ -106,6 +118,8 @@ export type PaymentFiltersBarProps = {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   onRecordPayment: () => void;
+  /** When false, "Record Payment" is disabled (requires `payments` add). */
+  canRecordPayment?: boolean;
 };
 
 export type PaymentsTableProps = {
@@ -118,6 +132,10 @@ export type PaymentsTableProps = {
   onDelete?: (row: PaymentTableRowProps) => void;
   isMarkingPaid?: boolean;
   markingPaidStudentId?: number;
+  /** When false, row "Mark as paid" is disabled (`payments` edit). */
+  canMarkPaid?: boolean;
+  /** When false, history icon is disabled (`payments` view). */
+  canOpenPaymentHistory?: boolean;
 };
 
   type PaymentTableRowComponentProps = {
@@ -130,6 +148,8 @@ export type PaymentsTableProps = {
   onDelete?: (row: PaymentTableRowProps) => void;
   isMarkingPaid?: boolean;
   markingPaidStudentId?: number;
+  canMarkPaid?: boolean;
+  canOpenPaymentHistory?: boolean;
 };
 
 export type PaymentRowActionsProps = {
@@ -141,6 +161,7 @@ export type PaymentRowActionsProps = {
   onDelete?: (row: PaymentTableRowProps) => void;
   isMarkingPaid?: boolean;
   markingPaidStudentId?: number;
+  canMarkPaid?: boolean;
 };
 
 export type PaymentStatsGridProps = {
@@ -158,7 +179,9 @@ export type RecordPaymentDialogProps = {
   onSubmit: (e: FormEvent) => void;
   studentsWithDues: StudentWithDuesProps[];
   isPending: boolean;
-  error?: Error | null;
+  submitError?: string | null;
+  /** When false, submit is disabled (`payments` add). */
+  canSubmit?: boolean;
 };
 
  type ActionItem = {

@@ -7,6 +7,7 @@ import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useAuthStore } from "@/lib/AuthStore";
+import { hasDashboardPermission } from "@/lib/dashboardPermissionClient";
 import { useExpensesData, type Expense, STAFF_SALARY_CATEGORY } from "./index";
 
 const ExpensesFiltersBar = dynamic(() =>
@@ -23,7 +24,10 @@ const DeleteExpenseDialog = dynamic(() =>
 );
 
 export default function ExpensesPage() {
-  const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
+  const user = useAuthStore((s) => s.user);
+  const hostelId = user?.hostelId ?? null;
+  const canExpensesAdd = hasDashboardPermission(user, "expenses", "add");
+  const canExpensesDelete = hasDashboardPermission(user, "expenses", "delete");
 
   const {
     expenses,
@@ -99,6 +103,7 @@ export default function ExpensesPage() {
             filterYear={filterYear}
             setFilterYear={setFilterYear}
             onAddExpense={() => setAddModalOpen(true)}
+            canAddExpense={canExpensesAdd}
           />
         </CardHeader>
         <CardContent>
@@ -116,6 +121,7 @@ export default function ExpensesPage() {
               totalAmount={totalAmount}
               onDelete={handleDeleteClick}
               isDeleting={deleteExpense.isPending}
+              canDeleteExpense={canExpensesDelete}
             />
           )}
         </CardContent>

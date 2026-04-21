@@ -11,8 +11,9 @@ import {
   TableRow,
 } from "@mui/material";
 import type { StudentsMuiTableProps } from "./students.types";
+import { isStudentTableRowClickSuppressed } from "./rowClickGuard";
 
-export function StudentsMuiTable<T>({ columns, data, getRowId }: StudentsMuiTableProps<T>) {
+export function StudentsMuiTable<T>({ columns, data, getRowId, onRowClick }: StudentsMuiTableProps<T>) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -56,7 +57,16 @@ export function StudentsMuiTable<T>({ columns, data, getRowId }: StudentsMuiTabl
                 <TableRow
                   key={getRowId(row)}
                   hover
+                  onClick={
+                    onRowClick
+                      ? () => {
+                          if (isStudentTableRowClickSuppressed()) return;
+                          onRowClick(row);
+                        }
+                      : undefined
+                  }
                   sx={{
+                    cursor: onRowClick ? "pointer" : undefined,
                     "& .MuiTableCell-root": {
                       borderBottom: "1px solid rgb(226 232 240)",
                       color: "rgb(51 65 85)",

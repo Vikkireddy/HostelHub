@@ -13,6 +13,7 @@ interface PaymentFiltersBarProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   onRecordPayment: () => void;
+  canRecordPayment?: boolean;
 }
 
 export function PaymentFiltersBar({
@@ -21,6 +22,7 @@ export function PaymentFiltersBar({
   searchQuery,
   onSearchChange,
   onRecordPayment,
+  canRecordPayment = true,
 }: PaymentFiltersBarProps) {
   return (
     <Box className="flex flex-wrap items-center gap-4 mb-6">
@@ -66,7 +68,12 @@ export function PaymentFiltersBar({
         />
       </Box>
 
-      <Button onClick={onRecordPayment} className="shrink-0 ml-auto">
+      <Button
+        onClick={onRecordPayment}
+        className="shrink-0 ml-auto"
+        disabled={!canRecordPayment}
+        title={!canRecordPayment ? "You don't have permission to record payments" : undefined}
+      >
         <Plus className="mr-2 h-4 w-4" />
         Record Payment
       </Button>

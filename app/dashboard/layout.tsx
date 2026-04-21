@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
@@ -15,6 +15,10 @@ const pageTitles: Record<string, { title: string; subtitle?: string }> = {
   "/dashboard/payments": { title: "Payments", subtitle: "Payment tracking" },
   "/dashboard/expenses": { title: "Expenses", subtitle: "Admin expenses & profit tracking" },
   "/dashboard/staff": { title: "Staff", subtitle: "Staff records & salary expense links" },
+  "/dashboard/users-roles": {
+    title: "Users & Roles",
+    subtitle: "Manage system users, roles and permissions",
+  },
   "/dashboard/settings": { title: "Settings", subtitle: "Manage your account & preferences" },
   "/dashboard/subscription": { title: "Subscription", subtitle: "Pricing & plans" },
 };
@@ -23,6 +27,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { isAuthenticated, _hasHydrated, setHasHydrated } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { title, subtitle } = pageTitles[pathname] || { title: "Dashboard", subtitle: "" };
 
   useEffect(() => {
@@ -36,6 +41,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.push("/login");
     }
   }, [_hasHydrated, isAuthenticated, router]);
+
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     document.documentElement.style.overflow = "hidden";
@@ -53,10 +62,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <SubscriptionGuard>
       <Box className="h-screen overflow-hidden flex bg-slate-50">
-        <Sidebar />
-        <Box className="pl-64 flex-1 flex flex-col min-h-0 overflow-hidden">
-          <Header title={title} subtitle={subtitle} />
-          <main className="flex-1 min-h-0 overflow-auto p-8">{children}</main>
+        <Sidebar mobileOpen={mobileSidebarOpen} onCloseMobile={() => setMobileSidebarOpen(false)} />
+        <Box className="md:pl-64 flex-1 flex flex-col min-h-0 overflow-hidden">
+          <Header title={title} subtitle={subtitle} onToggleMobileSidebar={() => setMobileSidebarOpen((s) => !s)} />
+          <main className="flex-1 min-h-0 overflow-auto p-4 md:p-8">{children}</main>
         </Box>
       </Box>
     </SubscriptionGuard>

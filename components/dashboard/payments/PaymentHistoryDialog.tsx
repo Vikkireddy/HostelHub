@@ -18,6 +18,7 @@ import { CheckCircle2, Download, FileText, X } from "lucide-react";
 import { useAuthStore } from "@/lib/AuthStore";
 import { fetchWithHostel } from "@/lib/ApiClient";
 import type { PaymentHistoryItemProps } from "@/components/dashboard/payments/payments.types";
+import { formatBillOrUtrLabel } from "@/components/dashboard/payments/payments.constants";
 import { t } from "@/lib/i18n";
 
 interface PaymentHistoryDialogProps {
@@ -44,6 +45,10 @@ function formatAmount(v: number | null | undefined) {
 function toDateTime(v?: string | null) {
   if (!v) return "-";
   return new Date(v).toLocaleString();
+}
+
+function historyRefLabel(item: PaymentHistoryItemProps): string {
+  return formatBillOrUtrLabel(item.payment_mode, item.payment_reference) ?? t("PAYMENT_HISTORY_NO_REF");
 }
 
 function getInitials(name: string) {
@@ -253,6 +258,12 @@ export function PaymentHistoryDialog({
                         <FileText size={14} />
                         {item.note ?? t("PAYMENT_HISTORY_RECORDED")}
                       </Typography>
+                      <Typography sx={{ color: "rgb(71 85 105)", mt: 0.5, fontSize: "0.8125rem" }}>
+                        <Box component="span" sx={{ fontWeight: 600, color: "rgb(100 116 139)" }}>
+                          {t("PAYMENT_HISTORY_BILL_UTR")}:{" "}
+                        </Box>
+                        {historyRefLabel(item)}
+                      </Typography>
                     </Box>
                     <Chip
                       label={
@@ -391,6 +402,10 @@ export function PaymentHistoryDialog({
                     <Box sx={{ color: "rgb(71 85 105)", mt: 0.3 }}>{toDateTime(item.recorded_at)}</Box>
                     <Box sx={{ color: "rgb(100 116 139)", mt: 0.6 }}>
                       {item.note ?? t("PAYMENT_HISTORY_RECORDED")}
+                    </Box>
+                    <Box sx={{ color: "rgb(71 85 105)", mt: 0.45, fontSize: 13 }}>
+                      <b style={{ color: "rgb(100 116 139)" }}>{t("PAYMENT_HISTORY_BILL_UTR")}:</b>{" "}
+                      {historyRefLabel(item)}
                     </Box>
                   </Box>
                   <Box

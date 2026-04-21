@@ -1,13 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { ModalWithHeaderFooter } from "@/components/ui/ModalWithHeaderFooter";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { ScrollArea } from "@/components/ui/ScrollArea";
@@ -18,21 +12,21 @@ import { Info } from "lucide-react";
 import type { PendingBillsModalProps, PendingBillProps } from "./dashboard.types";
 import { t } from "@/lib/i18n";
 
-
 export function PendingBillsModal({ open, onOpenChange, pendingBillsList, totalDue }: PendingBillsModalProps) {
   const [infoDialogBill, setInfoDialogBill] = useState<PendingBillProps | null>(null);
   const amountFormatted = totalDue.toLocaleString();
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle>{t("PENDING_BILLS_MODAL_TITLE")}</DialogTitle>
-            <DialogDescription>
-              {t("PENDING_BILLS_DESCRIPTION", { amount: totalDue.toLocaleString() })}
-            </DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="flex-1 min-h-0 -mx-6 px-6">
+      <ModalWithHeaderFooter
+        open={open}
+        onOpenChange={onOpenChange}
+        maxWidth="2xl"
+        className="max-h-[85vh]"
+        headerTitle={t("PENDING_BILLS_MODAL_TITLE")}
+        headerDescription={t("PENDING_BILLS_DESCRIPTION", { amount: totalDue.toLocaleString() })}
+        bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden !px-0 !py-0"
+        children={
+          <ScrollArea className="min-h-0 flex-1 px-6">
             <Box className="space-y-3 pr-4">
               {pendingBillsList.map((bill) => (
                 <Box
@@ -60,22 +54,18 @@ export function PendingBillsModal({ open, onOpenChange, pendingBillsList, totalD
                       <Typography
                         variant="caption"
                         className={
-                          bill.status === "overdue"
-                            ? "font-medium text-red-600"
-                            : "text-slate-500"
+                          bill.status === "overdue" ? "font-medium text-red-600" : "text-slate-500"
                         }
                       >
                         {bill.days_left}
                       </Typography>
                     )}
-                    <Typography className="font-semibold text-slate-900">
-                      ₹{amountFormatted}
-                    </Typography>
+                    <Typography className="font-semibold text-slate-900">₹{amountFormatted}</Typography>
                     {bill.monthBreakdown && bill.monthBreakdown.length > 0 && (
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 rounded-full text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                        className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                         onClick={() => setInfoDialogBill(bill)}
                         title={t("VIEW_BREAKDOWN")}
                       >
@@ -88,20 +78,21 @@ export function PendingBillsModal({ open, onOpenChange, pendingBillsList, totalD
               ))}
             </Box>
           </ScrollArea>
-        </DialogContent>
-      </Dialog>
+        }
+      />
 
-      <Dialog open={!!infoDialogBill} onOpenChange={(open) => !open && setInfoDialogBill(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t("PAYMENT_BREAKDOWN")}</DialogTitle>
-            <DialogDescription>
-              {infoDialogBill ? (
-                <>{t("DUE_OVERDUE_AMOUNT_BY_MONTH", { studentName: infoDialogBill.student_name })}</>
-              ) : null}
-            </DialogDescription>
-          </DialogHeader>
-          {infoDialogBill && infoDialogBill.monthBreakdown && infoDialogBill.monthBreakdown.length > 0 && (
+      <ModalWithHeaderFooter
+        open={!!infoDialogBill}
+        onOpenChange={(next) => !next && setInfoDialogBill(null)}
+        maxWidth="md"
+        headerTitle={t("PAYMENT_BREAKDOWN")}
+        headerDescription={
+          infoDialogBill ? (
+            <>{t("DUE_OVERDUE_AMOUNT_BY_MONTH", { studentName: infoDialogBill.student_name })}</>
+          ) : null
+        }
+        children={
+          infoDialogBill && infoDialogBill.monthBreakdown && infoDialogBill.monthBreakdown.length > 0 ? (
             <Box className="space-y-4">
               <Box className="rounded-lg border border-slate-200 bg-slate-50/50">
                 <Box className="border-b border-slate-200 px-4 py-2">
@@ -145,9 +136,9 @@ export function PendingBillsModal({ open, onOpenChange, pendingBillsList, totalD
                 </Typography>
               </Box>
             </Box>
-          )}
-        </DialogContent>
-      </Dialog>
+          ) : null
+        }
+      />
     </>
   );
 }
