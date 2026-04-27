@@ -61,18 +61,21 @@ export const useAuthStore = create<AuthState>()(
           const data = await res.json();
           if (data.success && data.user) {
             const u = data.user as AuthUser;
+            const assigned = u.accessibleHostels ?? [];
+            const resolvedHostelId =
+              u.hostelId ?? (!u.isOwner && assigned.length > 0 ? assigned[0].id : null);
             set({
               user: {
                 email: u.email,
                 name: u.name,
-                hostelId: u.hostelId ?? null,
+                hostelId: resolvedHostelId,
                 adminId: u.adminId,
                 isOwner: u.isOwner,
                 canManageUsersAndRoles: u.canManageUsersAndRoles,
                 roleId: u.roleId ?? null,
                 roleName: u.roleName ?? null,
                 managementMode: u.managementMode ?? "single",
-                accessibleHostels: u.accessibleHostels ?? [],
+                accessibleHostels: assigned,
                 permissions: (u as AuthUser).permissions,
               },
               isAuthenticated: true,
