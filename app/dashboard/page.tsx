@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -43,11 +43,20 @@ const STUDENT_CAPACITY_NEAR_THRESHOLD = 5;
 export default function DashboardPage() {
   const query = useSearchStore((s) => s.query);
   const user = useAuthStore((s) => s.user);
+  const updateUser = useAuthStore((s) => s.updateUser);
   const hostelId = user?.hostelId ?? null;
   const subscriptionStatus = useSubscriptionStore((s) => s.status);
   const paymentTrackingEnabled = useSettingsStore((s) => s.getPaymentTrackingEnabled(hostelId));
   const showMultiOverview =
     Boolean(user?.isOwner) && user?.managementMode === "multi" && hostelId == null;
+  const assignedHostels = user?.accessibleHostels ?? [];
+
+  useEffect(() => {
+    if (showMultiOverview) return;
+    if (hostelId != null) return;
+    if (assignedHostels.length === 0) return;
+    updateUser({ hostelId: assignedHostels[0].id });
+  }, [assignedHostels, hostelId, showMultiOverview, updateUser]);
 
   const { data, isLoading, error } = useQuery<DashboardStatsProps>({
     queryKey: ["dashboard-stats", hostelId],
@@ -98,6 +107,14 @@ export default function DashboardPage() {
 
   if (showMultiOverview) {
     return <MultiHostelOverview />;
+  }
+  if (hostelId == null) {
+    return (
+      <Box className="p-8 text-slate-700">
+        No hostel is assigned to this account yet. Ask your owner/admin to assign at least one
+        hostel, then sign out and sign in again.
+      </Box>
+    );
   }
 
   if (isLoading) return <DashboardSkeleton />;
