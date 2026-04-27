@@ -7,10 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Plus, Upload } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { useAuthStore } from "@/lib/AuthStore";
+import { hasDashboardPermission } from "@/lib/dashboardPermissionClient";
 import { fetchWithHostel } from "@/lib/ApiClient";
 import { Box } from "@/components/ui/box";
+import { toast } from "sonner";
 
-import type { InactiveStudent, Student, StudentFormValues, StudentRoom } from "./students.types";
+import type {
+  InactiveStudent,
+  ResidentInitialDocuments,
+  Student,
+  StudentFormValues,
+  StudentRoom,
+} from "./students.types";
 import { StudentsSkeleton } from "@/components/skeletons";
 import { useSearchStore } from "@/lib/SearchStore";
 
@@ -19,9 +27,12 @@ import {
   validateIdProof,
   normalizeIdProof,
   validatePhone,
+  validateOptionalPhone,
   normalizePhone,
 } from "./students.constants";
 import { filterStudents } from "./students.utils";
+import { mergeDetailsForKind, normalizeResidentKind } from "@/lib/residentType.constants";
+import { SelectHostelPrompt } from "@/components/multi-hostel/SelectHostelPrompt";
 
 const AddStudentDialog = dynamic(
   () => import("./AddStudentDialog").then((m) => m.AddStudentDialog)
@@ -37,6 +48,9 @@ const StudentCheckoutModal = dynamic(
 );
 const StudentsTabs = dynamic(
   () => import("./StudentsTabs").then((m) => m.StudentsTabs)
+);
+const ResidentDetailsDrawer = dynamic(() =>
+  import("./ResidentDetailsDrawer").then((m) => m.ResidentDetailsDrawer)
 );
 const ImportStudentsDialog = dynamic(() =>
   import("./ImportStudentsDialog").then((m) => m.ImportStudentsDialog)
@@ -58,11 +72,29 @@ export default function StudentsPage() {
   const [editIdProofError, setEditIdProofError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [editPhoneError, setEditPhoneError] = useState<string | null>(null);
+  const [emergencyPhoneError, setEmergencyPhoneError] = useState<string | null>(null);
+  const [editEmergencyPhoneError, setEditEmergencyPhoneError] = useState<string | null>(null);
   const [filterRoom, setFilterRoom] = useState<string>("all");
   const [filterPaymentStatus, setFilterPaymentStatus] = useState<string>("all");
   const [importOpen, setImportOpen] = useState(false);
+  const [detailsStudent, setDetailsStudent] = useState<Student | null>(null);
+  const [addResidentDocs, setAddResidentDocs] = useState<ResidentInitialDocuments>({
+    profilePhoto: null,
+    idProofFile: null,
+  });
 
-  const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
+  const user = useAuthStore((s) => s.user);
+  const hostelId = user?.hostelId ?? null;
+  const canResidentsAdd = hasDashboardPermission(user, "residents", "add");
+  const canResidentsEdit = hasDashboardPermission(user, "residents", "edit");
+  const canResidentsDelete = hasDashboardPermission(user, "residents", "delete");
+  const canDocumentsView = hasDashboardPermission(user, "documents", "view");
+  const canDocumentsAdd = hasDashboardPermission(user, "documents", "add");
+  const canDocumentsDelete = hasDashboardPermission(user, "documents", "delete");
+
+  if (!hostelId) {
+    return <SelectHostelPrompt moduleLabel={t("STUDENT_MANAGEMENT")} />;
+  }
 
   const { data: students = [], isLoading, error } = useQuery<Student[]>({
     queryKey: ["students", hostelId],
@@ -102,6 +134,13 @@ export default function StudentsPage() {
     return result;
   }, [searchFiltered, filterRoom, filterPaymentStatus]);
   const filteredInactive = useMemo(() => filterStudents(inactiveStudents, query), [inactiveStudents, query]);
+
+  const drawerStudent = useMemo(() => {
+    if (!detailsStudent) return null;
+    const id = String(detailsStudent.id);
+    const fresh = students.find((s) => String(s.id) === id);
+    return fresh ?? detailsStudent;
+  }, [students, detailsStudent]);
 
   const { data: roomsData } = useQuery<StudentRoom[]>({
     queryKey: ["rooms", hostelId],
@@ -146,8 +185,10 @@ export default function StudentsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: data.name,
+          gender: data.gender,
           email: data.email || null,
           phone: data.phone,
+          emergency_contact_phone: data.emergency_contact_phone,
           room_id: data.room_id ? Number(data.room_id) : null,
           course: data.course || null,
           join_date: data.join_date || null,
@@ -157,6 +198,8 @@ export default function StudentsPage() {
           id_proof_type: data.id_proof_type || null,
           id_proof_number: data.id_proof_number || null,
           address: data.address || null,
+          resident_type: data.resident_type,
+          resident_type_details: data.resident_type_details,
         }),
       });
       if (!res.ok) {
@@ -201,14 +244,20 @@ export default function StudentsPage() {
   });
 
   const createStudent = useMutation({
-    mutationFn: async (data: StudentFormValues) => {
+    mutationFn: async (payload: {
+      data: StudentFormValues;
+      documents: ResidentInitialDocuments;
+    }) => {
+      const { data } = payload;
       const res = await fetchWithHostel("/api/students", hostelId, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: data.name,
+          gender: data.gender,
           email: data.email || null,
           phone: data.phone,
+          emergency_contact_phone: data.emergency_contact_phone,
           room_id: data.room_id ? Number(data.room_id) : null,
           course: data.course || null,
           join_date: data.join_date || null,
@@ -218,19 +267,68 @@ export default function StudentsPage() {
           id_proof_type: data.id_proof_type || null,
           id_proof_number: data.id_proof_number || null,
           address: data.address || null,
+          resident_type: data.resident_type,
+          resident_type_details: data.resident_type_details,
         }),
       });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || "Failed to add resident");
       }
-      return res.json();
+      const json = (await res.json()) as { id: number };
+      return {
+        studentId: Number(json.id),
+        documents: payload.documents,
+        idProofType: data.id_proof_type || "",
+      };
     },
-    onSuccess: () => {
+    onSuccess: async ({ studentId, documents, idProofType }) => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
+
+      const uploads: Promise<Response>[] = [];
+      if (documents.profilePhoto) {
+        const fd = new FormData();
+        fd.set("file", documents.profilePhoto);
+        fd.set("category", "profile_photo");
+        uploads.push(
+          fetchWithHostel(`/api/students/${studentId}/documents`, hostelId, {
+            method: "POST",
+            body: fd,
+          })
+        );
+      }
+      if (documents.idProofFile) {
+        const fd = new FormData();
+        fd.set("file", documents.idProofFile);
+        fd.set("category", "id_proof");
+        fd.set(
+          "label",
+          idProofType.trim() ? `Primary ID (${idProofType.trim()})` : "Primary ID"
+        );
+        uploads.push(
+          fetchWithHostel(`/api/students/${studentId}/documents`, hostelId, {
+            method: "POST",
+            body: fd,
+          })
+        );
+      }
+      if (uploads.length > 0) {
+        try {
+          const results = await Promise.all(uploads);
+          const failed = results.filter((r) => !r.ok);
+          if (failed.length > 0) {
+            toast.error(t("RESIDENT_DOC_UPLOAD_AFTER_CREATE_FAILED"));
+          }
+        } catch {
+          toast.error(t("RESIDENT_DOC_UPLOAD_AFTER_CREATE_FAILED"));
+        }
+        queryClient.invalidateQueries({ queryKey: ["student-documents", hostelId, studentId] });
+      }
+
       setForm({ ...initialStudentForm });
+      setAddResidentDocs({ profilePhoto: null, idProofFile: null });
       setModalOpen(false);
     },
   });
@@ -239,9 +337,23 @@ export default function StudentsPage() {
     e.preventDefault();
     setIdProofError(null);
     setPhoneError(null);
-    const { name, email, phone, room_id, course, join_date, id_proof_type, id_proof_number, address } = form;
+    setEmergencyPhoneError(null);
+    const {
+      name,
+      gender,
+      email,
+      phone,
+      emergency_contact_phone,
+      room_id,
+      course,
+      join_date,
+      id_proof_type,
+      id_proof_number,
+      address,
+    } = form;
     if (
       !name.trim() ||
+      !gender.trim() ||
       !email.trim() ||
       !phone.trim() ||
       !room_id ||
@@ -257,6 +369,11 @@ export default function StudentsPage() {
       setPhoneError(phoneErr);
       return;
     }
+    const emergErr = validateOptionalPhone(emergency_contact_phone);
+    if (emergErr) {
+      setEmergencyPhoneError(emergErr);
+      return;
+    }
     const err = validateIdProof(id_proof_type, id_proof_number);
     if (err) {
       setIdProofError(err);
@@ -265,9 +382,10 @@ export default function StudentsPage() {
     const normalizedForm = {
       ...form,
       phone: normalizePhone(phone),
+      emergency_contact_phone: normalizePhone(emergency_contact_phone),
       id_proof_number: normalizeIdProof(id_proof_type, id_proof_number),
     };
-    createStudent.mutate(normalizedForm);
+    createStudent.mutate({ data: normalizedForm, documents: addResidentDocs });
   };
 
   const availableRooms = rooms.filter(
@@ -282,11 +400,15 @@ export default function StudentsPage() {
     );
 
   const handleEdit = (student: Student) => {
+    setDetailsStudent(null);
     setEditingStudent(student);
+    const kind = normalizeResidentKind(student.resident_type);
     setEditForm({
       name: student.name,
+      gender: student.gender || "",
       email: student.email || "",
-      phone: student.phone,
+      phone: student.phone ?? "",
+      emergency_contact_phone: student.emergency_contact_phone ?? "",
       room_id: student.room_id ? String(student.room_id) : "",
       course: student.course || "",
       join_date: student.join_date ? student.join_date.slice(0, 10) : "",
@@ -296,6 +418,8 @@ export default function StudentsPage() {
       id_proof_type: student.id_proof_type || "",
       id_proof_number: student.id_proof_number || "",
       address: student.address || "",
+      resident_type: kind,
+      resident_type_details: mergeDetailsForKind(kind, student.resident_type_details ?? {}),
     });
     setEditModalOpen(true);
   };
@@ -304,10 +428,24 @@ export default function StudentsPage() {
     e.preventDefault();
     setEditIdProofError(null);
     setEditPhoneError(null);
-    const { name, email, phone, room_id, course, join_date, id_proof_type, id_proof_number, address } = editForm;
+    setEditEmergencyPhoneError(null);
+    const {
+      name,
+      gender,
+      email,
+      phone,
+      emergency_contact_phone,
+      room_id,
+      course,
+      join_date,
+      id_proof_type,
+      id_proof_number,
+      address,
+    } = editForm;
     if (
       !editingStudent ||
       !name.trim() ||
+      !gender.trim() ||
       !email.trim() ||
       !phone.trim() ||
       !room_id ||
@@ -323,6 +461,11 @@ export default function StudentsPage() {
       setEditPhoneError(phoneErr);
       return;
     }
+    const emergErr = validateOptionalPhone(emergency_contact_phone);
+    if (emergErr) {
+      setEditEmergencyPhoneError(emergErr);
+      return;
+    }
     const err = validateIdProof(id_proof_type, id_proof_number);
     if (err) {
       setEditIdProofError(err);
@@ -331,6 +474,7 @@ export default function StudentsPage() {
     const normalizedData = {
       ...editForm,
       phone: normalizePhone(phone),
+      emergency_contact_phone: normalizePhone(emergency_contact_phone),
       id_proof_number: normalizeIdProof(id_proof_type, id_proof_number),
     };
     updateStudent.mutate({ id: editingStudent.id, data: normalizedData });
@@ -365,11 +509,20 @@ export default function StudentsPage() {
       <Box className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold">{t("STUDENT_MANAGEMENT")}</h2>
         <Box className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setImportOpen(true)}>
+          <Button
+            variant="outline"
+            disabled={!canResidentsAdd}
+            title={!canResidentsAdd ? "You don't have permission to import residents" : undefined}
+            onClick={() => setImportOpen(true)}
+          >
             <Upload className="mr-2 h-4 w-4" />
             {t("STUDENT_IMPORT_CTA")}
           </Button>
-          <Button onClick={() => setModalOpen(true)}>
+          <Button
+            disabled={!canResidentsAdd}
+            title={!canResidentsAdd ? "You don't have permission to add residents" : undefined}
+            onClick={() => setModalOpen(true)}
+          >
             <Plus className="mr-2 h-4 w-4" />
             {t("ADD_STUDENT")}
           </Button>
@@ -396,6 +549,8 @@ export default function StudentsPage() {
           if (!open) {
             setIdProofError(null);
             setPhoneError(null);
+            setEmergencyPhoneError(null);
+            setAddResidentDocs({ profilePhoto: null, idProofFile: null });
           }
         }}
         form={form}
@@ -406,6 +561,21 @@ export default function StudentsPage() {
         availableRooms={availableRooms}
         idProofError={idProofError}
         phoneError={phoneError}
+        emergencyPhoneError={emergencyPhoneError}
+        documents={addResidentDocs}
+        onDocumentsChange={setAddResidentDocs}
+      />
+
+      <ResidentDetailsDrawer
+        open={detailsStudent != null}
+        student={drawerStudent}
+        onOpenChange={(o) => {
+          if (!o) setDetailsStudent(null);
+        }}
+        canEditResidents={canResidentsEdit}
+        canViewDocuments={canDocumentsView}
+        canAddDocuments={canDocumentsAdd}
+        canDeleteDocuments={canDocumentsDelete}
       />
 
       <EditStudentDialog
@@ -416,6 +586,7 @@ export default function StudentsPage() {
             setEditingStudent(null);
             setEditIdProofError(null);
             setEditPhoneError(null);
+            setEditEmergencyPhoneError(null);
           }
         }}
         student={editingStudent}
@@ -427,6 +598,7 @@ export default function StudentsPage() {
         roomsForEdit={roomsForEdit}
         idProofError={editIdProofError}
         phoneError={editPhoneError}
+        emergencyPhoneError={editEmergencyPhoneError}
       />
 
       <StudentCheckoutModal
@@ -462,10 +634,14 @@ export default function StudentsPage() {
         filterPaymentStatus={filterPaymentStatus}
         onFilterRoomChange={setFilterRoom}
         onFilterPaymentStatusChange={setFilterPaymentStatus}
+        onViewDetails={(s) => setDetailsStudent(s)}
         onCheckOut={handleCheckOut}
         onEdit={handleEdit}
         onDelete={handleDelete}
         canDeleteStudent={canDeleteStudent}
+        canEditResident={canResidentsEdit}
+        canCheckOutResident={canResidentsEdit}
+        canDeleteResident={canResidentsDelete}
       />
     </Box>
   );

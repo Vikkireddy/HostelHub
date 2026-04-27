@@ -7,12 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Box } from "@/components/ui/box";
 import { EmptyState } from "@/components/ui/EmptyState";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ModalWithHeaderFooter } from "@/components/ui/ModalWithHeaderFooter";
 import { PaymentItem } from "./PaymentItem";
 import { RECENT_ITEMS_DISPLAY_LIMIT } from "./dashboard.constants";
 import type { RecentPaymentsProps } from "./dashboard.types";
@@ -58,20 +53,23 @@ export function RecentPayments({ payments }: RecentPaymentsProps) {
         </CardContent>
       </Card>
 
-      <Dialog open={viewAllOpen} onOpenChange={setViewAllOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle>{t("RECENT_PAYMENTS")}</DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="flex-1 min-h-0 -mx-6 px-6">
+      <ModalWithHeaderFooter
+        open={viewAllOpen}
+        onOpenChange={setViewAllOpen}
+        maxWidth="2xl"
+        className="max-h-[85vh]"
+        headerTitle={t("RECENT_PAYMENTS")}
+        bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden !px-0 !py-0"
+        children={
+          <ScrollArea className="min-h-0 flex-1 px-6">
             <Box className="space-y-4 pr-4">
               {payments.map((payment) => (
                 <PaymentItem key={payment.id} payment={payment} />
               ))}
             </Box>
           </ScrollArea>
-        </DialogContent>
-      </Dialog>
+        }
+      />
     </>
   );
 }

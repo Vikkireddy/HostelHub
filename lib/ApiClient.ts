@@ -2,6 +2,7 @@ import {
   API_SUBSCRIPTION_ERROR_STATUS,
   SUBSCRIPTION_PAGE_PATH,
 } from "@/lib/subscription/constants";
+import { useAuthStore } from "@/lib/AuthStore";
 
 /**
  * API client that includes hostel_id header for multi-tenant data isolation.
@@ -13,6 +14,10 @@ export function getHostelHeaders(hostelId: number | null): HeadersInit {
   };
   if (hostelId != null) {
     headers["X-Hostel-Id"] = String(hostelId);
+  }
+  if (typeof window !== "undefined") {
+    const email = useAuthStore.getState().user?.email?.trim().toLowerCase();
+    if (email) headers["X-Admin-Email"] = email;
   }
   return headers;
 }
@@ -40,7 +45,13 @@ export async function fetchWithHostel(
   if (hostelId != null) {
     headers.set("X-Hostel-Id", String(hostelId));
   }
-  if (!headers.has("Content-Type")) {
+  if (typeof window !== "undefined") {
+    const email = useAuthStore.getState().user?.email?.trim().toLowerCase();
+    if (email) headers.set("X-Admin-Email", email);
+  }
+  const isFormData =
+    typeof FormData !== "undefined" && options.body instanceof FormData;
+  if (!headers.has("Content-Type") && !isFormData) {
     headers.set("Content-Type", "application/json");
   }
   const res = await fetch(url, { ...options, headers });

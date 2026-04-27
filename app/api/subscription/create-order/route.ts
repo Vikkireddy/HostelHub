@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
+import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
 import { isPlanAvailableForPurchase, SUBSCRIPTION_PLANS } from "@/lib/subscription/constants";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
@@ -25,6 +26,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const denied = await assertDashboardPermission(request, "subscription", "edit");
+    if (denied) return denied;
 
     const body = await request.json();
     const { planId } = body;

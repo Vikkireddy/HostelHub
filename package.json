@@ -13,7 +13,10 @@
     "migrate:signup": "node scripts/run-migrate-signup.js",
     "migrate:hostel-isolation": "node scripts/run-migrate-hostel-isolation.js",
     "migrate:staff-management": "node scripts/run-migrate-staff-management.js",
-    "migrate:migrate-staff-management.sql": "node scripts/run-migrate-staff-management.js"
+    "migrate:migrate-staff-management.sql": "node scripts/run-migrate-staff-management.js",
+    "migrate:student-documents": "node scripts/run-migrate-student-documents.js",
+    "migrate:resident-type": "node scripts/run-migrate-resident-type.js",
+    "migrate:multi-hostel": "node scripts/run-migrate-multi-hostel.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

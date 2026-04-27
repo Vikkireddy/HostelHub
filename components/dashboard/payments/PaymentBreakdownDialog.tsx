@@ -16,6 +16,7 @@ interface PaymentBreakdownDialogProps {
   onOpenChange: (open: boolean) => void;
   group: GroupedUnpaidProps | null;
   onPayNow: (group: GroupedUnpaidProps) => void;
+  payNowDisabled?: boolean;
 }
 
 const dialogSx = {
@@ -40,6 +41,7 @@ export function PaymentBreakdownDialog({
   onOpenChange,
   group,
   onPayNow,
+  payNowDisabled = false,
 }: PaymentBreakdownDialogProps) {
   if (!group) return null;
 
@@ -144,6 +146,8 @@ export function PaymentBreakdownDialog({
             variant="contained"
             size="small"
             startIcon={<Banknote size={16} />}
+            disabled={payNowDisabled}
+            title={payNowDisabled ? "You don't have permission to record payments" : undefined}
             onClick={() => onPayNow(group)}
             sx={{
               backgroundColor: "rgb(16 185 129)",

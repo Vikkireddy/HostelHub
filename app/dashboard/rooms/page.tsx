@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { RoomsSkeleton } from "@/components/skeletons";
 import { useSearchStore } from "@/lib/SearchStore";
 import { useAuthStore } from "@/lib/AuthStore";
+import { hasDashboardPermission } from "@/lib/dashboardPermissionClient";
 import { fetchWithHostel } from "@/lib/ApiClient";
 import { DEFAULT_AC_TYPE } from "./rooms.constants";
 import { AddRoomDialog } from "./components/AddRoomDialog";
@@ -17,6 +18,7 @@ import { EditRoomDialog } from "./components/EditRoomDialog";
 import { RoomCard } from "./components/RoomCard";
 import { RoomsSummaryCards } from "./components/RoomsSummaryCards";
 import { Room, RoomForm, initialForm } from "./components/types";
+import { SelectHostelPrompt } from "@/components/multi-hostel/SelectHostelPrompt";
 
 function filterRooms<T extends { number: string; floor: number; type: string }>(
   rooms: T[],
@@ -35,7 +37,11 @@ function filterRooms<T extends { number: string; floor: number; type: string }>(
 export default function RoomsPage() {
   const queryClient = useQueryClient();
   const query = useSearchStore((s) => s.query);
-  const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
+  const user = useAuthStore((s) => s.user);
+  const hostelId = user?.hostelId ?? null;
+  const canRoomsAdd = hasDashboardPermission(user, "rooms", "add");
+  const canRoomsEdit = hasDashboardPermission(user, "rooms", "edit");
+  const canRoomsDelete = hasDashboardPermission(user, "rooms", "delete");
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
@@ -43,6 +49,10 @@ export default function RoomsPage() {
   const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
   const [form, setForm] = useState<RoomForm>(initialForm);
   const [editForm, setEditForm] = useState<RoomForm>(initialForm);
+
+  if (!hostelId) {
+    return <SelectHostelPrompt moduleLabel="Rooms" />;
+  }
 
   const { data: rooms = [], isLoading, error } = useQuery<Room[]>({
     queryKey: ["rooms", hostelId],
@@ -194,7 +204,11 @@ export default function RoomsPage() {
       <Box>
         <Box className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold">All Rooms</h3>
-          <Button onClick={() => setModalOpen(true)}>
+          <Button
+            onClick={() => setModalOpen(true)}
+            disabled={!canRoomsAdd}
+            title={!canRoomsAdd ? "You don't have permission to add rooms" : undefined}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Add Room
           </Button>
@@ -252,6 +266,8 @@ export default function RoomsPage() {
                 room={room}
                 onEdit={handleEdit}
                 onDelete={handleDeleteRoom}
+                canEdit={canRoomsEdit}
+                canDelete={canRoomsDelete}
               />
             ))}
           </Box>

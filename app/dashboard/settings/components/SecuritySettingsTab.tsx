@@ -20,6 +20,7 @@ export function SecuritySettingsTab({
   onNewPasswordChange,
   onConfirmPasswordChange,
   onSubmit,
+  allowEdit = true,
 }: SecuritySettingsTabProps) {
   return (
     <TabsContent value="security" className="mt-0">
@@ -43,6 +44,7 @@ export function SecuritySettingsTab({
                 id="current"
                 type="password"
                 value={currentPassword}
+                disabled={!allowEdit}
                 onChange={(e) => onCurrentPasswordChange(e.target.value)}
                 placeholder="Enter current password"
               />
@@ -53,6 +55,7 @@ export function SecuritySettingsTab({
                 id="new"
                 type="password"
                 value={newPassword}
+                disabled={!allowEdit}
                 onChange={(e) => onNewPasswordChange(e.target.value)}
                 placeholder="Enter new password"
               />
@@ -63,11 +66,18 @@ export function SecuritySettingsTab({
                 id="confirm"
                 type="password"
                 value={confirmPassword}
+                disabled={!allowEdit}
                 onChange={(e) => onConfirmPasswordChange(e.target.value)}
                 placeholder="Confirm new password"
               />
             </Box>
-            <Button type="submit">Update Password</Button>
+            <Button
+              type="submit"
+              disabled={!allowEdit}
+              title={!allowEdit ? "You don't have permission to change settings" : undefined}
+            >
+              Update Password
+            </Button>
           </form>
         </CardContent>
       </Card>

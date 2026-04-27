@@ -15,6 +15,7 @@ interface PaymentRowActionsProps {
   onDelete?: (row: PaymentTableRowProps) => void;
   isMarkingPaid?: boolean;
   markingPaidStudentId?: number;
+  canMarkPaid?: boolean;
 }
 
 export function PaymentRowActions({
@@ -26,6 +27,7 @@ export function PaymentRowActions({
   onDelete,
   isMarkingPaid,
   markingPaidStudentId,
+  canMarkPaid = true,
 }: PaymentRowActionsProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -88,7 +90,8 @@ export function PaymentRowActions({
         <Box
           component="button"
           onClick={() => onMarkPaid(row.studentId)}
-          disabled={isMarking}
+          disabled={isMarking || !canMarkPaid}
+          title={!canMarkPaid ? "You don't have permission to mark payments as paid" : undefined}
           sx={{
             display: "inline-flex",
             alignItems: "center",
@@ -101,9 +104,9 @@ export function PaymentRowActions({
             color: "white",
             fontSize: "0.8125rem",
             fontWeight: 600,
-            cursor: isMarking ? "not-allowed" : "pointer",
-            opacity: isMarking ? 0.7 : 1,
-            "&:hover": isMarking ? {} : { backgroundColor: "rgb(5 150 105)" },
+            cursor: isMarking || !canMarkPaid ? "not-allowed" : "pointer",
+            opacity: isMarking || !canMarkPaid ? 0.7 : 1,
+            "&:hover": isMarking || !canMarkPaid ? {} : { backgroundColor: "rgb(5 150 105)" },
           }}
         >
           <Check size={14} />

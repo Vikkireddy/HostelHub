@@ -17,6 +17,8 @@ export interface ProfileSettingsTabProps {
   onProfileNameChange: TextChangeHandler;
   onProfileEmailChange: TextChangeHandler;
   onSubmit: FormSubmitHandler;
+  /** When false, profile fields and save are disabled (`settings` edit). */
+  allowEdit?: boolean;
 }
 
 export interface SecuritySettingsTabProps {
@@ -29,6 +31,7 @@ export interface SecuritySettingsTabProps {
   onNewPasswordChange: TextChangeHandler;
   onConfirmPasswordChange: TextChangeHandler;
   onSubmit: FormSubmitHandler;
+  allowEdit?: boolean;
 }
 
 export interface NotificationsSettingsTabProps {
@@ -38,6 +41,7 @@ export interface NotificationsSettingsTabProps {
   onEmailNotificationsChange: BooleanChangeHandler;
   onPaymentRemindersChange: BooleanChangeHandler;
   onSubmit: FormSubmitHandler;
+  allowEdit?: boolean;
 }
 
 export interface BrandingSettingsTabProps {
@@ -50,4 +54,5 @@ export interface BrandingSettingsTabProps {
   onLogoChange: FileInputChangeHandler;
   onRemoveLogo: () => void;
   onSubmit: FormSubmitHandler;
+  allowEdit?: boolean;
 }

@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
 import { formatSqlDateOnlyForJson } from "@/lib/dateOnly";
+import { ensureStudentGenderColumn } from "@/lib/ensureGenderColumns";
+import { ensureStudentOptionalPhoneAndEmergency } from "@/lib/ensureStudentContactColumns";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 const escapeCsv = (value: unknown): string => {
@@ -16,13 +19,19 @@ export async function GET(request: NextRequest) {
     const subErr = await requireSubscription(request);
     if (subErr) return subErr;
 
+    const denied = await assertDashboardPermission(request, "residents", "view");
+    if (denied) return denied;
+
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    await ensureStudentGenderColumn();
+    await ensureStudentOptionalPhoneAndEmergency();
+
     const [rows] = await pool.execute(
-      `SELECT s.name, s.email, s.phone, r.number as room_number, s.course, s.join_date,
+      `SELECT s.name, s.gender, s.email, s.phone, s.emergency_contact_phone, r.number as room_number, s.course, s.join_date,
               s.id_proof_type, s.id_proof_number, s.address, s.planned_vacate_date
        FROM students s
        LEFT JOIN rooms r ON s.room_id = r.id
@@ -34,8 +43,10 @@ export async function GET(request: NextRequest) {
 
     const headers = [
       "name",
+      "gender",
       "email",
       "phone",
+      "emergency_contact_phone",
       "room_number",
       "course",
       "join_date",
@@ -46,8 +57,10 @@ export async function GET(request: NextRequest) {
     ];
     const exportRows = list.map((s) => ({
       name: s.name ?? "",
+      gender: s.gender ?? "",
       email: s.email ?? "",
       phone: s.phone ?? "",
+      emergency_contact_phone: s.emergency_contact_phone ?? "",
       room_number: s.room_number ?? "",
       course: s.course ?? "",
       join_date: formatSqlDateOnlyForJson(s.join_date) ?? "",
@@ -62,8 +75,10 @@ export async function GET(request: NextRequest) {
     for (const s of exportRows) {
       const row = [
         s.name,
+        s.gender,
         s.email,
         s.phone,
+        s.emergency_contact_phone,
         s.room_number,
         s.course,
         formatSqlDateOnlyForJson(s.join_date),

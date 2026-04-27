@@ -7,7 +7,9 @@ import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useAuthStore } from "@/lib/AuthStore";
+import { hasDashboardPermission } from "@/lib/dashboardPermissionClient";
 import { useExpensesData, type Expense, STAFF_SALARY_CATEGORY } from "./index";
+import { SelectHostelPrompt } from "@/components/multi-hostel/SelectHostelPrompt";
 
 const ExpensesFiltersBar = dynamic(() =>
   import("./ExpensesFiltersBar").then((m) => m.ExpensesFiltersBar)
@@ -23,7 +25,10 @@ const DeleteExpenseDialog = dynamic(() =>
 );
 
 export default function ExpensesPage() {
-  const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
+  const user = useAuthStore((s) => s.user);
+  const hostelId = user?.hostelId ?? null;
+  const canExpensesAdd = hasDashboardPermission(user, "expenses", "add");
+  const canExpensesDelete = hasDashboardPermission(user, "expenses", "delete");
 
   const {
     expenses,
@@ -61,11 +66,7 @@ export default function ExpensesPage() {
   };
 
   if (!hostelId) {
-    return (
-      <Box className="flex items-center justify-center p-16">
-        <Typography variant="muted">Loading…</Typography>
-      </Box>
-    );
+    return <SelectHostelPrompt moduleLabel="Expenses" />;
   }
 
   if (isLoading) {
@@ -99,6 +100,7 @@ export default function ExpensesPage() {
             filterYear={filterYear}
             setFilterYear={setFilterYear}
             onAddExpense={() => setAddModalOpen(true)}
+            canAddExpense={canExpensesAdd}
           />
         </CardHeader>
         <CardContent>
@@ -116,6 +118,7 @@ export default function ExpensesPage() {
               totalAmount={totalAmount}
               onDelete={handleDeleteClick}
               isDeleting={deleteExpense.isPending}
+              canDeleteExpense={canExpensesDelete}
             />
           )}
         </CardContent>

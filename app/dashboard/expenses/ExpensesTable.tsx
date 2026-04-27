@@ -19,6 +19,7 @@ interface ExpensesTableProps {
   totalAmount: number;
   onDelete: (expense: Expense) => void;
   isDeleting: boolean;
+  canDeleteExpense?: boolean;
 }
 
 export function ExpensesTable({
@@ -26,6 +27,7 @@ export function ExpensesTable({
   totalAmount,
   onDelete,
   isDeleting,
+  canDeleteExpense = true,
 }: ExpensesTableProps) {
   return (
     <>
@@ -73,7 +75,8 @@ export function ExpensesTable({
                   size="icon"
                   className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
                   onClick={() => onDelete(exp)}
-                  disabled={isDeleting}
+                  disabled={isDeleting || !canDeleteExpense}
+                  title={!canDeleteExpense ? "You don't have permission to delete expenses" : undefined}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

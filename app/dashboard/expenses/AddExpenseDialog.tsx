@@ -1,14 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,10 +8,13 @@ import { Dropdown } from "@/components/ui/dropdown";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
+import { ModalWithHeaderFooter } from "@/components/ui/ModalWithHeaderFooter";
 import { t } from "@/lib/i18n";
 import { EXPENSE_CATEGORIES, STAFF_SALARY_CATEGORY } from "./expenses.constants";
 import type { ExpenseFormValues } from "./expenses.types";
 import type { StaffOptionForExpense } from "./useExpensesData";
+
+const ADD_EXPENSE_FORM_ID = "add-expense-form";
 
 interface AddExpenseDialogProps {
   open: boolean;
@@ -57,18 +52,15 @@ export function AddExpenseDialog({
     (isStaffSalary && (!form.staff_member_id?.trim() || staffMembers.length === 0));
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add Expense</DialogTitle>
-          <DialogDescription>
-            Record admin expenses to track costs and calculate profit.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4">
-          {error && (
-            <Typography variant="error">{error.message}</Typography>
-          )}
+    <ModalWithHeaderFooter
+      open={open}
+      onOpenChange={onOpenChange}
+      maxWidth="md"
+      headerTitle="Add Expense"
+      headerDescription="Record admin expenses to track costs and calculate profit."
+      children={
+        <form id={ADD_EXPENSE_FORM_ID} onSubmit={onSubmit} className="space-y-4">
+          {error && <Typography variant="error">{error.message}</Typography>}
           <Box className="space-y-2">
             <Label htmlFor="category">Category *</Label>
             <Dropdown
@@ -155,16 +147,18 @@ export function AddExpenseDialog({
             onChange={(v) => onFormChange((p) => ({ ...p, expense_date: v }))}
             label={<Label htmlFor="expense_date">Date</Label>}
           />
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              {t("CANCEL")}
-            </Button>
-            <Button type="submit" disabled={submitDisabled}>
-              {isPending ? "Adding..." : "Add Expense"}
-            </Button>
-          </DialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      }
+      footerComponent={
+        <>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            {t("CANCEL")}
+          </Button>
+          <Button type="submit" form={ADD_EXPENSE_FORM_ID} disabled={submitDisabled}>
+            {isPending ? "Adding..." : "Add Expense"}
+          </Button>
+        </>
+      }
+    />
   );
 }

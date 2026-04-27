@@ -4,12 +4,16 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Box } from "@/components/ui/box";
 import { toast } from "sonner";
+import { useAuthStore } from "@/lib/AuthStore";
+import { hasDashboardPermission } from "@/lib/dashboardPermissionClient";
 import { PaymentsSkeleton } from "@/components/skeletons";
+import { useSettingsStore } from "@/lib/SettingsStore";
 import {
   usePaymentsData,
   getDefaultMonthYear,
   type PaymentTableRowProps,
 } from "@/components/dashboard/payments";
+import { SelectHostelPrompt } from "@/components/multi-hostel/SelectHostelPrompt";
 
 const PaymentStatsGrid = dynamic(() =>
   import("@/components/dashboard/payments").then((m) => m.PaymentStatsGrid)
@@ -31,6 +35,20 @@ const PaymentHistoryDialog = dynamic(() =>
 );
 
 export default function PaymentsPage() {
+  const user = useAuthStore((s) => s.user);
+  const hostelId = user?.hostelId ?? null;
+  const paymentTrackingEnabled = useSettingsStore((s) => s.getPaymentTrackingEnabled(hostelId));
+  const canPaymentsView = hasDashboardPermission(user, "payments", "view");
+  const canPaymentsAdd = hasDashboardPermission(user, "payments", "add");
+  const canPaymentsEdit = hasDashboardPermission(user, "payments", "edit");
+
+  if (!hostelId) {
+    return <SelectHostelPrompt moduleLabel="Payments" />;
+  }
+  if (!paymentTrackingEnabled) {
+    return <SelectHostelPrompt moduleLabel="Payments" />;
+  }
+
   const [historyStudent, setHistoryStudent] = useState<{
     id: number;
     name: string;
@@ -55,6 +73,7 @@ export default function PaymentsPage() {
     groupedUnpaid,
     bulkMarkPaid,
     recordPayment,
+    recordPaymentSubmitError,
     openPayNow,
     handleSubmit,
   } = usePaymentsData();
@@ -76,6 +95,8 @@ export default function PaymentsPage() {
         amount: String(row.totalBalance ?? row.amount),
         month: first?.month ?? getDefaultMonthYear().month,
         year: String(first?.year ?? new Date().getFullYear()),
+        payment_mode: "online",
+        payment_reference: "",
       });
       setModalOpen(true);
     } else {
@@ -113,6 +134,7 @@ export default function PaymentsPage() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onRecordPayment={() => setModalOpen(true)}
+        canRecordPayment={canPaymentsAdd}
       />
 
       <PaymentsTable
@@ -120,11 +142,13 @@ export default function PaymentsPage() {
         onMarkPaid={(studentId) => bulkMarkPaid.mutate(studentId)}
         onViewDetails={handleViewDetails}
         onOpenHistory={handleOpenHistory}
-        onEditPayment={handleEditPayment}
+        onEditPayment={canPaymentsAdd ? handleEditPayment : undefined}
         onSendReminder={handleSendReminder}
         onDelete={handleDelete}
         isMarkingPaid={bulkMarkPaid.isPending}
         markingPaidStudentId={bulkMarkPaid.variables}
+        canMarkPaid={canPaymentsEdit}
+        canOpenPaymentHistory={canPaymentsView}
       />
 
       <RecordPaymentDialog
@@ -135,7 +159,8 @@ export default function PaymentsPage() {
         onSubmit={handleSubmit}
         studentsWithDues={studentsWithDues}
         isPending={recordPayment.isPending}
-        error={recordPayment.error}
+        submitError={recordPaymentSubmitError}
+        canSubmit={canPaymentsAdd}
       />
 
       <PaymentBreakdownDialog
@@ -143,6 +168,7 @@ export default function PaymentsPage() {
         onOpenChange={(open) => !open && setInfoDialogGroup(null)}
         group={infoDialogGroup}
         onPayNow={openPayNow}
+        payNowDisabled={!canPaymentsAdd}
       />
 
       <PaymentHistoryDialog

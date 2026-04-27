@@ -21,6 +21,7 @@ export function BrandingSettingsTab({
   onLogoChange,
   onRemoveLogo,
   onSubmit,
+  allowEdit = true,
 }: BrandingSettingsTabProps) {
   return (
     <TabsContent value="branding" className="mt-0">
@@ -43,6 +44,7 @@ export function BrandingSettingsTab({
               <Input
                 id="hostelName"
                 value={brandingHostelName}
+                disabled={!allowEdit}
                 onChange={(e) => onBrandingHostelNameChange(e.target.value)}
                 placeholder={t("HOSTEL_NAME_PLACEHOLDER")}
               />
@@ -53,6 +55,7 @@ export function BrandingSettingsTab({
                 id="hostelLogo"
                 type="file"
                 accept="image/*"
+                disabled={!allowEdit}
                 onChange={onLogoChange}
                 className="cursor-pointer"
               />
@@ -63,14 +66,24 @@ export function BrandingSettingsTab({
                     <Box className="overflow-hidden rounded-lg border border-slate-200 p-2">
                       <img src={brandingLogoPreview} alt="Logo preview" className="h-16 w-16 object-contain" />
                     </Box>
-                    <Button type="button" variant="outline" size="sm" onClick={onRemoveLogo}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!allowEdit}
+                      onClick={onRemoveLogo}
+                    >
                       {t("REMOVE_LOGO")}
                     </Button>
                   </Box>
                 </Box>
               )}
             </Box>
-            <Button type="submit" disabled={hostelId == null}>
+            <Button
+              type="submit"
+              disabled={hostelId == null || !allowEdit}
+              title={!allowEdit ? "You don't have permission to change settings" : undefined}
+            >
               {brandingSaved ? t("BRANDING_SAVED") : t("SAVE_BRANDING")}
             </Button>
           </form>

@@ -26,13 +26,21 @@ export function StudentsTabs({
   filterPaymentStatus,
   onFilterRoomChange,
   onFilterPaymentStatusChange,
+  onViewDetails,
   onCheckOut,
   onEdit,
   onDelete,
   canDeleteStudent,
+  canEditResident,
+  canCheckOutResident,
+  canDeleteResident,
 }: StudentsTabsProps) {
   const { query, setQuery } = useSearchStore();
-  const columns = getStudentColumns(onCheckOut, onEdit, onDelete, canDeleteStudent);
+  const columns = getStudentColumns(onCheckOut, onEdit, onDelete, canDeleteStudent, onViewDetails, {
+    canEdit: canEditResident,
+    canCheckOut: canCheckOutResident,
+    canDelete: canDeleteResident,
+  });
   const inactiveColumns = getInactiveStudentColumns();
 
   return (
@@ -96,6 +104,7 @@ export function StudentsTabs({
                 columns={columns}
                 data={filteredStudents}
                 getRowId={(row: Student) => row.id}
+                onRowClick={onViewDetails}
               />
             )}
           </TabsContent>

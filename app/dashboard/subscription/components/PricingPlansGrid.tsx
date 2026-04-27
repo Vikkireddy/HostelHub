@@ -16,9 +16,15 @@ interface PricingPlansGridProps {
   plans: SubscriptionPlan[];
   activating: string | null;
   onCheckout: (planId: string) => void;
+  canPurchase?: boolean;
 }
 
-export function PricingPlansGrid({ plans, activating, onCheckout }: PricingPlansGridProps) {
+export function PricingPlansGrid({
+  plans,
+  activating,
+  onCheckout,
+  canPurchase = true,
+}: PricingPlansGridProps) {
   return (
     <Box id="pricing-plans" className="mx-auto max-w-6xl scroll-mt-8">
       <Box className="grid gap-6 md:grid-cols-3">
@@ -78,7 +84,8 @@ export function PricingPlansGrid({ plans, activating, onCheckout }: PricingPlans
                     variant={isPro ? "default" : "outline"}
                     onClick={() => onCheckout(plan.id)}
                     loading={activating === plan.id}
-                    disabled={!!activating}
+                    disabled={!!activating || !canPurchase}
+                    title={!canPurchase ? "You don't have permission to change subscription" : undefined}
                   >
                     {planCheckoutLabel(plan.id)}
                   </Button>

@@ -10,6 +10,7 @@ interface SubscriptionCtaCardProps {
   startingTrial: boolean;
   onStartTrial: () => void;
   onComparePlans: () => void;
+  canStartTrial?: boolean;
 }
 
 export function SubscriptionCtaCard({
@@ -18,6 +19,7 @@ export function SubscriptionCtaCard({
   startingTrial,
   onStartTrial,
   onComparePlans,
+  canStartTrial = true,
 }: SubscriptionCtaCardProps) {
   return (
     <Card className="mx-auto mb-8 mt-8 max-w-6xl border-0 bg-slate-950 text-white shadow-lg">
@@ -100,8 +102,9 @@ export function SubscriptionCtaCard({
                 variant="secondary"
                 className="bg-white text-slate-900 hover:bg-slate-100"
                 onClick={onStartTrial}
-                disabled={startingTrial}
+                disabled={startingTrial || !canStartTrial}
                 loading={startingTrial}
+                title={!canStartTrial ? "You don't have permission to start a trial" : undefined}
               >
                 {t("SUBSCRIPTION_CTA_START_TRIAL")}
               </Button>

@@ -5,7 +5,23 @@ import { updateOverduePayments, ensureBillsForStudents, getPendingDuesSql } from
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
 import { checkStudentLimit } from "@/lib/subscription/CheckFeature";
 import { ensurePlannedVacateDateColumn } from "@/lib/ensurePlannedVacateDateColumn";
+import { ensureStudentGenderColumn } from "@/lib/ensureGenderColumns";
+import {
+  normalizeGenderValue,
+  normalizePhone,
+  validatePhone,
+  validateOptionalPhone,
+} from "@/app/dashboard/students/students.constants";
+import { ensureStudentOptionalPhoneAndEmergency } from "@/lib/ensureStudentContactColumns";
 import { formatSqlDateOnlyForJson } from "@/lib/dateOnly";
+import { ensureStudentsResidentTypeColumns } from "@/lib/ensureResidentTypeColumns";
+import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
+import {
+  mergeDetailsForKind,
+  normalizeResidentKind,
+  parseJsonDetails,
+  sanitizeDetailsForKind,
+} from "@/lib/residentType.constants";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function GET(request: NextRequest) {
@@ -13,11 +29,15 @@ export async function GET(request: NextRequest) {
     const subErr = await requireSubscription(request);
     if (subErr) return subErr;
 
+    const denied = await assertDashboardPermission(request, "residents", "view");
+    if (denied) return denied;
+
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
       return NextResponse.json([], { status: 200 });
     }
 
+    await ensureStudentsResidentTypeColumns();
     await ensureBillsForStudents(hostelId);
     await updateOverduePayments(hostelId);
     const { sumSelect, unpaidWhere } = await getPendingDuesSql();
@@ -39,12 +59,15 @@ export async function GET(request: NextRequest) {
       const overdueCount = Number(s.overdue_count ?? 0);
       const payment_status =
         pendingDues === 0 ? "No Due Amount" : overdueCount > 0 ? "Overdue" : "Pending";
+      const kind = normalizeResidentKind(s.resident_type);
       return {
         ...s,
         join_date: formatSqlDateOnlyForJson(s.join_date),
         planned_vacate_date: formatSqlDateOnlyForJson(s.planned_vacate_date),
         pending_dues: pendingDues,
         payment_status,
+        resident_type: kind,
+        resident_type_details: mergeDetailsForKind(kind, parseJsonDetails(s.resident_type_details)),
       };
     });
     return NextResponse.json(students);
@@ -57,10 +80,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const subErr = await requireSubscription(request);
     if (subErr) return subErr;
+
+    const denied = await assertDashboardPermission(request, "residents", "add");
+    if (denied) return denied;
 
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
@@ -70,8 +96,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const {
       name,
+      gender,
       email,
       phone,
+      emergency_contact_phone,
       room_id,
       course,
       join_date,
@@ -79,7 +107,13 @@ export async function POST(request: Request) {
       id_proof_type,
       id_proof_number,
       address,
+      resident_type,
+      resident_type_details,
     } = body;
+    const residentKind = normalizeResidentKind(resident_type);
+    const residentDetailsJson = JSON.stringify(
+      sanitizeDetailsForKind(residentKind, resident_type_details)
+    );
     const plannedVacateYmd =
       planned_vacate_date != null && String(planned_vacate_date).trim() !== ""
         ? String(planned_vacate_date).trim().slice(0, 10)
@@ -87,6 +121,7 @@ export async function POST(request: Request) {
 
     const required = [
       ["name", name],
+      ["gender", gender],
       ["email", email],
       ["phone", phone],
       ["room_id", room_id],
@@ -104,6 +139,33 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    const genderNorm = normalizeGenderValue(gender);
+    if (!genderNorm) {
+      return NextResponse.json(
+        { error: "Gender must be Male, Female, or Other." },
+        { status: 400 }
+      );
+    }
+
+    const phoneStr = typeof phone === "string" ? phone : "";
+    const phoneErr = validatePhone(phoneStr);
+    if (phoneErr) {
+      return NextResponse.json({ error: phoneErr }, { status: 400 });
+    }
+    const emergStr =
+      typeof emergency_contact_phone === "string" ? emergency_contact_phone : "";
+    const emergErr = validateOptionalPhone(emergStr);
+    if (emergErr) {
+      return NextResponse.json({ error: emergErr }, { status: 400 });
+    }
+    const phoneForDb = normalizePhone(phoneStr);
+    const emergDigits = normalizePhone(emergStr);
+    const emergencyForDb = emergDigits.length === 10 ? emergDigits : null;
+
+    await ensureStudentGenderColumn();
+    await ensureStudentOptionalPhoneAndEmergency();
+    await ensureStudentsResidentTypeColumns();
 
     const limitErr = await checkStudentLimit(hostelId);
     if (limitErr) {
@@ -137,13 +199,15 @@ export async function POST(request: Request) {
 
     try {
       const [result] = await pool.execute(
-        `INSERT INTO students (hostel_id, name, email, phone, room_id, course, join_date, planned_vacate_date, id_proof_type, id_proof_number, address, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'present')`,
+        `INSERT INTO students (hostel_id, name, gender, email, phone, emergency_contact_phone, room_id, course, join_date, planned_vacate_date, id_proof_type, id_proof_number, address, resident_type, resident_type_details, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'present')`,
         [
           hostelId,
           name,
+          genderNorm,
           email || null,
-          phone,
+          phoneForDb,
+          emergencyForDb,
           room_id ? Number(room_id) : null,
           course || null,
           join_date || null,
@@ -151,6 +215,8 @@ export async function POST(request: Request) {
           id_proof_type || null,
           id_proof_number || null,
           address || null,
+          residentKind,
+          residentDetailsJson,
         ]
       );
       insertResult = result as { insertId?: number };
@@ -158,13 +224,15 @@ export async function POST(request: Request) {
       const err = insertError as { code?: string };
       if (err.code === "ER_BAD_FIELD_ERROR") {
         const [result] = await pool.execute(
-          `INSERT INTO students (hostel_id, name, email, phone, room_id, course, join_date, status)
-           VALUES (?, ?, ?, ?, ?, ?, ?, 'present')`,
+          `INSERT INTO students (hostel_id, name, gender, email, phone, emergency_contact_phone, room_id, course, join_date, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'present')`,
           [
             hostelId,
             name,
+            genderNorm,
             email || null,
-            phone,
+            phoneForDb,
+            emergencyForDb,
             room_id ? Number(room_id) : null,
             course || null,
             join_date || null,
@@ -190,8 +258,10 @@ export async function POST(request: Request) {
     return NextResponse.json({
       id,
       name,
+      gender: genderNorm,
       email: email || null,
-      phone,
+      phone: phoneForDb,
+      emergency_contact_phone: emergencyForDb,
       room_id: room_id ? Number(room_id) : null,
       course: course || null,
       join_date: join_date || null,

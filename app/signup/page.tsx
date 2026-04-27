@@ -1,15 +1,23 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Box, Typography } from "@mui/material";
+import {
+  Box,
+  Typography,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  Radio,
+  RadioGroup,
+} from "@mui/material";
 import { Check as CheckIcon } from "@mui/icons-material";
 import { t } from "@/lib/i18n";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signupSchema, type SignupFormValues } from "@/lib/validations/signup";
+import { createSignupSchema, type SignupFormValues, type SignupManagementMode } from "@/lib/validations/signup";
 import { SignupFormFields } from "./components";
 
 const DEFAULT_VALUES: SignupFormValues = {
@@ -41,58 +49,87 @@ const LEFT_FEATURES = [
   },
 ] as const;
 
-function SignupPageContent() {
+type SignupFormBlockProps = {
+  managementType: SignupManagementMode;
+  nextAfterSignup: string | null;
+};
+
+function SignupFormBlock({ managementType, nextAfterSignup }: SignupFormBlockProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const nextAfterSignup = searchParams.get("next");
+
+  const schema = useMemo(() => createSignupSchema(managementType), [managementType]);
 
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm<SignupFormValues>({
-    resolver: zodResolver(signupSchema),
+    resolver: zodResolver(schema),
     defaultValues: DEFAULT_VALUES,
   });
+
+  const pushAfterSuccess = () => {
+    const q = managementType === "multi" ? "signedup=1&flow=multi" : "signedup=1";
+    if (
+      nextAfterSignup &&
+      nextAfterSignup.startsWith("/") &&
+      !nextAfterSignup.startsWith("//")
+    ) {
+      router.push(`/login?${q}&next=${encodeURIComponent(nextAfterSignup)}`);
+    } else {
+      router.push(`/login?${q}`);
+    }
+  };
 
   const onSubmit = async (data: SignupFormValues) => {
     setSubmitError("");
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          hostelName: data.hostelName,
-          ownerName: data.ownerName,
-          email: data.email,
-          mobile: data.mobile,
-          address: data.address || undefined,
-          city: data.city || undefined,
-          state: data.state || undefined,
-          pincode: data.pincode || undefined,
-          password: data.password,
-          acceptTerms: data.acceptTerms,
-        }),
-      });
-      const result = await res.json();
-
-      if (result.success) {
-        if (
-          nextAfterSignup &&
-          nextAfterSignup.startsWith("/") &&
-          !nextAfterSignup.startsWith("//")
-        ) {
-          router.push(`/login?signedup=1&next=${encodeURIComponent(nextAfterSignup)}`);
+      if (managementType === "multi") {
+        const res = await fetch("/api/auth/register-owner", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: data.ownerName,
+            email: data.email,
+            mobile: data.mobile,
+            password: data.password,
+            acceptTerms: data.acceptTerms,
+          }),
+        });
+        const result = await res.json();
+        if (result.success) {
+          pushAfterSuccess();
         } else {
-          router.push("/login?signedup=1");
+          setSubmitError(result.message || t("SIGNUP_FAILED"));
         }
       } else {
-        setSubmitError(result.message || t("SIGNUP_FAILED"));
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            hostelName: data.hostelName,
+            ownerName: data.ownerName,
+            email: data.email,
+            mobile: data.mobile,
+            address: data.address || undefined,
+            city: data.city || undefined,
+            state: data.state || undefined,
+            pincode: data.pincode || undefined,
+            password: data.password,
+            acceptTerms: data.acceptTerms,
+          }),
+        });
+        const result = await res.json();
+        if (result.success) {
+          pushAfterSuccess();
+        } else {
+          setSubmitError(result.message || t("SIGNUP_FAILED"));
+        }
       }
     } catch {
       setSubmitError(t("SIGNUP_ERROR_OCCURRED"));
@@ -100,6 +137,59 @@ function SignupPageContent() {
       setIsSubmitting(false);
     }
   };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {submitError && (
+        <Typography
+          variant="body2"
+          color="#fecaca"
+          sx={{
+            mb: 2,
+            p: 1.5,
+            borderRadius: 1.5,
+            border: "1px solid rgba(248, 113, 113, 0.45)",
+            bgcolor: "rgba(127, 29, 29, 0.35)",
+          }}
+        >
+          {submitError}
+        </Typography>
+      )}
+
+      <SignupFormFields
+        managementMode={managementType}
+        control={control}
+        errors={errors}
+        showPassword={showPassword}
+        showConfirmPassword={showConfirmPassword}
+        onTogglePassword={() => setShowPassword((p) => !p)}
+        onToggleConfirmPassword={() => setShowConfirmPassword((p) => !p)}
+        isSubmitting={isSubmitting}
+      />
+
+      <Typography variant="body2" color="rgba(203, 213, 225, 0.85)" sx={{ mt: 2.5, textAlign: "center" }}>
+        {t("SIGNUP_ALREADY_HAVE_ACCOUNT")}{" "}
+        <Link
+          href={
+            nextAfterSignup &&
+            nextAfterSignup.startsWith("/") &&
+            !nextAfterSignup.startsWith("//")
+              ? `/login?next=${encodeURIComponent(nextAfterSignup)}`
+              : "/login"
+          }
+          style={{ color: "#60a5fa", fontWeight: 600 }}
+        >
+          {t("SIGNUP_SIGN_IN")}
+        </Link>
+      </Typography>
+    </form>
+  );
+}
+
+function SignupPageContent() {
+  const [managementType, setManagementType] = useState<SignupManagementMode>("single");
+  const searchParams = useSearchParams();
+  const nextAfterSignup = searchParams.get("next");
 
   return (
     <Box
@@ -117,7 +207,6 @@ function SignupPageContent() {
       <Box
         sx={{
           width: "100%",
-          // maxWidth: 1120,
           mx: "auto",
           display: "grid",
           gridTemplateColumns: { xs: "1fr", md: "0.95fr 1.25fr" },
@@ -265,53 +354,64 @@ function SignupPageContent() {
             <Typography variant="h4" fontWeight={700} color="#f8fafc" gutterBottom>
               {t("SIGNUP_TITLE")}
             </Typography>
-            <Typography variant="body2" color="rgba(203, 213, 225, 0.9)" sx={{ mb: 3 }}>
+            <Typography variant="body2" color="rgba(203, 213, 225, 0.9)" sx={{ mb: 2 }}>
               {t("SIGNUP_FILL_DETAILS")}
             </Typography>
 
-            <form onSubmit={handleSubmit(onSubmit)}>
-              {submitError && (
-                <Typography
-                  variant="body2"
-                  color="#fecaca"
-                  sx={{
-                    mb: 2,
-                    p: 1.5,
-                    borderRadius: 1.5,
-                    border: "1px solid rgba(248, 113, 113, 0.45)",
-                    bgcolor: "rgba(127, 29, 29, 0.35)",
-                  }}
-                >
-                  {submitError}
-                </Typography>
-              )}
-
-              <SignupFormFields
-                control={control}
-                errors={errors}
-                showPassword={showPassword}
-                showConfirmPassword={showConfirmPassword}
-                onTogglePassword={() => setShowPassword((p) => !p)}
-                onToggleConfirmPassword={() => setShowConfirmPassword((p) => !p)}
-                isSubmitting={isSubmitting}
-              />
-
-              <Typography variant="body2" color="rgba(203, 213, 225, 0.85)" sx={{ mt: 2.5, textAlign: "center" }}>
-                {t("SIGNUP_ALREADY_HAVE_ACCOUNT")}{" "}
-                <Link
-                  href={
-                    nextAfterSignup &&
-                    nextAfterSignup.startsWith("/") &&
-                    !nextAfterSignup.startsWith("//")
-                      ? `/login?next=${encodeURIComponent(nextAfterSignup)}`
-                      : "/login"
+            <FormControl component="fieldset" sx={{ mb: 3, width: "100%" }}>
+              <FormLabel
+                component="legend"
+                sx={{
+                  color: "rgba(226, 232, 240, 0.95)",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  mb: 1,
+                  "&.Mui-focused": { color: "rgba(226, 232, 240, 0.95)" },
+                }}
+              >
+                {t("SIGNUP_MANAGEMENT_LABEL")}
+              </FormLabel>
+              <RadioGroup
+                row
+                name="management-type"
+                value={managementType}
+                onChange={(_, v) => setManagementType(v as SignupManagementMode)}
+                sx={{
+                  gap: 2,
+                  "& .MuiFormControlLabel-label": { color: "rgba(226, 232, 240, 0.92)", fontSize: "0.9375rem" },
+                }}
+              >
+                <FormControlLabel
+                  value="single"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "rgba(148, 163, 184, 0.9)",
+                        "&.Mui-checked": { color: "#60a5fa" },
+                      }}
+                    />
                   }
-                  style={{ color: "#60a5fa", fontWeight: 600 }}
-                >
-                  {t("SIGNUP_SIGN_IN")}
-                </Link>
+                  label={t("SIGNUP_MANAGEMENT_SINGLE")}
+                />
+                <FormControlLabel
+                  value="multi"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "rgba(148, 163, 184, 0.9)",
+                        "&.Mui-checked": { color: "#60a5fa" },
+                      }}
+                    />
+                  }
+                  label={t("SIGNUP_MANAGEMENT_MULTI")}
+                />
+              </RadioGroup>
+              <Typography variant="caption" color="rgba(148, 163, 184, 0.95)" sx={{ display: "block", mt: 1 }}>
+                {t("SIGNUP_MANAGEMENT_HINT")}
               </Typography>
-            </form>
+            </FormControl>
+
+            <SignupFormBlock key={managementType} managementType={managementType} nextAfterSignup={nextAfterSignup} />
           </Box>
         </Box>
       </Box>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuthStore } from "@/lib/AuthStore";
@@ -13,13 +13,15 @@ import type {
   PaymentStatsProps,
   RecordPaymentFormProps,
 } from "@/components/dashboard/payments/payments.types";
-import { MONTHS, getDefaultMonthYear } from "./payments.constants";
+import { MONTHS, getDefaultMonthYear, formatBillOrUtrLabel } from "./payments.constants";
 
 const initialForm: RecordPaymentFormProps = {
   student_id: "",
   amount: "",
   month: getDefaultMonthYear().month,
   year: getDefaultMonthYear().year,
+  payment_mode: "online",
+  payment_reference: "",
 };
 
 function filterBySearch<
@@ -30,19 +32,27 @@ function filterBySearch<
     amount?: number;
     amount_due?: number;
     amount_paid?: number;
+    bill_payment_mode?: string | null;
+    bill_payment_reference?: string | null;
   }
 >(items: T[], query: string): T[] {
   const q = query.trim().toLowerCase();
   if (!q) return items;
-  return items.filter(
-    (p) =>
+  return items.filter((p) => {
+    const billLabel = formatBillOrUtrLabel(p.bill_payment_mode, p.bill_payment_reference);
+    return (
       (p.student_name ?? "").toLowerCase().includes(q) ||
       (p.month ?? "").toLowerCase().includes(q) ||
       String(p.year ?? "").includes(q) ||
       String(p.amount ?? "").includes(q) ||
       String(p.amount_due ?? "").includes(q) ||
-      String(p.amount_paid ?? "").includes(q)
-  );
+      String(p.amount_paid ?? "").includes(q) ||
+      (billLabel ?? "").toLowerCase().includes(q) ||
+      String(p.bill_payment_reference ?? "")
+        .toLowerCase()
+        .includes(q)
+    );
+  });
 }
 
 /** Money actually received on a bill row (partial or full). Legacy: only `paid` rows count full `amount`. */
@@ -63,7 +73,8 @@ export function usePaymentsData() {
   const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
   const [modalOpen, setModalOpen] = useState(false);
   const [infoDialogGroup, setInfoDialogGroup] = useState<GroupedUnpaidProps | null>(null);
-  const [form, setForm] = useState<RecordPaymentFormProps>(initialForm);
+  const [form, setFormState] = useState<RecordPaymentFormProps>(initialForm);
+  const [recordPaymentClientError, setRecordPaymentClientError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<PaymentStatusFilterProps>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -80,6 +91,14 @@ export function usePaymentsData() {
       fetchWithHostel("/api/students/with-dues", hostelId).then((r) => r.json()),
     enabled: Boolean(hostelId),
   });
+
+  const { data: usedReferencesData } = useQuery<{ references: string[] }>({
+    queryKey: ["payment-used-references", hostelId],
+    queryFn: () =>
+      fetchWithHostel("/api/payments/used-references", hostelId).then((r) => r.json()),
+    enabled: Boolean(hostelId),
+  });
+  const usedReferences = usedReferencesData?.references ?? [];
 
   const bulkMarkPaid = useMutation({
     mutationFn: async (studentId: number) => {
@@ -115,6 +134,8 @@ export function usePaymentsData() {
           amount: Number(data.amount),
           month: data.month,
           year: Number(data.year),
+          payment_mode: data.payment_mode,
+          payment_reference: data.payment_reference.trim(),
         }),
       });
       if (!res.ok) {
@@ -124,15 +145,16 @@ export function usePaymentsData() {
       return res.json();
     },
     onSuccess: async (data: { message?: string; amount?: number }) => {
+      await queryClient.invalidateQueries({ queryKey: ["payments"] });
       await Promise.all([
         queryClient.refetchQueries({ queryKey: ["payments"] }),
         queryClient.refetchQueries({ queryKey: ["students"] }),
         queryClient.refetchQueries({ queryKey: ["dashboard-stats"] }),
+        queryClient.refetchQueries({ queryKey: ["payment-used-references"] }),
       ]);
-      setForm({
+      setRecordPaymentClientError(null);
+      setFormState({
         ...initialForm,
-        student_id: "",
-        amount: "",
         month: getDefaultMonthYear().month,
         year: getDefaultMonthYear().year,
       });
@@ -141,6 +163,17 @@ export function usePaymentsData() {
       toast.success(msg);
     },
   });
+
+  const resetRecordPayment = recordPayment.reset;
+
+  const setForm = useCallback(
+    (next: RecordPaymentFormProps) => {
+      setRecordPaymentClientError(null);
+      resetRecordPayment();
+      setFormState(next);
+    },
+    [resetRecordPayment]
+  );
 
   const searchFiltered = useMemo(() => filterBySearch(payments, searchQuery), [payments, searchQuery]);
   const filteredPayments = useMemo(() => {
@@ -222,6 +255,17 @@ export function usePaymentsData() {
         amount: Number(p.balance ?? p.amount_due ?? p.amount ?? 0),
         status: p.status,
       }));
+      let billOrUtrLabel: string | null = null;
+      let bestPaymentAt = -1;
+      for (const p of items) {
+        const lbl = formatBillOrUtrLabel(p.bill_payment_mode, p.bill_payment_reference);
+        if (!lbl) continue;
+        const ts = p.last_payment_at ? new Date(String(p.last_payment_at)).getTime() : 0;
+        if (ts >= bestPaymentAt) {
+          bestPaymentAt = ts;
+          billOrUtrLabel = lbl;
+        }
+      }
       result.push({
         student_id: studentId,
         student_name: first.student_name,
@@ -232,6 +276,7 @@ export function usePaymentsData() {
         hasOverdue: items.some((p) => p.status === "overdue"),
         monthBreakdown,
         last_payment_at: first.last_payment_at ?? null,
+        billOrUtrLabel,
       });
     });
     return result;
@@ -252,6 +297,7 @@ export function usePaymentsData() {
         amountLabel: `₹${group.totalBalance.toLocaleString()} due`,
         status: group.hasOverdue ? "overdue" : "pending",
         lastPaymentAt: group.last_payment_at ?? null,
+        billOrUtrLabel: group.billOrUtrLabel ?? null,
         paymentIds: group.paymentIds,
         totalBalance: group.totalBalance,
         monthBreakdown: group.monthBreakdown,
@@ -270,6 +316,10 @@ export function usePaymentsData() {
         amountLabel: `₹${paidAmount.toLocaleString()} paid`,
         status: "paid",
         lastPaymentAt: payment.last_payment_at ?? payment.paid_at ?? null,
+        billOrUtrLabel: formatBillOrUtrLabel(
+          payment.bill_payment_mode,
+          payment.bill_payment_reference
+        ),
       });
     });
     return rows;
@@ -282,6 +332,8 @@ export function usePaymentsData() {
       amount: String(group.totalBalance),
       month: first?.month ?? getDefaultMonthYear().month,
       year: String(first?.year ?? new Date().getFullYear()),
+      payment_mode: "online",
+      payment_reference: "",
     });
     setInfoDialogGroup(null);
     setModalOpen(true);
@@ -289,9 +341,36 @@ export function usePaymentsData() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    resetRecordPayment();
+    setRecordPaymentClientError(null);
     if (!form.student_id || !form.amount || !form.month || !form.year) return;
+
+    const ref = form.payment_reference.trim();
+    if (!ref) {
+      setRecordPaymentClientError(
+        form.payment_mode === "cash"
+          ? "Bill number is required."
+          : "UTR number is required."
+      );
+      return;
+    }
+
+    const refKey = ref.toLowerCase();
+    if (usedReferences.includes(refKey)) {
+      setRecordPaymentClientError(
+        form.payment_mode === "cash"
+          ? "This bill number is already recorded for a payment."
+          : "This UTR number is already recorded for a payment."
+      );
+      return;
+    }
+
     recordPayment.mutate(form);
   };
+
+  const recordPaymentSubmitError =
+    recordPaymentClientError ??
+    (recordPayment.error instanceof Error ? recordPayment.error.message : null);
 
   return {
     payments,
@@ -313,6 +392,7 @@ export function usePaymentsData() {
     groupedUnpaid,
     bulkMarkPaid,
     recordPayment,
+    recordPaymentSubmitError,
     openPayNow,
     handleSubmit,
   };

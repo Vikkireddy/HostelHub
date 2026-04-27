@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Bell, LogOut, Settings, Home } from "lucide-react";
+import { Search, Bell, LogOut, Settings, Home, Menu } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,13 +23,15 @@ import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
 import { SUBSCRIPTION_PAGE_PATH } from "@/lib/subscription/constants";
 import { useSubscriptionStore } from "@/lib/SubscriptionStore";
+import { HostelSwitcher } from "@/components/multi-hostel/HostelSwitcher";
 
 interface HeaderProps {
   title: string;
   subtitle?: string;
+  onToggleMobileSidebar?: () => void;
 }
 
-export function Header({ title, subtitle }: HeaderProps) {
+export function Header({ title, subtitle, onToggleMobileSidebar }: HeaderProps) {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const hostelId = user?.hostelId ?? null;
@@ -92,15 +94,28 @@ export function Header({ title, subtitle }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card px-8">
-      <Box>
-        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
-        {subtitle && (
-          <Typography variant="muted">{subtitle}</Typography>
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card px-4 md:px-8">
+      <Box className="flex items-center gap-3">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          aria-label="Open menu"
+          onClick={onToggleMobileSidebar}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+        {(title || subtitle) && (
+          <Box>
+            {title ? <h1 className="text-xl font-semibold text-foreground">{title}</h1> : null}
+            {subtitle ? <Typography variant="muted">{subtitle}</Typography> : null}
+          </Box>
         )}
       </Box>
       <Box className="flex items-center gap-4">
-        <Box className="relative">
+        <HostelSwitcher />
+        <Box className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search residents, rooms, payments..."

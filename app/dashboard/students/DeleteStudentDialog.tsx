@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { ModalWithHeaderFooter } from "@/components/ui/ModalWithHeaderFooter";
 import type { DeleteStudentDialogProps } from "./students.types";
 
 export function DeleteStudentDialog({
@@ -19,26 +12,22 @@ export function DeleteStudentDialog({
   isPending,
 }: DeleteStudentDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="max-w-md"
-        onInteractOutside={(e) => e.preventDefault()}
-      >
-        <DialogHeader>
-          <DialogTitle>Delete Resident</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to permanently delete {student?.name}? This cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
+    <ModalWithHeaderFooter
+      open={open}
+      onOpenChange={onOpenChange}
+      maxWidth="md"
+      headerTitle="Delete Resident"
+      headerDescription={`Are you sure you want to permanently delete ${student?.name ?? ""}? This cannot be undone.`}
+      footerComponent={
+        <>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
             Cancel
           </Button>
           <Button variant="destructive" onClick={onConfirm} disabled={isPending}>
             {isPending ? "Deleting..." : "Delete"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    />
   );
 }
