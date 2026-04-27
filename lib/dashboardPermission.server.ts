@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
-import { getAdminEmailFromRequest } from "@/lib/adminAccess.server";
+import {
+  getAdminEmailFromRequest,
+  resolveUsersRolesRequestContext,
+  type UsersRolesRequestContext,
+} from "@/lib/adminAccess.server";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import {
   fullAccessMatrix,
@@ -30,8 +34,13 @@ export const loadAdminPermissionRow = async (
             r.permissions AS role_permissions
      FROM admins a
      LEFT JOIN admin_roles r ON r.id = a.role_id
-     WHERE LOWER(a.email) = LOWER(?) AND a.hostel_id = ?`,
-    [email, hostelId]
+     LEFT JOIN admin_hostels ah
+       ON ah.admin_id = a.id
+      AND ah.hostel_id = ?
+     WHERE LOWER(a.email) = LOWER(?)
+       AND (a.hostel_id = ? OR ah.hostel_id IS NOT NULL)
+     LIMIT 1`,
+    [hostelId, email, hostelId]
   );
   const list = rows as AdminPermRow[];
   return list[0] ?? null;
@@ -89,3 +98,21 @@ export const assertDashboardPermission = async (
   }
   return null;
 };
+
+/** Resolves Users & Roles context and enforces permission (hostel matrix or portfolio owner). */
+export async function getUsersRolesContextOrDenied(
+  request: NextRequest,
+  operation: keyof CrudFlags
+): Promise<{ ctx: UsersRolesRequestContext } | NextResponse> {
+  const r = await resolveUsersRolesRequestContext(request);
+  if ("error" in r) {
+    return NextResponse.json({ error: r.error }, { status: r.status });
+  }
+  if (r.mode === "hostel") {
+    const denied = await assertDashboardPermission(request, "users_roles", operation);
+    if (denied) return denied;
+  }
+  return { ctx: r };
+}
+
+export type { UsersRolesRequestContext };

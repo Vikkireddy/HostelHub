@@ -7,7 +7,7 @@ import {
   Lock as LockIcon,
 } from "@mui/icons-material";
 import type { FieldPath } from "react-hook-form";
-import type { SignupFormValues } from "@/lib/validations/signup";
+import type { SignupFormValues, SignupManagementMode } from "@/lib/validations/signup";
 import type { EnKeys } from "@/lib/i18n";
 
 export interface SignupFieldConfig {
@@ -64,3 +64,41 @@ export const SIGNUP_SECTIONS: SignupSectionConfig[] = [
     ],
   },
 ];
+
+/** Single: hostel + address + credentials. Multi: owner contact + credentials only (hostel added after login). */
+export function getSignupSectionsForMode(mode: SignupManagementMode): SignupSectionConfig[] {
+  if (mode === "single") return SIGNUP_SECTIONS;
+  return [
+    {
+      id: "account",
+      icon: <PersonIcon />,
+      titleKey: "SIGNUP_MULTI_OWNER_DETAILS",
+      columns: 2,
+      fields: [
+        {
+          name: "ownerName",
+          labelKey: "SIGNUP_OWNER_NAME",
+          placeholderKey: "SIGNUP_OWNER_NAME_PLACEHOLDER",
+          icon: <PersonIcon />,
+          required: true,
+        },
+        {
+          name: "email",
+          labelKey: "SIGNUP_EMAIL_ADDRESS",
+          placeholderKey: "SIGNUP_EMAIL_PLACEHOLDER",
+          type: "email",
+          icon: <EmailIcon />,
+          required: true,
+        },
+        {
+          name: "mobile",
+          labelKey: "SIGNUP_MOBILE_NUMBER",
+          placeholderKey: "SIGNUP_MOBILE_PLACEHOLDER",
+          icon: <PhoneIcon />,
+          required: true,
+        },
+      ],
+    },
+    SIGNUP_SECTIONS[2],
+  ];
+}

@@ -10,6 +10,8 @@ export type AdminUserRow = {
   is_owner: boolean;
   role_id: number | null;
   role_name: string;
+  /** Property assignment; null when not yet assigned (portfolio mode). */
+  hostel_id: number | null;
   hostel_name: string;
   permissions_override?: unknown;
 };
@@ -36,6 +38,8 @@ export type EditUserSnapshot = {
   is_active: boolean;
   is_owner: boolean;
   role_id: number | null;
+  hostel_id: number | null;
+  hostel_name: string;
   permissions_override?: unknown;
 };
 
@@ -48,6 +52,8 @@ export type AddUserDrawerSavePayload = {
   roleId: number;
   isActive: boolean;
   permissionsOverride: PermissionsMatrix | null;
+  /** When set, create user assigned to this hostel; omit or null for unassigned (portfolio only). */
+  assignHostelId?: number | null;
 };
 
 export type AddUserDrawerUpdatePayload = {
@@ -60,6 +66,8 @@ export type AddUserDrawerUpdatePayload = {
   password?: string;
   confirmPassword?: string;
   isOwnerTarget: boolean;
+  /** Portfolio only: set or clear property assignment for staff. */
+  assignHostelId?: number | null;
 };
 
 export type AddUserDrawerProps = {
@@ -71,6 +79,9 @@ export type AddUserDrawerProps = {
   onSave: (payload: AddUserDrawerSavePayload) => Promise<void>;
   onUpdateUser: (payload: AddUserDrawerUpdatePayload) => Promise<void>;
   saving: boolean;
+  /** All Hostels / portfolio Users & Roles: optional property on create, reassign on edit. */
+  portfolioContext?: boolean;
+  assignHostelOptions?: { id: number; name: string }[];
 };
 
 export type RoleEditSnapshot = {

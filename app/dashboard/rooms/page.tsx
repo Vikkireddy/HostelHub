@@ -18,6 +18,7 @@ import { EditRoomDialog } from "./components/EditRoomDialog";
 import { RoomCard } from "./components/RoomCard";
 import { RoomsSummaryCards } from "./components/RoomsSummaryCards";
 import { Room, RoomForm, initialForm } from "./components/types";
+import { SelectHostelPrompt } from "@/components/multi-hostel/SelectHostelPrompt";
 
 function filterRooms<T extends { number: string; floor: number; type: string }>(
   rooms: T[],
@@ -48,6 +49,10 @@ export default function RoomsPage() {
   const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
   const [form, setForm] = useState<RoomForm>(initialForm);
   const [editForm, setEditForm] = useState<RoomForm>(initialForm);
+
+  if (!hostelId) {
+    return <SelectHostelPrompt moduleLabel="Rooms" />;
+  }
 
   const { data: rooms = [], isLoading, error } = useQuery<Room[]>({
     queryKey: ["rooms", hostelId],

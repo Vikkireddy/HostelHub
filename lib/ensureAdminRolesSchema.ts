@@ -31,6 +31,67 @@ export async function ensureAdminRolesSchema(): Promise<void> {
         )
       `);
 
+      if (!(await columnExists("admin_roles", "scope_owner_admin_id"))) {
+        try {
+          const [fkRows] = await pool.execute<RowDataPacket[]>(
+            `SELECT CONSTRAINT_NAME AS c FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'admin_roles'
+               AND REFERENCED_TABLE_NAME = 'hostels' AND CONSTRAINT_NAME IS NOT NULL
+             LIMIT 1`
+          );
+          const fk = (fkRows as RowDataPacket[])[0]?.c as string | undefined;
+          if (fk) {
+            await pool.execute(`ALTER TABLE admin_roles DROP FOREIGN KEY \`${fk.replace(/`/g, "")}\``);
+          }
+        } catch {
+          /* ignore */
+        }
+        try {
+          await pool.execute(`ALTER TABLE admin_roles MODIFY COLUMN hostel_id INT NULL`);
+        } catch (e: unknown) {
+          const err = e as { errno?: number };
+          if (err.errno !== 1054) throw e;
+        }
+        try {
+          await pool.execute(
+            `ALTER TABLE admin_roles ADD COLUMN scope_owner_admin_id INT NULL AFTER hostel_id`
+          );
+        } catch (e: unknown) {
+          const err = e as { errno?: number; code?: string };
+          if (err.errno !== 1060 && err.code !== "ER_DUP_FIELDNAME") throw e;
+        }
+        try {
+          await pool.execute(`
+            ALTER TABLE admin_roles
+            ADD CONSTRAINT fk_admin_roles_hostel
+            FOREIGN KEY (hostel_id) REFERENCES hostels(id) ON DELETE CASCADE
+          `);
+        } catch {
+          /* FK may already exist after partial run */
+        }
+        try {
+          await pool.execute(`
+            ALTER TABLE admin_roles
+            ADD CONSTRAINT fk_admin_roles_scope_owner
+            FOREIGN KEY (scope_owner_admin_id) REFERENCES admins(id) ON DELETE SET NULL
+          `);
+        } catch {
+          /* optional FK */
+        }
+        await pool.execute(`
+          UPDATE admin_roles ar
+          INNER JOIN (
+            SELECT a.hostel_id AS hid, MIN(a.id) AS owner_id
+            FROM admins a
+            WHERE COALESCE(a.is_owner, 0) = 1 AND a.hostel_id IS NOT NULL
+            GROUP BY a.hostel_id
+          ) t ON t.hid = ar.hostel_id
+          SET ar.scope_owner_admin_id = t.owner_id
+          WHERE ar.hostel_id IS NOT NULL
+            AND (ar.scope_owner_admin_id IS NULL OR ar.scope_owner_admin_id = 0)
+        `);
+      }
+
       if (!(await columnExists("admins", "is_owner"))) {
         try {
           await pool.execute(

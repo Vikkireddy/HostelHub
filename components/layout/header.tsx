@@ -23,6 +23,7 @@ import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
 import { SUBSCRIPTION_PAGE_PATH } from "@/lib/subscription/constants";
 import { useSubscriptionStore } from "@/lib/SubscriptionStore";
+import { HostelSwitcher } from "@/components/multi-hostel/HostelSwitcher";
 
 interface HeaderProps {
   title: string;
@@ -94,7 +95,7 @@ export function Header({ title, subtitle, onToggleMobileSidebar }: HeaderProps) 
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card px-4 md:px-8">
-      <Box className="flex items-center gap-2">
+      <Box className="flex items-center gap-3">
         <Button
           type="button"
           variant="ghost"
@@ -105,14 +106,15 @@ export function Header({ title, subtitle, onToggleMobileSidebar }: HeaderProps) 
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <Box>
-        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
-        {subtitle && (
-          <Typography variant="muted">{subtitle}</Typography>
+        {(title || subtitle) && (
+          <Box>
+            {title ? <h1 className="text-xl font-semibold text-foreground">{title}</h1> : null}
+            {subtitle ? <Typography variant="muted">{subtitle}</Typography> : null}
+          </Box>
         )}
-        </Box>
       </Box>
       <Box className="flex items-center gap-4">
+        <HostelSwitcher />
         <Box className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input

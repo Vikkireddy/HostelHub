@@ -17,6 +17,7 @@ import {
 } from "@/lib/permissionMatrix";
 import { PermissionMatrixEditor } from "./PermissionMatrixEditor";
 import type { AddUserDrawerProps } from "./types";
+import { UserCoreFormFields } from "./UserCoreFormFields";
 
 const RESET_USER_FORM = {
   name: "",
@@ -32,6 +33,9 @@ const RESET_USER_FORM = {
   initialPermissionOverride: null as PermissionsMatrix | null,
 };
 
+const selectClassName =
+  "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
 export const AddUserDrawer = ({
   open,
   onOpenChange,
@@ -41,6 +45,8 @@ export const AddUserDrawer = ({
   onSave,
   onUpdateUser,
   saving,
+  portfolioContext = false,
+  assignHostelOptions = [],
 }: AddUserDrawerProps) => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -53,6 +59,8 @@ export const AddUserDrawer = ({
   const [permsOpen, setPermsOpen] = useState(false);
   const [overrideMatrix, setOverrideMatrix] = useState<PermissionsMatrix | null>(null);
   const [initialPermissionOverride, setInitialPermissionOverride] = useState<PermissionsMatrix | null>(null);
+  const [assignHostelCreate, setAssignHostelCreate] = useState<number | null>(null);
+  const [assignHostelEdit, setAssignHostelEdit] = useState<number | null>(null);
 
   const isEdit = editUser != null;
   const isOwnerEdit = Boolean(editUser?.is_owner);
@@ -69,6 +77,8 @@ export const AddUserDrawer = ({
     setOverrideMatrix(RESET_USER_FORM.overrideMatrix);
     setPermsOpen(RESET_USER_FORM.permsOpen);
     setInitialPermissionOverride(RESET_USER_FORM.initialPermissionOverride);
+    setAssignHostelCreate(null);
+    setAssignHostelEdit(null);
   };
 
   useEffect(() => {
@@ -87,6 +97,7 @@ export const AddUserDrawer = ({
       setShowPwd(false);
       setOverrideMatrix(null);
       setPermsOpen(false);
+      setAssignHostelEdit(editUser.hostel_id ?? null);
       setInitialPermissionOverride(
         editUser.permissions_override != null
           ? normalizePermissionsFromDb(editUser.permissions_override)
@@ -147,6 +158,7 @@ export const AddUserDrawer = ({
         password: password.trim() || undefined,
         confirmPassword: confirmPassword.trim() || undefined,
         isOwnerTarget: isOwnerEdit,
+        ...(portfolioContext && !isOwnerEdit ? { assignHostelId: assignHostelEdit } : {}),
       });
       return;
     }
@@ -159,6 +171,7 @@ export const AddUserDrawer = ({
       roleId,
       isActive,
       permissionsOverride: permsOpen && overrideMatrix ? overrideMatrix : null,
+      ...(portfolioContext ? { assignHostelId: assignHostelCreate } : {}),
     });
   };
 
@@ -176,6 +189,9 @@ export const AddUserDrawer = ({
       ? canSubmitEditOwner
       : canSubmitEditStaff
     : canSubmitCreate;
+
+  const showHostelPickerCreate = portfolioContext && !isEdit && assignHostelOptions.length > 0;
+  const showHostelPickerEdit = portfolioContext && isEdit && !isOwnerEdit && assignHostelOptions.length > 0;
 
   return (
     <ModalWithHeaderFooter
@@ -201,102 +217,200 @@ export const AddUserDrawer = ({
         </>
       }
     >
-        <div className="space-y-2">
-          <Label>{t("USERS_ROLES_FIELD_NAME")} *</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("USERS_ROLES_PLACEHOLDER_NAME")} />
-        </div>
-        <div className="space-y-2">
-          <Label>{t("USERS_ROLES_FIELD_PHONE")} *</Label>
-          <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t("USERS_ROLES_PLACEHOLDER_PHONE")} />
-        </div>
-        <div className="space-y-2">
-          <Label>{t("USERS_ROLES_FIELD_EMAIL")}{isEdit ? "" : " *"}</Label>
-          <Input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={t("USERS_ROLES_PLACEHOLDER_EMAIL")}
-            readOnly={isEdit}
-            disabled={isEdit}
-            className={isEdit ? "bg-slate-50" : undefined}
+      {isEdit ? (
+        <>
+          <div className="space-y-2">
+            <Label>{t("USERS_ROLES_FIELD_NAME")} *</Label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t("USERS_ROLES_PLACEHOLDER_NAME")}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>{t("USERS_ROLES_FIELD_PHONE")} *</Label>
+            <Input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder={t("USERS_ROLES_PLACEHOLDER_PHONE")}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>{t("USERS_ROLES_FIELD_EMAIL")}</Label>
+            <Input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={t("USERS_ROLES_PLACEHOLDER_EMAIL")}
+              readOnly
+              disabled
+              className="bg-slate-50"
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          <UserCoreFormFields
+            name={name}
+            phone={phone}
+            email={email}
+            password={password}
+            confirmPassword={confirmPassword}
+            roleId={roleId}
+            isActive={isActive}
+            roles={roles.map((r) => ({ id: r.id, name: r.name }))}
+            onNameChange={setName}
+            onPhoneChange={setPhone}
+            onEmailChange={setEmail}
+            onPasswordChange={setPassword}
+            onConfirmPasswordChange={setConfirmPassword}
+            onRoleIdChange={handleRoleChange}
+            onIsActiveChange={setIsActive}
           />
-        </div>
-        <div className="space-y-2">
-          <Label>
-            {t("USERS_ROLES_FIELD_PASSWORD")}
-            {isEdit ? ` (${t("USERS_ROLES_PASSWORD_OPTIONAL")})` : " *"}
-          </Label>
-          <div className="relative">
+          {showHostelPickerCreate ? (
+            <div className="space-y-2">
+              <Label>{t("USERS_ROLES_ASSIGN_HOSTEL_OPTIONAL")}</Label>
+              <Typography variant="caption" className="block text-slate-600">
+                {t("USERS_ROLES_ASSIGN_HOSTEL_HINT")}
+              </Typography>
+              <select
+                className={selectClassName}
+                value={assignHostelCreate === null ? "" : String(assignHostelCreate)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setAssignHostelCreate(v === "" ? null : Number(v));
+                }}
+              >
+                <option value="">{t("USERS_ROLES_HOSTEL_UNASSIGNED")}</option>
+                {assignHostelOptions.map((h) => (
+                  <option key={h.id} value={h.id}>
+                    {h.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+        </>
+      )}
+      {isEdit && (
+        <>
+          <div className="space-y-2">
+            <Label>
+              {t("USERS_ROLES_FIELD_PASSWORD")}
+              {isEdit ? ` (${t("USERS_ROLES_PASSWORD_OPTIONAL")})` : " *"}
+            </Label>
+            <div className="relative">
+              <Input
+                type={showPwd ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pr-10"
+                placeholder={isEdit ? t("USERS_ROLES_PASSWORD_LEAVE_BLANK") : undefined}
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800"
+                onClick={() => setShowPwd((s) => !s)}
+              >
+                {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>
+              {t("USERS_ROLES_FIELD_CONFIRM_PASSWORD")}
+              {isEdit ? ` (${t("USERS_ROLES_PASSWORD_OPTIONAL")})` : " *"}
+            </Label>
             <Input
               type={showPwd ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="pr-10"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder={isEdit ? t("USERS_ROLES_PASSWORD_LEAVE_BLANK") : undefined}
             />
-            <button
-              type="button"
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800"
-              onClick={() => setShowPwd((s) => !s)}
-            >
-              {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
           </div>
-        </div>
+        </>
+      )}
+      {isEdit && !isOwnerEdit && (
         <div className="space-y-2">
-          <Label>
-            {t("USERS_ROLES_FIELD_CONFIRM_PASSWORD")}
-            {isEdit ? ` (${t("USERS_ROLES_PASSWORD_OPTIONAL")})` : " *"}
-          </Label>
-          <Input
-            type={showPwd ? "text" : "password"}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder={isEdit ? t("USERS_ROLES_PASSWORD_LEAVE_BLANK") : undefined}
-          />
+          <Label>{t("USERS_ROLES_FIELD_ROLE")} *</Label>
+          <select
+            className={selectClassName}
+            value={roleId || ""}
+            onChange={(e) => handleRoleChange(Number(e.target.value) || 0)}
+          >
+            <option value="">{t("USERS_ROLES_SELECT_ROLE")}</option>
+            {roles.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
         </div>
-        {!isOwnerEdit && (
-          <div className="space-y-2">
-            <Label>{t("USERS_ROLES_FIELD_ROLE")} *</Label>
-            <select
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              value={roleId || ""}
-              onChange={(e) => handleRoleChange(Number(e.target.value) || 0)}
-            >
-              <option value="">{t("USERS_ROLES_SELECT_ROLE")}</option>
-              {roles.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-        {isOwnerEdit && (
-          <div className="space-y-2">
-            <Label>{t("USERS_ROLES_FIELD_ROLE")}</Label>
-            <Input value={t("USERS_ROLES_ROLE_OWNER")} readOnly className="bg-slate-50" />
-          </div>
-        )}
+      )}
+      {isEdit && isOwnerEdit && (
         <div className="space-y-2">
-          <Label>{t("USERS_ROLES_FIELD_ASSIGNED_HOSTEL")} *</Label>
+          <Label>{t("USERS_ROLES_FIELD_ROLE")}</Label>
+          <Input value={t("USERS_ROLES_ROLE_OWNER")} readOnly className="bg-slate-50" />
+        </div>
+      )}
+      {isEdit && isOwnerEdit && (
+        <div className="space-y-2">
+          <Label>{t("USERS_ROLES_FIELD_ASSIGNED_HOSTEL")}</Label>
           <Input value={hostelName} readOnly className="bg-slate-50" />
         </div>
-        {!isOwnerEdit && (
-          <div className="space-y-2">
-            <Label>{t("USERS_ROLES_CONFIGURE_PERMISSIONS")}</Label>
-            <Typography variant="caption" className="block">
-              {t("USERS_ROLES_PERMISSIONS_HINT")}
-            </Typography>
-            <Button type="button" variant="outline" size="sm" onClick={openConfigurePerms} disabled={!roleId}>
-              {t("USERS_ROLES_CONFIGURE_PERMISSIONS")}
-            </Button>
-            {permsOpen && overrideMatrix && (
-              <div className="pt-2">
-                <PermissionMatrixEditor value={overrideMatrix} onChange={setOverrideMatrix} />
-              </div>
-            )}
-          </div>
-        )}
+      )}
+      {isEdit && !isOwnerEdit && showHostelPickerEdit ? (
+        <div className="space-y-2">
+          <Label>{t("USERS_ROLES_ASSIGN_HOSTEL_OPTIONAL")}</Label>
+          <Typography variant="caption" className="block text-slate-600">
+            {t("USERS_ROLES_ASSIGN_HOSTEL_HINT")}
+          </Typography>
+          <select
+            className={selectClassName}
+            value={assignHostelEdit === null ? "" : String(assignHostelEdit)}
+            onChange={(e) => {
+              const v = e.target.value;
+              setAssignHostelEdit(v === "" ? null : Number(v));
+            }}
+          >
+            <option value="">{t("USERS_ROLES_HOSTEL_UNASSIGNED")}</option>
+            {assignHostelOptions.map((h) => (
+              <option key={h.id} value={h.id}>
+                {h.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+      {isEdit && !isOwnerEdit && !showHostelPickerEdit ? (
+        <div className="space-y-2">
+          <Label>{t("USERS_ROLES_FIELD_ASSIGNED_HOSTEL")}</Label>
+          <Input
+            value={
+              editUser?.hostel_name?.trim() ||
+              (editUser?.hostel_id == null ? t("USERS_ROLES_HOSTEL_UNASSIGNED") : hostelName)
+            }
+            readOnly
+            className="bg-slate-50"
+          />
+        </div>
+      ) : null}
+      {isEdit && !isOwnerEdit && (
+        <div className="space-y-2">
+          <Label>{t("USERS_ROLES_CONFIGURE_PERMISSIONS")}</Label>
+          <Typography variant="caption" className="block">
+            {t("USERS_ROLES_PERMISSIONS_HINT")}
+          </Typography>
+          <Button type="button" variant="outline" size="sm" onClick={openConfigurePerms} disabled={!roleId}>
+            {t("USERS_ROLES_CONFIGURE_PERMISSIONS")}
+          </Button>
+          {permsOpen && overrideMatrix && (
+            <div className="pt-2">
+              <PermissionMatrixEditor value={overrideMatrix} onChange={setOverrideMatrix} />
+            </div>
+          )}
+        </div>
+      )}
+      {isEdit && (
         <div className="space-y-2">
           <Label>{t("USERS_ROLES_FIELD_STATUS")} *</Label>
           <div className="flex gap-4 pt-1">
@@ -315,6 +429,7 @@ export const AddUserDrawer = ({
             </label>
           </div>
         </div>
+      )}
     </ModalWithHeaderFooter>
   );
 };

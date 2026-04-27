@@ -3,6 +3,8 @@
 import { Box, Drawer } from "@mui/material";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { t } from "@/lib/i18n";
+import { useAuthStore } from "@/lib/AuthStore";
+import { useSettingsStore } from "@/lib/SettingsStore";
 import type { Student } from "./students.types";
 import { ResidentTypeDrawerTab } from "./ResidentTypeDrawerTab";
 import { ResidentDetailsDrawerAddDocumentDialog } from "./resident-details-drawer/ResidentDetailsDrawerAddDocumentDialog";
@@ -30,6 +32,8 @@ export const ResidentDetailsDrawer = ({
   canAddDocuments?: boolean;
   canDeleteDocuments?: boolean;
 }) => {
+  const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
+  const paymentTrackingEnabled = useSettingsStore((s) => s.getPaymentTrackingEnabled(hostelId));
   const {
     avatarUrl,
     documents,
@@ -104,9 +108,11 @@ export const ResidentDetailsDrawer = ({
               <TabsTrigger value="resident-type" className="text-xs sm:text-sm">
                 {t("RESIDENT_DETAILS_TAB_RESIDENT_TYPE")}
               </TabsTrigger>
-              <TabsTrigger value="payments" className="text-xs sm:text-sm">
-                {t("RESIDENT_DETAILS_TAB_PAYMENTS")}
-              </TabsTrigger>
+              {paymentTrackingEnabled ? (
+                <TabsTrigger value="payments" className="text-xs sm:text-sm">
+                  {t("RESIDENT_DETAILS_TAB_PAYMENTS")}
+                </TabsTrigger>
+              ) : null}
             </TabsList>
 
             <ResidentDetailsDrawerOverviewTab student={student} />
@@ -127,7 +133,9 @@ export const ResidentDetailsDrawer = ({
               <ResidentTypeDrawerTab student={student} readOnly={!canEditResidents} />
             </TabsContent>
 
-            <ResidentDetailsDrawerPaymentsTab paymentData={paymentData} payLoading={payLoading} />
+            {paymentTrackingEnabled ? (
+              <ResidentDetailsDrawerPaymentsTab paymentData={paymentData} payLoading={payLoading} />
+            ) : null}
           </Tabs>
         </Box>
 

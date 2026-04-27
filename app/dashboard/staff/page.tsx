@@ -14,6 +14,7 @@ import { Box } from "@/components/ui/box";
 import { useAuthStore } from "@/lib/AuthStore";
 import { hasDashboardPermission } from "@/lib/dashboardPermissionClient";
 import { fetchWithHostel } from "@/lib/ApiClient";
+import { SelectHostelPrompt } from "@/components/multi-hostel/SelectHostelPrompt";
 type StaffFormState = {
   name: string;
   phone: string;
@@ -96,11 +97,7 @@ export default function StaffManagementPage() {
   });
 
   if (!hostelId) {
-    return (
-      <Box className="flex items-center justify-center p-16">
-        <Typography variant="muted">Loading…</Typography>
-      </Box>
-    );
+    return <SelectHostelPrompt moduleLabel="Staff" />;
   }
 
   return (

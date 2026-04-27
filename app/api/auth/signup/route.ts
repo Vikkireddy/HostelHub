@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { ensureAdminRolesSchema } from "@/lib/ensureAdminRolesSchema";
+import { ensureMultiHostelSchema } from "@/lib/ensureMultiHostelSchema";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -157,6 +158,7 @@ export async function POST(request: NextRequest) {
     const passwordHash = await bcrypt.hash(password, 10);
 
     await ensureAdminRolesSchema();
+    await ensureMultiHostelSchema();
 
     await pool.execute(
       `INSERT INTO hostels (name, address, city, state, pincode)
@@ -180,11 +182,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await pool.execute(
-      `INSERT INTO admins (hostel_id, email, mobile, password_hash, name, is_owner, is_active)
-       VALUES (?, ?, ?, ?, ?, 1, 1)`,
+    const [adminIns] = await pool.execute(
+      `INSERT INTO admins (hostel_id, email, mobile, password_hash, name, is_owner, is_active, management_mode)
+       VALUES (?, ?, ?, ?, ?, 1, 1, 'single')`,
       [hostelId, trimmedEmail, trimmedMobile, passwordHash, ownerName.trim()]
     );
+    const newAdminId = Number((adminIns as { insertId?: number }).insertId ?? 0);
+    if (newAdminId) {
+      await pool.execute(
+        `INSERT IGNORE INTO admin_hostels (admin_id, hostel_id) VALUES (?, ?)`,
+        [newAdminId, hostelId]
+      );
+    }
 
     return NextResponse.json({
       success: true,

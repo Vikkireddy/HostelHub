@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { ensureAdminRolesSchema } from "@/lib/ensureAdminRolesSchema";
+import { ensureMultiHostelSchema } from "@/lib/ensureMultiHostelSchema";
+import {
+  canManageUsersAndRoles as canManageUsersAndRolesForRow,
+  listAccessibleHostelsForAdmin,
+} from "@/lib/adminAccess.server";
 import { fullAccessMatrix, mergeEffectivePermissionMatrix } from "@/lib/permissionMatrix";
 
 /** Match signup storage: 10 digits; accept +91 / leading 0 / spaces from the login field. */
@@ -47,6 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     await ensureAdminRolesSchema();
+    await ensureMultiHostelSchema();
 
     const [rows] = await pool.execute(
       isEmail
@@ -55,6 +61,7 @@ export async function POST(request: NextRequest) {
             COALESCE(a.is_owner, 0) AS is_owner,
             a.role_id,
             a.permissions_override,
+            COALESCE(a.management_mode, 'single') AS management_mode,
             r.name AS role_name,
             r.permissions AS role_permissions
            FROM admins a
@@ -65,6 +72,7 @@ export async function POST(request: NextRequest) {
             COALESCE(a.is_owner, 0) AS is_owner,
             a.role_id,
             a.permissions_override,
+            COALESCE(a.management_mode, 'single') AS management_mode,
             r.name AS role_name,
             r.permissions AS role_permissions
            FROM admins a
@@ -85,6 +93,7 @@ export async function POST(request: NextRequest) {
       role_name: string | null;
       permissions_override: unknown;
       role_permissions: unknown;
+      management_mode: string;
     }[];
     if (admins.length === 0) {
       return NextResponse.json(
@@ -115,7 +124,20 @@ export async function POST(request: NextRequest) {
     }
 
     const isOwner = admin.is_owner === true || admin.is_owner === 1;
-    const canManageUsersAndRoles = Boolean(isOwner && admin.hostel_id != null);
+    const hostels = await listAccessibleHostelsForAdmin(admin.id);
+    const managementMode = String(admin.management_mode ?? "single").toLowerCase() === "multi" ? "multi" : "single";
+    const effectiveHostelId = admin.hostel_id ?? hostels[0]?.id ?? null;
+
+    const canManageUsersAndRoles = canManageUsersAndRolesForRow({
+      id: admin.id,
+      email: admin.email,
+      name: admin.name,
+      hostel_id: admin.hostel_id,
+      is_owner: admin.is_owner,
+      is_active: admin.is_active,
+      role_id: admin.role_id,
+      management_mode: managementMode,
+    });
     const legacyFullAccess = !isOwner && admin.role_id == null;
     const permissions =
       isOwner || legacyFullAccess
@@ -127,13 +149,20 @@ export async function POST(request: NextRequest) {
       user: {
         email: admin.email,
         name: admin.name,
-        hostelId: admin.hostel_id ?? null,
+        hostelId: effectiveHostelId,
         adminId: admin.id,
         isOwner,
         canManageUsersAndRoles,
         roleId: admin.role_id ?? null,
         roleName: admin.role_name ?? null,
         permissions,
+        managementMode,
+        accessibleHostels: hostels.map((h) => ({
+          id: h.id,
+          name: h.name,
+          city: h.city,
+          state: h.state,
+        })),
       },
     });
   } catch (error) {

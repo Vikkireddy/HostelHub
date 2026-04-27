@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { useAuthStore } from "@/lib/AuthStore";
 import { Box } from "@/components/ui/box";
 import { SubscriptionGuard } from "@/components/subscription/SubscriptionGuard";
+import { t } from "@/lib/i18n";
 
 const pageTitles: Record<string, { title: string; subtitle?: string }> = {
   "/dashboard": { title: "Dashboard", subtitle: "Welcome back, Admin" },
@@ -28,7 +29,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const { title, subtitle } = pageTitles[pathname] || { title: "Dashboard", subtitle: "" };
+  const { title, subtitle } = useMemo(() => {
+    if (pathname === "/dashboard/portfolio") {
+      return { title: "", subtitle: "" };
+    }
+    if (pathname === "/dashboard/hostels/new") {
+      return { title: t("MULTI_HOSTEL_ADD_HOSTEL"), subtitle: t("MULTI_HOSTEL_PAGE_SUBTITLE") };
+    }
+    if (pathname?.startsWith("/dashboard/hostels/")) {
+      return { title: t("MULTI_HOSTEL_DETAIL_TITLE"), subtitle: t("MULTI_HOSTEL_DETAIL_SUBTITLE") };
+    }
+    return pageTitles[pathname] || { title: "Dashboard", subtitle: "" };
+  }, [pathname]);
 
   useEffect(() => {
     const id = setTimeout(() => setHasHydrated(true), 0);

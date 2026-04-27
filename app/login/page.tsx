@@ -45,7 +45,11 @@ function LoginForm() {
     setError("");
     const result = await login(emailOrPhone, password);
     if (result.success) {
-      router.push(safeNext ?? "/dashboard");
+      if (safeNext) {
+        router.push(safeNext);
+      } else {
+        router.push("/dashboard");
+      }
     } else {
       setError(result.message || "Invalid email/phone or password. Please try again.");
     }

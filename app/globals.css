@@ -66,6 +66,17 @@
     color: var(--foreground);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
+
+  button,
+  [role="button"],
+  .MuiButtonBase-root {
+    cursor: pointer;
+  }
+  button:disabled,
+  [role="button"][aria-disabled="true"],
+  .MuiButtonBase-root.Mui-disabled {
+    cursor: not-allowed;
+  }
 }
 
 /* Animations for Radix UI */

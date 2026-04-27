@@ -50,6 +50,7 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const hostelId = user?.hostelId ?? null;
+  const paymentTrackingEnabled = useSettingsStore((s) => s.getPaymentTrackingEnabled(hostelId));
   const brandingByHostelId = useSettingsStore((s) => s.brandingByHostelId);
   const branding = hostelId != null ? brandingByHostelId[hostelId] : undefined;
   const hostelName = branding?.hostelName ?? "";
@@ -97,29 +98,32 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
         <Typography className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
           Menu
         </Typography>
-        {navItems.filter((item) => canSeeModuleNav(user, item.module)).map((item) => {
-          const isActive = pathname === item.href;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              prefetch
-              onMouseEnter={() => prefetchRoute(item.href)}
-              onFocus={() => prefetchRoute(item.href)}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-white/15 text-primary-foreground"
-                  : "text-slate-300 hover:bg-white/10 hover:text-white"
-              )}
-              onClick={onCloseMobile}
-            >
-              <Icon className="h-5 w-5 shrink-0" />
-              {item.label}
-            </Link>
-          );
-        })}
+        {navItems
+          .filter((item) => canSeeModuleNav(user, item.module))
+          .filter((item) => paymentTrackingEnabled || item.module !== "payments")
+          .map((item) => {
+            const isActive = pathname === item.href;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                prefetch
+                onMouseEnter={() => prefetchRoute(item.href)}
+                onFocus={() => prefetchRoute(item.href)}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-white/15 text-primary-foreground"
+                    : "text-slate-300 hover:bg-white/10 hover:text-white"
+                )}
+                onClick={onCloseMobile}
+              >
+                <Icon className="h-5 w-5 shrink-0" />
+                {item.label}
+              </Link>
+            );
+          })}
       </nav>
       </aside>
     </>

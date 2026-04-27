@@ -7,11 +7,13 @@ import { toast } from "sonner";
 import { useAuthStore } from "@/lib/AuthStore";
 import { hasDashboardPermission } from "@/lib/dashboardPermissionClient";
 import { PaymentsSkeleton } from "@/components/skeletons";
+import { useSettingsStore } from "@/lib/SettingsStore";
 import {
   usePaymentsData,
   getDefaultMonthYear,
   type PaymentTableRowProps,
 } from "@/components/dashboard/payments";
+import { SelectHostelPrompt } from "@/components/multi-hostel/SelectHostelPrompt";
 
 const PaymentStatsGrid = dynamic(() =>
   import("@/components/dashboard/payments").then((m) => m.PaymentStatsGrid)
@@ -34,9 +36,18 @@ const PaymentHistoryDialog = dynamic(() =>
 
 export default function PaymentsPage() {
   const user = useAuthStore((s) => s.user);
+  const hostelId = user?.hostelId ?? null;
+  const paymentTrackingEnabled = useSettingsStore((s) => s.getPaymentTrackingEnabled(hostelId));
   const canPaymentsView = hasDashboardPermission(user, "payments", "view");
   const canPaymentsAdd = hasDashboardPermission(user, "payments", "add");
   const canPaymentsEdit = hasDashboardPermission(user, "payments", "edit");
+
+  if (!hostelId) {
+    return <SelectHostelPrompt moduleLabel="Payments" />;
+  }
+  if (!paymentTrackingEnabled) {
+    return <SelectHostelPrompt moduleLabel="Payments" />;
+  }
 
   const [historyStudent, setHistoryStudent] = useState<{
     id: number;

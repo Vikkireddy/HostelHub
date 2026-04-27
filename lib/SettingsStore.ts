@@ -23,6 +23,9 @@ interface SettingsState {
   setProfile: (name: string, email: string) => void;
   notifications: NotificationSettings;
   setNotifications: (settings: Partial<NotificationSettings>) => void;
+  paymentTrackingByHostelId: Record<number, boolean>;
+  setPaymentTrackingEnabled: (hostelId: number, enabled: boolean) => void;
+  getPaymentTrackingEnabled: (hostelId: number | null) => boolean;
   /** Branding keyed by hostel ID - each hostel has its own name and logo */
   brandingByHostelId: Record<number, HostelBranding>;
   setBranding: (hostelId: number, hostelName: string, hostelLogoUrl: string | null) => void;
@@ -41,6 +44,19 @@ export const useSettingsStore = create<SettingsState>()(
       },
       setNotifications: (settings) =>
         set((s) => ({ notifications: { ...s.notifications, ...settings } })),
+      paymentTrackingByHostelId: {},
+      setPaymentTrackingEnabled: (hostelId, enabled) =>
+        set((s) => ({
+          paymentTrackingByHostelId: {
+            ...s.paymentTrackingByHostelId,
+            [hostelId]: enabled,
+          },
+        })),
+      getPaymentTrackingEnabled: (hostelId) => {
+        if (hostelId == null) return true;
+        const raw = get().paymentTrackingByHostelId[hostelId];
+        return raw !== false;
+      },
       brandingByHostelId: {},
       setBranding: (hostelId, hostelName, hostelLogoUrl) =>
         set((s) => ({
@@ -57,12 +73,20 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: "hostelhub-settings",
-      version: 1,
+      version: 2,
       migrate: (persistedState: unknown) => {
         const s = (persistedState ?? {}) as Record<string, unknown>;
-        const { hostelName: _hn, hostelLogoUrl: _hl, ...rest } = s;
+        const {
+          hostelName: _hn,
+          hostelLogoUrl: _hl,
+          paymentTrackingEnabled: legacyPaymentTrackingEnabled,
+          ...rest
+        } = s;
+        void legacyPaymentTrackingEnabled;
         return {
           ...rest,
+          paymentTrackingByHostelId:
+            (s.paymentTrackingByHostelId as Record<number, boolean>) ?? {},
           brandingByHostelId: (s.brandingByHostelId as Record<number, HostelBranding>) ?? {},
         };
       },

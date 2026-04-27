@@ -2,13 +2,14 @@
 
 import { Divider, Typography, Checkbox, FormControlLabel, Button } from "@mui/material";
 import type { Control, FieldErrors } from "react-hook-form";
-import type { SignupFormValues } from "@/lib/validations/signup";
+import type { SignupFormValues, SignupManagementMode } from "@/lib/validations/signup";
 import { SignupFormField, SignupFormSection } from "./index";
 import { Controller } from "react-hook-form";
 import { t } from "@/lib/i18n";
-import { SIGNUP_SECTIONS } from "../SignupSectionConfig";
+import { getSignupSectionsForMode } from "../SignupSectionConfig";
 
 interface SignupFormFieldsProps {
+  managementMode: SignupManagementMode;
   control: Control<SignupFormValues>;
   errors: FieldErrors<SignupFormValues>;
   showPassword: boolean;
@@ -19,6 +20,7 @@ interface SignupFormFieldsProps {
 }
 
 export function SignupFormFields({
+  managementMode,
   control,
   errors,
   showPassword,
@@ -27,6 +29,7 @@ export function SignupFormFields({
   onToggleConfirmPassword,
   isSubmitting,
 }: SignupFormFieldsProps) {
+  const sections = getSignupSectionsForMode(managementMode);
   const getPasswordProps = (name: string) => {
     if (name === "password") {
       return { showPassword, onTogglePassword };
@@ -41,9 +44,11 @@ export function SignupFormFields({
 
   return (
     <>
-      {SIGNUP_SECTIONS.map((section, index) => (
+      {sections.map((section) => (
         <div key={section.id}>
-          {index === 2 && <Divider sx={{ my: 2, borderColor: "rgba(148, 163, 184, 0.22)" }} />}
+          {section.id === "credentials" && (
+            <Divider sx={{ my: 2, borderColor: "rgba(148, 163, 184, 0.22)" }} />
+          )}
           <SignupFormSection icon={section.icon} title={t(section.titleKey)} columns={section.columns}>
             {section.fields.map((field) => (
               <SignupFormField

@@ -13,8 +13,10 @@ import { DashboardSkeleton } from "@/components/skeletons";
 import { t } from "@/lib/i18n";
 import { useSearchStore } from "@/lib/SearchStore";
 import { useSubscriptionStore } from "@/lib/SubscriptionStore";
+import { useSettingsStore } from "@/lib/SettingsStore";
 import { PlanExpiryBanner } from "@/components/subscription/PlanExpiryBanner";
 import { Typography } from "@/components/ui/typography";
+import { MultiHostelOverview } from "@/components/multi-hostel/MultiHostelOverview";
 
 const StatsGrid = dynamic(() =>
   import("@/components/dashboard").then((m) => m.StatsGrid)
@@ -40,8 +42,12 @@ const STUDENT_CAPACITY_NEAR_THRESHOLD = 5;
 
 export default function DashboardPage() {
   const query = useSearchStore((s) => s.query);
-  const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
+  const user = useAuthStore((s) => s.user);
+  const hostelId = user?.hostelId ?? null;
   const subscriptionStatus = useSubscriptionStore((s) => s.status);
+  const paymentTrackingEnabled = useSettingsStore((s) => s.getPaymentTrackingEnabled(hostelId));
+  const showMultiOverview =
+    Boolean(user?.isOwner) && user?.managementMode === "multi" && hostelId == null;
 
   const { data, isLoading, error } = useQuery<DashboardStatsProps>({
     queryKey: ["dashboard-stats", hostelId],
@@ -89,6 +95,10 @@ export default function DashboardPage() {
           ),
     [plannedVacatesRaw, q]
   );
+
+  if (showMultiOverview) {
+    return <MultiHostelOverview />;
+  }
 
   if (isLoading) return <DashboardSkeleton />;
   if (error || !data) return <Box className="p-8 text-red-600">{t("FAILED_TO_LOAD_DASHBOARD")}</Box>;
@@ -170,8 +180,9 @@ export default function DashboardPage() {
 
       <StatsGrid
         stats={stats}
-        pendingBillsList={pendingBillsList}
+        pendingBillsList={paymentTrackingEnabled ? pendingBillsList : []}
         showExpenseMetrics={advancedAnalytics}
+        showPaymentMetrics={paymentTrackingEnabled}
       />
 
       {advancedAnalytics && (
@@ -182,7 +193,19 @@ export default function DashboardPage() {
       )}
 
       <Box className="grid gap-6 lg:grid-cols-2">
-        <RecentPayments payments={filteredPayments} />
+        {paymentTrackingEnabled ? (
+          <RecentPayments payments={filteredPayments} />
+        ) : (
+          <Box className="rounded-lg border border-dashed border-slate-200 bg-slate-50/80 p-6">
+            <Typography className="text-sm font-semibold text-slate-800">
+              Payments disabled
+            </Typography>
+            <Typography className="mt-2 text-sm text-slate-600">
+              Enable payment tracking from Settings → Payment Configuration to view payment
+              activity.
+            </Typography>
+          </Box>
+        )}
         {advancedAnalytics ? (
           <PlannedVacatesCard items={filteredPlannedVacates} />
         ) : (

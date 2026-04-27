@@ -32,6 +32,7 @@ import {
 } from "./students.constants";
 import { filterStudents } from "./students.utils";
 import { mergeDetailsForKind, normalizeResidentKind } from "@/lib/residentType.constants";
+import { SelectHostelPrompt } from "@/components/multi-hostel/SelectHostelPrompt";
 
 const AddStudentDialog = dynamic(
   () => import("./AddStudentDialog").then((m) => m.AddStudentDialog)
@@ -90,6 +91,10 @@ export default function StudentsPage() {
   const canDocumentsView = hasDashboardPermission(user, "documents", "view");
   const canDocumentsAdd = hasDashboardPermission(user, "documents", "add");
   const canDocumentsDelete = hasDashboardPermission(user, "documents", "delete");
+
+  if (!hostelId) {
+    return <SelectHostelPrompt moduleLabel={t("STUDENT_MANAGEMENT")} />;
+  }
 
   const { data: students = [], isLoading, error } = useQuery<Student[]>({
     queryKey: ["students", hostelId],

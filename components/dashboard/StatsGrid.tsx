@@ -15,6 +15,7 @@ export function StatsGrid({
   stats,
   pendingBillsList = [],
   showExpenseMetrics = true,
+  showPaymentMetrics = true,
 }: StatsGridProps) {
   const [pendingBillsModalOpen, setPendingBillsModalOpen] = useState(false);
 
@@ -114,7 +115,9 @@ export function StatsGrid({
     <>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {STAT_CARD_CONFIG.filter(
-          (config) => showExpenseMetrics || config.id !== "adminExpenses"
+          (config) =>
+            (showExpenseMetrics || config.id !== "adminExpenses") &&
+            (showPaymentMetrics || config.id !== "pendingBills")
         ).map((config) => (
           <StatCard
             key={config.id}

@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useAuthStore } from "@/lib/AuthStore";
 import { hasDashboardPermission } from "@/lib/dashboardPermissionClient";
 import { useExpensesData, type Expense, STAFF_SALARY_CATEGORY } from "./index";
+import { SelectHostelPrompt } from "@/components/multi-hostel/SelectHostelPrompt";
 
 const ExpensesFiltersBar = dynamic(() =>
   import("./ExpensesFiltersBar").then((m) => m.ExpensesFiltersBar)
@@ -65,11 +66,7 @@ export default function ExpensesPage() {
   };
 
   if (!hostelId) {
-    return (
-      <Box className="flex items-center justify-center p-16">
-        <Typography variant="muted">Loading…</Typography>
-      </Box>
-    );
+    return <SelectHostelPrompt moduleLabel="Expenses" />;
   }
 
   if (isLoading) {

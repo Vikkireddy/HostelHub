@@ -33,21 +33,40 @@ import {
 } from "./types";
 
 export default function UsersAndRolesPage() {
+  const _hasHydrated = useAuthStore((s) => s._hasHydrated);
   const user = useAuthStore((s) => s.user);
   const hostelId = user?.hostelId ?? null;
+  const portfolioUsersRolesMode =
+    Boolean(user) &&
+    hostelId == null &&
+    user?.managementMode === "multi" &&
+    Boolean(user?.canManageUsersAndRoles ?? user?.isOwner);
+
   const canUsersRolesAdd = hasDashboardPermission(user, "users_roles", "add");
   const canUsersRolesEdit = hasDashboardPermission(user, "users_roles", "edit");
   const canUsersRolesDelete = hasDashboardPermission(user, "users_roles", "delete");
   const canManage = useMemo(() => {
     const u = user;
-    if (!u?.hostelId) return false;
+    if (!u) return false;
     if (u.canManageUsersAndRoles === true) return true;
     if (u.canManageUsersAndRoles === false) return false;
     return Boolean(u.isOwner);
   }, [user]);
   const queryClient = useQueryClient();
   const branding = useSettingsStore((s) => s.getBranding(hostelId));
-  const hostelName = branding.hostelName?.trim() || t("PLATFORM_HOSTEL");
+  const hostelName =
+    portfolioUsersRolesMode && hostelId == null
+      ? t("MULTI_HOSTEL_SWITCH_ALL")
+      : branding.hostelName?.trim() || t("PLATFORM_HOSTEL");
+
+  const assignHostelOptions = useMemo(
+    () =>
+      (user?.accessibleHostels ?? []).map((h) => ({
+        id: h.id,
+        name: h.name,
+      })),
+    [user?.accessibleHostels]
+  );
 
   const [userDrawer, setUserDrawer] = useState(false);
   const [editUserForDrawer, setEditUserForDrawer] = useState<EditUserSnapshot | null>(null);
@@ -56,8 +75,11 @@ export default function UsersAndRolesPage() {
   const [deleteUserTarget, setDeleteUserTarget] = useState<AdminUserRow | null>(null);
   const [deleteRoleTarget, setDeleteRoleTarget] = useState<AdminRoleRow | null>(null);
 
+  const queryHostelKey = hostelId ?? "portfolio";
+  const usersQueryEnabled = Boolean(user?.email) && (hostelId != null || portfolioUsersRolesMode);
+
   const { data: usersRes, isLoading: usersLoading } = useQuery({
-    queryKey: ["dashboard-admins", hostelId],
+    queryKey: ["dashboard-admins", queryHostelKey],
     queryFn: async () => {
       const res = await fetchWithHostel("/api/admins", hostelId);
       if (!res.ok) {
@@ -66,11 +88,11 @@ export default function UsersAndRolesPage() {
       }
       return res.json() as Promise<{ users: AdminUserRow[] }>;
     },
-    enabled: Boolean(hostelId),
+    enabled: usersQueryEnabled,
   });
 
   const { data: rolesRes, isLoading: rolesLoading } = useQuery({
-    queryKey: ["dashboard-admin-roles", hostelId],
+    queryKey: ["dashboard-admin-roles", queryHostelKey],
     queryFn: async () => {
       const res = await fetchWithHostel("/api/admin-roles", hostelId);
       if (!res.ok) {
@@ -79,7 +101,7 @@ export default function UsersAndRolesPage() {
       }
       return res.json() as Promise<{ roles: AdminRoleRow[] }>;
     },
-    enabled: Boolean(hostelId),
+    enabled: usersQueryEnabled,
   });
 
   const users = usersRes?.users ?? EMPTY_ADMIN_USERS;
@@ -154,6 +176,9 @@ export default function UsersAndRolesPage() {
         body.password = payload.password;
         body.confirmPassword = payload.confirmPassword ?? "";
       }
+      if (payload.assignHostelId !== undefined) {
+        body.assignHostelId = payload.assignHostelId;
+      }
       const res = await fetchWithHostel(`/api/admins/${payload.id}`, hostelId, {
         method: "PATCH",
         body: JSON.stringify(body),
@@ -174,18 +199,22 @@ export default function UsersAndRolesPage() {
 
   const createUser = useMutation({
     mutationFn: async (payload: CreateAdminUserPayload) => {
+      const body: Record<string, unknown> = {
+        name: payload.name,
+        phone: payload.phone,
+        email: payload.email,
+        password: payload.password,
+        confirmPassword: payload.confirmPassword,
+        roleId: payload.roleId,
+        isActive: payload.isActive,
+        permissionsOverride: payload.permissionsOverride,
+      };
+      if (payload.assignHostelId !== undefined) {
+        body.assignHostelId = payload.assignHostelId;
+      }
       const res = await fetchWithHostel("/api/admins", hostelId, {
         method: "POST",
-        body: JSON.stringify({
-          name: payload.name,
-          phone: payload.phone,
-          email: payload.email,
-          password: payload.password,
-          confirmPassword: payload.confirmPassword,
-          roleId: payload.roleId,
-          isActive: payload.isActive,
-          permissionsOverride: payload.permissionsOverride,
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
@@ -203,7 +232,6 @@ export default function UsersAndRolesPage() {
 
   const deleteRole = useMutation({
     mutationFn: async (roleId: number) => {
-      if (hostelId == null) throw new Error("Hostel context required");
       const res = await fetchWithHostel(`/api/admin-roles/${roleId}`, hostelId, { method: "DELETE" });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -227,7 +255,6 @@ export default function UsersAndRolesPage() {
 
   const deleteUser = useMutation({
     mutationFn: async (userId: number) => {
-      if (hostelId == null) throw new Error("Hostel context required");
       const res = await fetchWithHostel(`/api/admins/${userId}`, hostelId, { method: "DELETE" });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -242,16 +269,26 @@ export default function UsersAndRolesPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  if (!hostelId) {
+  if (!_hasHydrated) {
+    return null;
+  }
+
+  if (!usersQueryEnabled) {
     return (
-      <Box className="flex items-center justify-center p-16">
-        <Typography variant="muted">{t("USERS_ROLES_LOADING")}</Typography>
+      <Box className="rounded-lg border border-slate-200 bg-white p-8 text-center">
+        <Typography className="text-slate-600">{t("USERS_ROLES_PORTFOLIO_FORBIDDEN")}</Typography>
       </Box>
     );
   }
 
   return (
     <Box className="space-y-6">
+      {portfolioUsersRolesMode ? (
+        <Typography variant="muted" className="text-sm">
+          {t("USERS_ROLES_PORTFOLIO_INTRO")}
+        </Typography>
+      ) : null}
+
       <Tabs defaultValue="users" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="users">{t("USERS_ROLES_TAB_USERS")}</TabsTrigger>
@@ -316,6 +353,8 @@ export default function UsersAndRolesPage() {
         roles={roleOptions}
         editUser={editUserForDrawer}
         saving={createUser.isPending || updateUser.isPending}
+        portfolioContext={portfolioUsersRolesMode}
+        assignHostelOptions={assignHostelOptions}
         onSave={async (payload) => {
           if (!roleOptions.length) {
             toast.error(t("USERS_ROLES_NO_ROLES_YET"));

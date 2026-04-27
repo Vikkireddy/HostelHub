@@ -115,6 +115,8 @@ type StatsGridProps = {
   pendingBillsList?: PendingBillProps[];
   /** When false, hides admin expenses / profit card (Base plan) */
   showExpenseMetrics?: boolean;
+  /** When false, hides pending bills card and payment modal trigger */
+  showPaymentMetrics?: boolean;
 };
 
 type PendingBillsModalProps = {
