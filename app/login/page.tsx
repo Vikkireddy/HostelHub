@@ -9,14 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { DialogTrigger } from "@/components/ui/dialog";
+import { ModalWithHeaderFooter } from "@/components/ui/ModalWithHeaderFooter";
 import { useAuthStore } from "@/lib/AuthStore";
 import { cn } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
@@ -51,7 +45,11 @@ function LoginForm() {
     setError("");
     const result = await login(emailOrPhone, password);
     if (result.success) {
-      router.push(safeNext ?? "/dashboard");
+      if (safeNext) {
+        router.push(safeNext);
+      } else {
+        router.push("/dashboard");
+      }
     } else {
       setError(result.message || "Invalid email/phone or password. Please try again.");
     }
@@ -181,7 +179,17 @@ function LoginForm() {
               </Box>
             </Box>
             <Box className="flex justify-end">
-              <Dialog
+              <ModalWithHeaderFooter
+                trigger={
+                  <DialogTrigger asChild>
+                    <button
+                      type="button"
+                      className="text-sm font-medium text-[var(--link)] underline-offset-4 hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  </DialogTrigger>
+                }
                 open={resetOpen}
                 onOpenChange={(open) => {
                   setResetOpen(open);
@@ -192,22 +200,11 @@ function LoginForm() {
                     setResetConfirmPassword("");
                   }
                 }}
-              >
-                <DialogTrigger asChild>
-                  <button
-                    type="button"
-                    className="text-sm font-medium text-[var(--link)] underline-offset-4 hover:underline"
-                  >
-                    Forgot password?
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Reset password</DialogTitle>
-                    <DialogDescription>
-                      Enter your registered email or phone and choose a new password.
-                    </DialogDescription>
-                  </DialogHeader>
+                maxWidth="md"
+                className="sm:max-w-md"
+                headerTitle="Reset password"
+                headerDescription="Enter your registered email or phone and choose a new password."
+                children={
                   <form onSubmit={handleResetPassword} className="space-y-4">
                     {resetError ? (
                       <Typography variant="error" className="p-2">
@@ -295,8 +292,8 @@ function LoginForm() {
                       {resetLoading ? "Resetting..." : "Reset password"}
                     </Button>
                   </form>
-                </DialogContent>
-              </Dialog>
+                }
+              />
             </Box>
             <Button type="submit" className="w-full">
               Sign In

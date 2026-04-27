@@ -3,12 +3,16 @@ import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { VALID_AC_TYPES, DEFAULT_AC_TYPE } from "@/app/dashboard/rooms/rooms.constants";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function GET(request: NextRequest) {
   try {
     const subErr = await requireSubscription(request);
     if (subErr) return subErr;
+
+    const denied = await assertDashboardPermission(request, "rooms", "view");
+    if (denied) return denied;
 
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
@@ -36,6 +40,9 @@ export async function POST(request: NextRequest) {
   try {
     const subErr = await requireSubscription(request);
     if (subErr) return subErr;
+
+    const denied = await assertDashboardPermission(request, "rooms", "add");
+    if (denied) return denied;
 
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {

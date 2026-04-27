@@ -2,17 +2,45 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useSettingsStore } from "@/lib/SettingsStore";
 import { useSubscriptionStore } from "@/lib/SubscriptionStore";
+import type { PermissionsMatrix } from "@/lib/permissionMatrix";
+
+export type AccessibleHostelSummary = {
+  id: number;
+  name: string;
+  city: string | null;
+  state: string | null;
+};
+
+export type AuthUser = {
+  email: string;
+  name: string;
+  hostelId: number | null;
+  adminId?: number;
+  isOwner?: boolean;
+  canManageUsersAndRoles?: boolean;
+  roleId?: number | null;
+  roleName?: string | null;
+  /** `single` (default) or `multi` portfolio owner. */
+  managementMode?: "single" | "multi";
+  /** Properties linked to this account (owner: portfolio; staff: assigned only). */
+  accessibleHostels?: AccessibleHostelSummary[];
+  /** Effective CRUD matrix; omitted on legacy persisted sessions until next login. */
+  permissions?: PermissionsMatrix;
+};
+
+export type LoginResult = {
+  success: boolean;
+  message?: string;
+  managementMode?: "single" | "multi";
+};
 
 interface AuthState {
-  user: { email: string; name: string; hostelId: number | null } | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   _hasHydrated: boolean;
-  login: (
-    emailOrPhone: string,
-    password: string
-  ) => Promise<{ success: boolean; message?: string }>;
+  login: (emailOrPhone: string, password: string) => Promise<LoginResult>;
   logout: () => void;
-  updateUser: (updates: { name?: string; email?: string }) => void;
+  updateUser: (updates: Partial<AuthUser>) => void;
   setHasHydrated: (state: boolean) => void;
 }
 
@@ -32,18 +60,30 @@ export const useAuthStore = create<AuthState>()(
           });
           const data = await res.json();
           if (data.success && data.user) {
+            const u = data.user as AuthUser;
             set({
               user: {
-                email: data.user.email,
-                name: data.user.name,
-                hostelId: data.user.hostelId ?? null,
+                email: u.email,
+                name: u.name,
+                hostelId: u.hostelId ?? null,
+                adminId: u.adminId,
+                isOwner: u.isOwner,
+                canManageUsersAndRoles: u.canManageUsersAndRoles,
+                roleId: u.roleId ?? null,
+                roleName: u.roleName ?? null,
+                managementMode: u.managementMode ?? "single",
+                accessibleHostels: u.accessibleHostels ?? [],
+                permissions: (u as AuthUser).permissions,
               },
               isAuthenticated: true,
               _hasHydrated: true,
             });
             useSettingsStore.getState().setProfile(data.user.name, data.user.email);
             useSubscriptionStore.getState().reset();
-            return { success: true };
+            return {
+              success: true,
+              managementMode: u.managementMode ?? "single",
+            };
           }
           return {
             success: false,
@@ -73,6 +113,13 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
       onRehydrateStorage: () => (state) => {
         useAuthStore.getState().setHasHydrated(true);
+        const u = state?.user;
+        if (!u || u.isOwner) return;
+        const assigned = u.accessibleHostels ?? [];
+        if (assigned.length === 0) return;
+        if (u.hostelId == null || !assigned.some((h) => h.id === u.hostelId)) {
+          useAuthStore.getState().updateUser({ hostelId: assigned[0].id });
+        }
       },
     }
   )

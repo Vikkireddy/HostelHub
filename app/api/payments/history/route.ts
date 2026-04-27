@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
-import { hasPartialPaymentColumns } from "@/lib/PaymentUtils";
+import { hasPartialPaymentColumns, hasPaymentReferenceColumns } from "@/lib/PaymentUtils";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function GET(request: NextRequest) {
   try {
     const subErr = await requireSubscription(request);
     if (subErr) return subErr;
+
+    const denied = await assertDashboardPermission(request, "payments", "view");
+    if (denied) return denied;
 
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
@@ -35,10 +39,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Resident not found" }, { status: 404 });
     }
 
+    const hasRefCols = await hasPaymentReferenceColumns();
+    const refSelect = hasRefCols ? ", payment_mode, payment_reference" : "";
+
     let historyRows: Array<Record<string, unknown>> = [];
     try {
       const [rows] = await pool.execute(
-        `SELECT id, amount, recorded_at, 'Payment recorded' as note
+        `SELECT id, amount, recorded_at${refSelect}, 'Payment recorded' as note
          FROM payment_transactions
          WHERE student_id = ?
          ORDER BY recorded_at DESC`,
@@ -62,6 +69,14 @@ export async function GET(request: NextRequest) {
       id: Number(row.id ?? 0),
       amount: Number(row.amount ?? 0),
       recorded_at: String(row.recorded_at),
+      payment_mode:
+        hasRefCols && row.payment_mode != null && String(row.payment_mode).trim() !== ""
+          ? String(row.payment_mode)
+          : null,
+      payment_reference:
+        hasRefCols && row.payment_reference != null && String(row.payment_reference).trim() !== ""
+          ? String(row.payment_reference)
+          : null,
       status:
         Number(row.amount ?? 0) > 0 && Number(row.amount ?? 0) < Number(student.room_rent ?? 0)
           ? "partial"

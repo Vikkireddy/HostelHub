@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
+import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 async function ensureStaffTable() {
@@ -23,6 +24,9 @@ async function ensureStaffTable() {
 
 export async function GET(request: NextRequest) {
   try {
+    const denied = await assertDashboardPermission(request, "staff", "view");
+    if (denied) return denied;
+
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) return NextResponse.json([], { status: 200 });
 
@@ -67,6 +71,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const denied = await assertDashboardPermission(request, "staff", "add");
+    if (denied) return denied;
+
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

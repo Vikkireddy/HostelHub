@@ -1,4 +1,20 @@
 import type { StudentFormValues } from "./students.types";
+import { emptyDetailsForKind } from "@/lib/residentType.constants";
+
+export const GENDER_OPTIONS = ["Male", "Female", "Other"] as const;
+
+/** Canonical gender for DB and forms; returns null if missing or invalid. */
+export function normalizeGenderValue(raw: unknown): "Male" | "Female" | "Other" | null {
+  if (raw == null) return null;
+  const s = String(raw).trim();
+  if (!s) return null;
+  const lower = s.toLowerCase();
+  if (lower === "male" || lower === "m") return "Male";
+  if (lower === "female" || lower === "f") return "Female";
+  if (lower === "other" || lower === "o") return "Other";
+  if (s === "Male" || s === "Female" || s === "Other") return s;
+  return null;
+}
 
 export const ID_PROOF_OPTIONS = [
   "Aadhaar",
@@ -85,8 +101,17 @@ export function normalizeIdProof(type: string, value: string): string {
 /** Indian mobile: 10 digits, starting with 6/7/8/9 */
 const PHONE_PATTERN = /^[6-9][0-9]{9}$/;
 
+/** Primary resident phone: required, 10-digit Indian mobile. */
 export function validatePhone(value: string): string | null {
   const digits = value.replace(/\D/g, "");
+  if (digits.length !== 10) return "Phone must be 10 digits";
+  return PHONE_PATTERN.test(digits) ? null : "Phone must start with 6, 7, 8, or 9";
+}
+
+/** Emergency / secondary number: omit or full 10-digit valid mobile only. */
+export function validateOptionalPhone(value: string): string | null {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 0) return null;
   if (digits.length !== 10) return "Phone must be 10 digits";
   return PHONE_PATTERN.test(digits) ? null : "Phone must start with 6, 7, 8, or 9";
 }
@@ -95,10 +120,12 @@ export function normalizePhone(value: string): string {
   return value.replace(/\D/g, "").slice(0, 10);
 }
 
-export const initialStudentForm = {
+export const initialStudentForm: StudentFormValues = {
   name: "",
+  gender: "",
   email: "",
   phone: "",
+  emergency_contact_phone: "",
   room_id: "",
   course: "",
   join_date: "",
@@ -106,4 +133,6 @@ export const initialStudentForm = {
   id_proof_type: "",
   id_proof_number: "",
   address: "",
-} as const;
+  resident_type: "student",
+  resident_type_details: emptyDetailsForKind("student"),
+};

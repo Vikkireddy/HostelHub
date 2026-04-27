@@ -12,6 +12,32 @@ export async function hasPartialPaymentColumns(): Promise<boolean> {
   }
 }
 
+/** payment_transactions.payment_reference + payment_mode (cash / online) */
+export async function hasPaymentReferenceColumns(): Promise<boolean> {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT COLUMN_NAME FROM information_schema.COLUMNS 
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'payment_transactions' AND COLUMN_NAME = 'payment_reference'`
+    );
+    return (rows as unknown[]).length > 0;
+  } catch {
+    return false;
+  }
+}
+
+/** payments.bill_payment_reference + bill_payment_mode (denormalized for list UI) */
+export async function hasPaymentBillProofOnPayments(): Promise<boolean> {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT COLUMN_NAME FROM information_schema.COLUMNS 
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'payments' AND COLUMN_NAME = 'bill_payment_reference'`
+    );
+    return (rows as unknown[]).length > 0;
+  } catch {
+    return false;
+  }
+}
+
 /** SQL for pending dues sum - works with both schemas */
 export async function getPendingDuesSql(): Promise<{
   sumSelect: string;

@@ -8,9 +8,14 @@ const passwordSchema = z
   .regex(/\d/, en.SIGNUP_ERROR_PASSWORD_NUMBER)
   .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, en.SIGNUP_ERROR_PASSWORD_SPECIAL);
 
-export const signupSchema = z
-  .object({
-    hostelName: z.string().min(1, en.SIGNUP_ERROR_HOSTEL_REQUIRED),
+export type SignupManagementMode = "single" | "multi";
+
+const signupFieldsBase = (mode: SignupManagementMode) =>
+  z.object({
+    hostelName:
+      mode === "single"
+        ? z.string().min(1, en.SIGNUP_ERROR_HOSTEL_REQUIRED)
+        : z.string(),
     ownerName: z.string().min(1, en.SIGNUP_ERROR_OWNER_REQUIRED),
     email: z.string().min(1, en.SIGNUP_ERROR_EMAIL_REQUIRED).email(en.SIGNUP_ERROR_EMAIL_INVALID),
     mobile: z
@@ -26,10 +31,16 @@ export const signupSchema = z
     acceptTerms: z.boolean().refine((v) => v === true, {
       message: en.SIGNUP_ERROR_TERMS_REQUIRED,
     }),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
+  });
+
+export function createSignupSchema(mode: SignupManagementMode) {
+  return signupFieldsBase(mode).refine((data) => data.password === data.confirmPassword, {
     message: en.SIGNUP_ERROR_PASSWORDS_MISMATCH,
     path: ["confirmPassword"],
   });
+}
+
+/** Default export: single-hostel (full form including hostel name). */
+export const signupSchema = createSignupSchema("single");
 
 export type SignupFormValues = z.infer<typeof signupSchema>;

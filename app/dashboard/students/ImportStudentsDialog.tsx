@@ -1,17 +1,10 @@
 "use client";
 
 import { useState, useRef } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
+import { ModalWithHeaderFooter } from "@/components/ui/ModalWithHeaderFooter";
 import { Upload, Download, FileDown } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { fetchWithHostel } from "@/lib/ApiClient";
@@ -156,19 +149,16 @@ export const ImportStudentsDialog = ({
   };
 
   return (
-    <Dialog
+    <ModalWithHeaderFooter
       open={open}
       onOpenChange={(o) => {
         if (!o) resetState();
         onOpenChange(o);
       }}
-    >
-      <DialogContent className="max-w-lg" onInteractOutside={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle>{t("STUDENT_IMPORT_TITLE")}</DialogTitle>
-          <DialogDescription>{t("STUDENT_IMPORT_DESCRIPTION")}</DialogDescription>
-        </DialogHeader>
-
+      maxWidth="lg"
+      headerTitle={t("STUDENT_IMPORT_TITLE")}
+      headerDescription={t("STUDENT_IMPORT_DESCRIPTION")}
+      children={
         <Box className="space-y-4">
           <Box className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" size="sm" asChild>
@@ -187,12 +177,7 @@ export const ImportStudentsDialog = ({
               <FileDown className="mr-2 h-4 w-4" />
               {exporting ? t("STUDENT_EXPORT_DOWNLOADING") : t("STUDENT_EXPORT_CURRENT")}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => inputRef.current?.click()}
-            >
+            <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()}>
               <Upload className="mr-2 h-4 w-4" />
               {t("STUDENT_IMPORT_CHOOSE_FILE")}
             </Button>
@@ -231,8 +216,9 @@ export const ImportStudentsDialog = ({
             {t("STUDENT_IMPORT_HINT")}
           </Typography>
         </Box>
-
-        <DialogFooter>
+      }
+      footerComponent={
+        <>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             {t("CANCEL")}
           </Button>
@@ -243,8 +229,8 @@ export const ImportStudentsDialog = ({
           >
             {importing ? t("STUDENT_IMPORT_IMPORTING") : t("STUDENT_IMPORT_RUN")}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    />
   );
 };

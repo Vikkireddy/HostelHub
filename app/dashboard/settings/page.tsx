@@ -6,11 +6,11 @@ import { Tabs } from "@/components/ui/tabs";
 import { useSettingsStore } from "@/lib/SettingsStore";
 import { t } from "@/lib/i18n";
 import { useAuthStore } from "@/lib/AuthStore";
+import { hasDashboardPermission } from "@/lib/dashboardPermissionClient";
 import { SettingsTabsList } from "./components/SettingsTabsList";
 import { ProfileSettingsTab } from "./components/ProfileSettingsTab";
 import { SecuritySettingsTab } from "./components/SecuritySettingsTab";
-import { NotificationsSettingsTab } from "./components/NotificationsSettingsTab";
-import { AppearanceSettingsTab } from "./components/AppearanceSettingsTab";
+import { ConfigurationSettingsTab } from "./components/ConfigurationSettingsTab";
 import { BrandingSettingsTab } from "./components/BrandingSettingsTab";
 
 const DEFAULT_HOSTEL_LOGO_URL = "/branding/default-logo.png";
@@ -19,6 +19,8 @@ export default function SettingsPage() {
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const hostelId = user?.hostelId ?? null;
+  const canSettingsEdit = hasDashboardPermission(user, "settings", "edit");
+  const canEditConfiguration = Boolean(user?.isOwner);
   const name = useSettingsStore((s) => s.name);
   const email = useSettingsStore((s) => s.email);
   const notifications = useSettingsStore((s) => s.notifications);
@@ -29,12 +31,13 @@ export default function SettingsPage() {
   const branding = hostelId != null ? brandingByHostelId[hostelId] : undefined;
   const hostelName = branding?.hostelName ?? "";
   const hostelLogoUrl = branding?.hostelLogoUrl ?? null;
+  const paymentTrackingEnabled = useSettingsStore((s) => s.getPaymentTrackingEnabled(hostelId));
+  const setPaymentTrackingEnabled = useSettingsStore((s) => s.setPaymentTrackingEnabled);
   const [profileName, setProfileName] = useState(name || user?.name || "Administrator");
   const [profileEmail, setProfileEmail] = useState(email || user?.email || "admin@hostel.com");
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [profileLoading, setProfileLoading] = useState(false);
-  const [notifSaved, setNotifSaved] = useState(false);
 
   // Security form
   const [currentPassword, setCurrentPassword] = useState("");
@@ -42,8 +45,6 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState(false);
-
-  // Branding form
   const [brandingHostelName, setBrandingHostelName] = useState(hostelName || "Admin HostelHub");
   const [brandingLogoFile, setBrandingLogoFile] = useState<File | null>(null);
   const [brandingLogoPreview, setBrandingLogoPreview] = useState<string | null>(
@@ -64,6 +65,7 @@ export default function SettingsPage() {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSettingsEdit) return;
     if (!user?.email) {
       setProfileError("You must be logged in to update your profile.");
       return;
@@ -97,6 +99,7 @@ export default function SettingsPage() {
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSettingsEdit) return;
     setPasswordError("");
     setPasswordSuccess(false);
     if (newPassword !== confirmPassword) {
@@ -136,13 +139,8 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSaveNotifications = (e: React.FormEvent) => {
-    e.preventDefault();
-    setNotifSaved(true);
-    setTimeout(() => setNotifSaved(false), 2000);
-  };
-
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!canSettingsEdit) return;
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 500 * 1024) {
@@ -158,6 +156,7 @@ export default function SettingsPage() {
 
   const handleSaveBranding = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSettingsEdit) return;
     if (hostelId == null) {
       setBrandingError(t("BRANDING_REQUIRES_HOSTEL"));
       return;
@@ -188,7 +187,7 @@ export default function SettingsPage() {
   const displayName = profileName || "Administrator";
 
   return (
-    <Box className="mx-auto max-w-3xl space-y-6">
+    <Box className="space-y-6">
       <Tabs defaultValue="profile" className="w-full">
         <SettingsTabsList />
 
@@ -202,6 +201,7 @@ export default function SettingsPage() {
           onProfileNameChange={setProfileName}
           onProfileEmailChange={setProfileEmail}
           onSubmit={handleSaveProfile}
+          allowEdit={canSettingsEdit}
         />
 
         <SecuritySettingsTab
@@ -214,18 +214,29 @@ export default function SettingsPage() {
           onNewPasswordChange={setNewPassword}
           onConfirmPasswordChange={setConfirmPassword}
           onSubmit={handleUpdatePassword}
+          allowEdit={canSettingsEdit}
         />
 
-        <NotificationsSettingsTab
+        <ConfigurationSettingsTab
           emailNotifications={notifications.emailNotifications}
           paymentReminders={notifications.paymentReminders}
-          notifSaved={notifSaved}
-          onEmailNotificationsChange={(checked) => setNotifications({ emailNotifications: checked })}
-          onPaymentRemindersChange={(checked) => setNotifications({ paymentReminders: checked })}
-          onSubmit={handleSaveNotifications}
+          onEmailNotificationsChange={(checked) => {
+            if (!canEditConfiguration) return;
+            setNotifications({ emailNotifications: checked });
+          }}
+          onPaymentRemindersChange={(checked) => {
+            if (!canEditConfiguration) return;
+            setNotifications({ paymentReminders: checked });
+          }}
+          paymentTrackingEnabled={paymentTrackingEnabled}
+          onPaymentTrackingChange={(checked) => {
+            if (!canEditConfiguration || hostelId == null) return;
+            setPaymentTrackingEnabled(hostelId, checked);
+          }}
+          hostelSelected={hostelId != null}
+          allowEdit={canEditConfiguration}
+          ownerOnlyHint={!canEditConfiguration ? t("SETTINGS_CONFIGURATION_OWNER_ONLY") : undefined}
         />
-
-        <AppearanceSettingsTab />
 
         <BrandingSettingsTab
           hostelId={hostelId}
@@ -240,6 +251,7 @@ export default function SettingsPage() {
             setBrandingLogoPreview(DEFAULT_HOSTEL_LOGO_URL);
           }}
           onSubmit={handleSaveBranding}
+          allowEdit={canSettingsEdit}
         />
       </Tabs>
     </Box>

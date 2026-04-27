@@ -1,16 +1,23 @@
 import type { ColumnDef } from "@tanstack/react-table";
+import type { ResidentKind } from "@/lib/residentType.constants";
 
 export interface Student {
   id: string | number;
   name: string;
+  gender?: string | null;
   email?: string;
   room_number?: string;
   room_id?: number;
   course?: string;
+  /** student | employee | job_seeker | other */
+  resident_type?: ResidentKind | string | null;
+  /** Type-specific fields stored as JSON on the server */
+  resident_type_details?: Record<string, string> | null;
   join_date?: string;
   /** YYYY-MM-DD when resident plans to vacate; shown on admin dashboard */
   planned_vacate_date?: string | null;
-  phone: string;
+  phone?: string | null;
+  emergency_contact_phone?: string | null;
   id_proof_type?: string;
   id_proof_number?: string;
   address?: string;
@@ -35,10 +42,29 @@ export interface StudentRoom {
   ac_type?: string;
 }
 
+/** Optional files collected in Add Resident; uploaded after the resident row is created. */
+export interface ResidentInitialDocuments {
+  profilePhoto: File | null;
+  idProofFile: File | null;
+}
+
+export interface StudentDocumentRow {
+  id: number;
+  student_id: number;
+  category: string;
+  label: string;
+  file_name: string;
+  mime_type: string;
+  size_bytes: number;
+  created_at: string | null;
+}
+
 export interface StudentFormValues {
   name: string;
+  gender: string;
   email: string;
   phone: string;
+  emergency_contact_phone: string;
   room_id: string;
   course: string;
   join_date: string;
@@ -46,6 +72,8 @@ export interface StudentFormValues {
   id_proof_type: string;
   id_proof_number: string;
   address: string;
+  resident_type: ResidentKind;
+  resident_type_details: Record<string, string>;
 }
 
 export type StudentFormUpdater = (prev: StudentFormValues) => StudentFormValues;
@@ -58,6 +86,7 @@ export interface StudentFormFieldsProps {
   roomCaption?: string;
   idProofError?: string | null;
   phoneError?: string | null;
+  emergencyPhoneError?: string | null;
 }
 
 export interface AddStudentDialogProps {
@@ -71,6 +100,9 @@ export interface AddStudentDialogProps {
   availableRooms: StudentRoom[];
   idProofError?: string | null;
   phoneError?: string | null;
+  emergencyPhoneError?: string | null;
+  documents: ResidentInitialDocuments;
+  onDocumentsChange: (next: ResidentInitialDocuments) => void;
 }
 
 export interface EditStudentDialogProps {
@@ -85,6 +117,7 @@ export interface EditStudentDialogProps {
   roomsForEdit: (currentRoomId?: number) => StudentRoom[];
   idProofError?: string | null;
   phoneError?: string | null;
+  emergencyPhoneError?: string | null;
 }
 
 export interface DeleteStudentDialogProps {
@@ -114,26 +147,36 @@ export interface StudentsTabsProps {
   filterPaymentStatus: string;
   onFilterRoomChange: (value: string) => void;
   onFilterPaymentStatusChange: (value: string) => void;
+  onViewDetails?: (student: Student) => void;
   onCheckOut: (student: Student) => void;
   onEdit: (student: Student) => void;
   onDelete: (student: Student) => void;
   canDeleteStudent: (student: Student) => boolean;
+  /** When false, row actions for edit / checkout / delete are disabled (RBAC). */
+  canEditResident: boolean;
+  canCheckOutResident: boolean;
+  canDeleteResident: boolean;
 }
 
 export interface SearchableStudent {
   name?: string;
+  gender?: string | null;
   email?: string;
-  phone?: string;
+  phone?: string | null;
+  emergency_contact_phone?: string | null;
   room_number?: string;
+  room_id?: number;
   course?: string;
   id_proof_type?: string;
   id_proof_number?: string;
   address?: string;
   planned_vacate_date?: string | null;
+  payment_status?: string;
 }
 
 export interface StudentsMuiTableProps<T> {
   columns: ColumnDef<T, unknown>[];
   data: T[];
   getRowId: (row: T) => string | number;
+  onRowClick?: (row: T) => void;
 }

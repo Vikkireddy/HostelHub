@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Box } from "@mui/material";
 import { toast } from "sonner";
 import { useAuthStore } from "@/lib/AuthStore";
+import { hasDashboardPermission } from "@/lib/dashboardPermissionClient";
 import { fetchWithHostel } from "@/lib/ApiClient";
 import { useSubscriptionStore } from "@/lib/SubscriptionStore";
 import { t } from "@/lib/i18n";
@@ -27,7 +28,9 @@ function scrollToPlans(): void {
 
 export default function SubscriptionPage() {
   const router = useRouter();
-  const hostelId = useAuthStore((s) => s.user?.hostelId ?? null);
+  const user = useAuthStore((s) => s.user);
+  const hostelId = user?.hostelId ?? null;
+  const canSubscriptionEdit = hasDashboardPermission(user, "subscription", "edit");
   const { setStatus } = useSubscriptionStore();
   const [activating, setActivating] = useState<string | null>(null);
   const [startingTrial, setStartingTrial] = useState(false);
@@ -71,7 +74,7 @@ export default function SubscriptionPage() {
   }, [subscriptionStatus, setStatus]);
 
   const startFreeTrial = async () => {
-    if (!hostelId) return;
+    if (!hostelId || !canSubscriptionEdit) return;
     try {
       setStartingTrial(true);
       const res = await fetchWithHostel("/api/subscription/start-trial", hostelId, {
@@ -109,7 +112,7 @@ export default function SubscriptionPage() {
 
   const openRazorpayCheckout = useCallback(
     async (planId: string) => {
-      if (!hostelId) return;
+      if (!hostelId || !canSubscriptionEdit) return;
       setActivating(planId);
       const user = useAuthStore.getState().user;
       await startRazorpayCheckout(planId, hostelId, {
@@ -151,7 +154,7 @@ export default function SubscriptionPage() {
         },
       });
     },
-    [hostelId, router, setStatus]
+    [hostelId, router, setStatus, canSubscriptionEdit]
   );
 
   const formatExpiryDate = (iso: string | null) => {
@@ -183,6 +186,7 @@ export default function SubscriptionPage() {
           plans={SUBSCRIPTION_PLANS}
           activating={activating}
           onCheckout={openRazorpayCheckout}
+          canPurchase={canSubscriptionEdit}
         />
 
         <SubscriptionStatusCards
@@ -202,6 +206,7 @@ export default function SubscriptionPage() {
           startingTrial={startingTrial}
           onStartTrial={startFreeTrial}
           onComparePlans={scrollToPlans}
+          canStartTrial={canSubscriptionEdit}
         />
       </Box>
     </Box>

@@ -5,13 +5,18 @@ import { updateOverduePayments, ensureBillsForStudents } from "@/lib/PaymentUtil
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
 import { getRemainingStudentSlots } from "@/lib/subscription/CheckFeature";
 import { ensurePlannedVacateDateColumn } from "@/lib/ensurePlannedVacateDateColumn";
+import { ensureStudentGenderColumn } from "@/lib/ensureGenderColumns";
+import { ensureStudentOptionalPhoneAndEmergency } from "@/lib/ensureStudentContactColumns";
 import {
   validateIdProof,
   normalizeIdProof,
   validatePhone,
+  validateOptionalPhone,
   normalizePhone,
+  normalizeGenderValue,
 } from "@/app/dashboard/students/students.constants";
 import type { StudentCsvRow } from "@/app/dashboard/students/studentCsv.utils";
+import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 const MAX_ROWS = 200;
@@ -39,6 +44,9 @@ export async function POST(request: NextRequest) {
   try {
     const subErr = await requireSubscription(request);
     if (subErr) return subErr;
+
+    const denied = await assertDashboardPermission(request, "residents", "add");
+    if (denied) return denied;
 
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
@@ -71,6 +79,8 @@ export async function POST(request: NextRequest) {
     }
 
     await ensurePlannedVacateDateColumn();
+    await ensureStudentGenderColumn();
+    await ensureStudentOptionalPhoneAndEmergency();
 
     const [roomRows] = await pool.execute(
       `SELECT r.id, r.number, r.capacity, r.status,
@@ -127,6 +137,8 @@ export async function POST(request: NextRequest) {
       const idNumRaw = (row.id_proof_number ?? "").trim();
       const address = (row.address ?? "").trim();
       const plannedRaw = (row.planned_vacate_date ?? "").trim();
+      const genderRaw = (row.gender ?? "").trim();
+      const emergRaw = (row.emergency_contact_phone ?? "").trim();
 
       const missing: string[] = [];
       if (!name) missing.push("name");
@@ -143,12 +155,33 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
+      let genderForDb: string | null = null;
+      if (genderRaw) {
+        const g = normalizeGenderValue(genderRaw);
+        if (!g) {
+          failures.push({
+            line,
+            message: `Invalid gender "${genderRaw}". Use Male, Female, or Other.`,
+          });
+          continue;
+        }
+        genderForDb = g;
+      }
+
       const phoneErr = validatePhone(phoneRaw);
       if (phoneErr) {
         failures.push({ line, message: phoneErr });
         continue;
       }
-      const phone = normalizePhone(phoneRaw);
+      const phoneForDb = normalizePhone(phoneRaw);
+
+      const emergErr = validateOptionalPhone(emergRaw);
+      if (emergErr) {
+        failures.push({ line, message: emergErr });
+        continue;
+      }
+      const emergDigits = normalizePhone(emergRaw);
+      const emergencyForDb = emergDigits.length === 10 ? emergDigits : null;
 
       const idProofType = matchIdProofType(idTypeRaw);
       if (!idProofType) {
@@ -190,13 +223,15 @@ export async function POST(request: NextRequest) {
       try {
         try {
           await pool.execute(
-            `INSERT INTO students (hostel_id, name, email, phone, room_id, course, join_date, planned_vacate_date, id_proof_type, id_proof_number, address, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'present')`,
+            `INSERT INTO students (hostel_id, name, gender, email, phone, emergency_contact_phone, room_id, course, join_date, planned_vacate_date, id_proof_type, id_proof_number, address, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'present')`,
             [
               hostelId,
               name,
+              genderForDb,
               email || null,
-              phone,
+              phoneForDb,
+              emergencyForDb,
               roomId,
               course || null,
               joinDate || null,
@@ -210,13 +245,15 @@ export async function POST(request: NextRequest) {
           const code = (insertErr as { code?: string }).code;
           if (code === "ER_BAD_FIELD_ERROR") {
             await pool.execute(
-              `INSERT INTO students (hostel_id, name, email, phone, room_id, course, join_date, status)
-               VALUES (?, ?, ?, ?, ?, ?, ?, 'present')`,
+              `INSERT INTO students (hostel_id, name, gender, email, phone, emergency_contact_phone, room_id, course, join_date, status)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'present')`,
               [
                 hostelId,
                 name,
+                genderForDb,
                 email || null,
-                phone,
+                phoneForDb,
+                emergencyForDb,
                 roomId,
                 course || null,
                 joinDate || null,

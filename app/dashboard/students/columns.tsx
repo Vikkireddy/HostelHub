@@ -4,26 +4,35 @@ import { useState } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Box } from "@/components/ui/box";
-import { LogOut, Pencil, Trash2, MoreHorizontal } from "lucide-react";
+import { LogOut, Pencil, Trash2, MoreHorizontal, Eye } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { sqlDateOnlyToYmd } from "@/lib/dateOnly";
 import { IconButton, Menu, MenuItem } from "@mui/material";
 import type { InactiveStudent, Student } from "./students.types";
+import { suppressStudentTableRowClick } from "./rowClickGuard";
 
 function ActionsMenu({
   student,
+  onViewDetails,
   onEdit,
   onCheckOut,
   onDelete,
   hasPendingDues,
   deletable,
+  canEdit,
+  canCheckOut,
+  canDeletePerm,
 }: {
   student: Student;
+  onViewDetails?: (s: Student) => void;
   onEdit: (s: Student) => void;
   onCheckOut: (s: Student) => void;
   onDelete: (s: Student) => void;
   hasPendingDues: boolean;
   deletable: boolean;
+  canEdit: boolean;
+  canCheckOut: boolean;
+  canDeletePerm: boolean;
 }) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -36,16 +45,25 @@ function ActionsMenu({
   const handleClose = () => setAnchorEl(null);
 
   const handleEdit = () => {
+    suppressStudentTableRowClick();
     onEdit(student);
     handleClose();
   };
 
+  const handleViewDetails = () => {
+    suppressStudentTableRowClick();
+    onViewDetails?.(student);
+    handleClose();
+  };
+
   const handleCheckOut = () => {
+    suppressStudentTableRowClick();
     if (!hasPendingDues) onCheckOut(student);
     handleClose();
   };
 
   const handleDelete = () => {
+    suppressStudentTableRowClick();
     if (deletable) onDelete(student);
     handleClose();
   };
@@ -63,28 +81,54 @@ function ActionsMenu({
       <Menu
         anchorEl={anchorEl}
         open={open}
-        onClose={handleClose}
+        onClose={() => {
+          suppressStudentTableRowClick();
+          handleClose();
+        }}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <MenuItem onClick={handleEdit} sx={{ gap: 1 }}>
+        {onViewDetails && (
+          <MenuItem onClick={handleViewDetails} sx={{ gap: 1 }}>
+            <Eye className="h-4 w-4" />
+            {t("RESIDENT_DETAILS_VIEW")}
+          </MenuItem>
+        )}
+        <MenuItem
+          onClick={handleEdit}
+          disabled={!canEdit}
+          sx={{ gap: 1 }}
+          title={!canEdit ? "You don't have permission to edit residents" : undefined}
+        >
           <Pencil className="h-4 w-4" />
           Edit
         </MenuItem>
         <MenuItem
           onClick={handleCheckOut}
-          disabled={hasPendingDues}
+          disabled={hasPendingDues || !canCheckOut}
           sx={{ gap: 1 }}
-          title={hasPendingDues ? t("CHECKOUT_DISABLED_DUES") : undefined}
+          title={
+            !canCheckOut
+              ? "You don't have permission to check out residents"
+              : hasPendingDues
+                ? t("CHECKOUT_DISABLED_DUES")
+                : undefined
+          }
         >
           <LogOut className="h-4 w-4" />
           {t("CHECK_OUT")}
         </MenuItem>
         <MenuItem
           onClick={handleDelete}
-          disabled={!deletable}
+          disabled={!deletable || !canDeletePerm}
           sx={{ gap: 1 }}
-          title={!deletable ? "Cannot delete resident with payment history" : undefined}
+          title={
+            !canDeletePerm
+              ? "You don't have permission to delete residents"
+              : !deletable
+                ? "Cannot delete resident with payment history"
+                : undefined
+          }
         >
           <Trash2 className="h-4 w-4" />
           Delete
@@ -98,7 +142,9 @@ export const getStudentColumns = (
   onCheckOut: (student: Student) => void,
   onEdit: (student: Student) => void,
   onDelete: (student: Student) => void,
-  canDelete: (student: Student) => boolean
+  canDelete: (student: Student) => boolean,
+  onViewDetails: ((student: Student) => void) | undefined,
+  caps: { canEdit: boolean; canCheckOut: boolean; canDelete: boolean }
 ): ColumnDef<Student>[] => [
   {
     accessorKey: "name",
@@ -115,8 +161,25 @@ export const getStudentColumns = (
       </Box>
     ),
   },
+  {
+    accessorKey: "gender",
+    header: "Gender",
+    id: "gender",
+    cell: ({ row }) => row.original.gender || "-",
+  },
   { accessorKey: "email", header: "Email", id: "email", cell: ({ row }) => row.original.email || "-" },
-  { accessorKey: "phone", header: "Phone", id: "phone" },
+  {
+    accessorKey: "phone",
+    header: "Phone",
+    id: "phone",
+    cell: ({ row }) => row.original.phone || "-",
+  },
+  {
+    accessorKey: "emergency_contact_phone",
+    header: "Emergency",
+    id: "emergency_contact_phone",
+    cell: ({ row }) => row.original.emergency_contact_phone || "-",
+  },
   { accessorKey: "room_number", header: "Room", id: "room_number", cell: ({ row }) => row.original.room_number || "-" },
   { accessorKey: "course", header: "Course", id: "course", cell: ({ row }) => row.original.course || "-" },
   { accessorKey: "id_proof_type", header: "ID Proof", id: "id_proof_type", cell: ({ row }) => row.original.id_proof_type || "-" },
@@ -149,11 +212,15 @@ export const getStudentColumns = (
       return (
         <ActionsMenu
           student={row.original}
+          onViewDetails={onViewDetails}
           onEdit={onEdit}
           onCheckOut={onCheckOut}
           onDelete={onDelete}
           hasPendingDues={hasPendingDues}
           deletable={deletable}
+          canEdit={caps.canEdit}
+          canCheckOut={caps.canCheckOut}
+          canDeletePerm={caps.canDelete}
         />
       );
     },
@@ -176,8 +243,29 @@ export const getInactiveStudentColumns = (): ColumnDef<InactiveStudent>[] => [
       </Box>
     ),
   },
+  {
+    accessorKey: "gender",
+    header: "Gender",
+    id: "gender",
+    cell: ({ row }) => (
+      <span className="text-slate-600">{row.original.gender || "-"}</span>
+    ),
+  },
   { accessorKey: "email", header: "Email", id: "email", cell: ({ row }) => <span className="text-slate-600">{row.original.email || "-"}</span> },
-  { accessorKey: "phone", header: "Phone", id: "phone", cell: ({ row }) => <span className="text-slate-600">{row.original.phone}</span> },
+  {
+    accessorKey: "phone",
+    header: "Phone",
+    id: "phone",
+    cell: ({ row }) => <span className="text-slate-600">{row.original.phone || "-"}</span>,
+  },
+  {
+    accessorKey: "emergency_contact_phone",
+    header: "Emergency",
+    id: "emergency_contact_phone",
+    cell: ({ row }) => (
+      <span className="text-slate-600">{row.original.emergency_contact_phone || "-"}</span>
+    ),
+  },
   { accessorKey: "room_number", header: "Room", id: "room_number", cell: ({ row }) => <span className="text-slate-600">{row.original.room_number || "-"}</span> },
   { accessorKey: "course", header: "Course", id: "course", cell: ({ row }) => <span className="text-slate-600">{row.original.course || "-"}</span> },
   { accessorKey: "id_proof_type", header: "ID Proof", id: "id_proof_type", cell: ({ row }) => <span className="text-slate-600">{row.original.id_proof_type || "-"}</span> },

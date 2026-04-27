@@ -3,6 +3,7 @@ import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { getPendingDuesSql } from "@/lib/PaymentUtils";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function GET(
@@ -12,6 +13,9 @@ export async function GET(
   try {
     const subErr = await requireSubscription(request);
     if (subErr) return subErr;
+
+    const denied = await assertDashboardPermission(request, "residents", "view");
+    if (denied) return denied;
 
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {

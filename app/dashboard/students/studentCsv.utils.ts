@@ -1,7 +1,9 @@
 export type StudentCsvRow = {
   name: string;
+  gender: string;
   email: string;
   phone: string;
+  emergency_contact_phone: string;
   room_number: string;
   course: string;
   join_date: string;
@@ -66,9 +68,14 @@ const normalizeHeaderKey = (h: string) =>
 /** Map CSV header variants to canonical field names. */
 const HEADER_ALIASES: Record<string, keyof StudentCsvRow> = {
   name: "name",
+  gender: "gender",
+  sex: "gender",
   email: "email",
   phone: "phone",
   mobile: "phone",
+  emergency_contact_phone: "emergency_contact_phone",
+  emergency_phone: "emergency_contact_phone",
+  emergency: "emergency_contact_phone",
   room: "room_number",
   room_number: "room_number",
   room_no: "room_number",
@@ -89,8 +96,10 @@ const HEADER_ALIASES: Record<string, keyof StudentCsvRow> = {
 
 const emptyRow = (): StudentCsvRow => ({
   name: "",
+  gender: "",
   email: "",
   phone: "",
+  emergency_contact_phone: "",
   room_number: "",
   course: "",
   join_date: "",
@@ -149,8 +158,10 @@ export const csvTextToStudentRows = (
     });
     const emptyLine =
       !o.name &&
+      !o.gender &&
       !o.email &&
       !o.phone &&
+      !o.emergency_contact_phone &&
       !o.room_number &&
       !o.course &&
       !o.join_date &&

@@ -1,25 +1,21 @@
 "use client";
 
-import { useMemo } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { RequiredLabel } from "@/components/ui/RequiredLabel";
 import { Dropdown } from "@/components/ui/dropdown";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
+import { Radio } from "@/components/ui/radio";
+import { ModalWithHeaderFooter } from "@/components/ui/ModalWithHeaderFooter";
 import type {
   RecordPaymentFormProps,
   StudentWithDuesProps,
 } from "@/components/dashboard/payments/payments.types";
 import { MONTHS } from "./payments.constants";
+import { cn } from "@/lib/utils";
+
+const RECORD_PAYMENT_FORM_ID = "record-payment-form";
 
 interface RecordPaymentDialogProps {
   open: boolean;
@@ -29,7 +25,8 @@ interface RecordPaymentDialogProps {
   onSubmit: (e: React.FormEvent) => void;
   studentsWithDues: StudentWithDuesProps[];
   isPending: boolean;
-  error?: Error | null;
+  submitError?: string | null;
+  canSubmit?: boolean;
 }
 
 export function RecordPaymentDialog({
@@ -40,14 +37,10 @@ export function RecordPaymentDialog({
   onSubmit,
   studentsWithDues,
   isPending,
-  error,
+  submitError,
+  canSubmit = true,
 }: RecordPaymentDialogProps) {
-  const selectedStudent = useMemo(
-    () => studentsWithDues.find((s) => String(s.id) === form.student_id),
-    [studentsWithDues, form.student_id]
-  );
-
-  const isDisabled = isPending || studentsWithDues.length === 0;
+  const isDisabled = isPending || studentsWithDues.length === 0 || !canSubmit;
 
   const handleFieldChange = (field: keyof RecordPaymentFormProps, value: string) => {
     onFormChange({ ...form, [field]: value });
@@ -60,30 +53,21 @@ export function RecordPaymentDialog({
       ...form,
       student_id: value,
       amount: student?.room_rent ? String(student.room_rent) : "",
+      payment_reference: "",
     });
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Record Payment</DialogTitle>
-          <DialogDescription>
-            Record a rent payment for a resident. Select resident, amount, and billing period.
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={onSubmit} className="space-y-4">
-          {error && <Typography variant="error">{error.message}</Typography>}
-
-          {studentsWithDues.length === 0 && (
-            <Typography variant="caption" className="block">
-              All residents have cleared their dues. No payment to record.
-            </Typography>
-          )}
+    <ModalWithHeaderFooter
+      open={open}
+      onOpenChange={onOpenChange}
+      maxWidth="lg"
+      headerTitle="Record Payment"
+      children={
+        <form id={RECORD_PAYMENT_FORM_ID} onSubmit={onSubmit} className="space-y-4">
+          {submitError && <Typography variant="error">{submitError}</Typography>}
 
           <div className="space-y-4">
-            {/* Resident select (form field remains student_id) */}
             <Box className="space-y-2">
               <RequiredLabel htmlFor="record-student">Resident</RequiredLabel>
               <Dropdown
@@ -99,22 +83,18 @@ export function RecordPaymentDialog({
               />
             </Box>
 
-            {/* Amount */}
             <Box className="space-y-2">
               <RequiredLabel htmlFor="record-amount">Amount (₹)</RequiredLabel>
               <Input
                 id="record-amount"
                 min={1}
                 value={form.amount}
-                onChange={(e) =>
-                  handleFieldChange("amount", e.target.value)
-                }
+                onChange={(e) => handleFieldChange("amount", e.target.value)}
                 placeholder="e.g. 5000"
                 required
               />
             </Box>
 
-            {/* Month */}
             <Box className="space-y-2">
               <RequiredLabel htmlFor="record-month">Month</RequiredLabel>
               <Dropdown
@@ -126,7 +106,6 @@ export function RecordPaymentDialog({
               />
             </Box>
 
-            {/* Year */}
             <Box className="space-y-2">
               <RequiredLabel htmlFor="record-year">Year</RequiredLabel>
               <Input
@@ -134,29 +113,93 @@ export function RecordPaymentDialog({
                 min={2020}
                 max={2030}
                 value={form.year}
-                onChange={(e) =>
-                  handleFieldChange("year", e.target.value)
-                }
+                onChange={(e) => handleFieldChange("year", e.target.value)}
                 placeholder="e.g. 2025"
                 required
               />
             </Box>
-          </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isDisabled}>
-              {isPending ? "Saving..." : "Record Payment"}
-            </Button>
-          </DialogFooter>
+            <Box className="space-y-2">
+              <RequiredLabel>Mode of Payment</RequiredLabel>
+              <div className="flex flex-wrap gap-6 pt-1" role="radiogroup" aria-label="Mode of payment">
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <Radio
+                    name="record-payment-mode"
+                    value="cash"
+                    checked={form.payment_mode === "cash"}
+                    onChange={() =>
+                      onFormChange({
+                        ...form,
+                        payment_mode: "cash",
+                        payment_reference: "",
+                      })
+                    }
+                  />
+                  Cash
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <Radio
+                    name="record-payment-mode"
+                    value="online"
+                    checked={form.payment_mode === "online"}
+                    onChange={() =>
+                      onFormChange({
+                        ...form,
+                        payment_mode: "online",
+                        payment_reference: "",
+                      })
+                    }
+                  />
+                  Online
+                </label>
+              </div>
+            </Box>
+
+            {form.payment_mode === "cash" ? (
+              <Box className="space-y-2">
+                <RequiredLabel htmlFor="record-bill">Bill Number</RequiredLabel>
+                <Input
+                  id="record-bill"
+                  value={form.payment_reference}
+                  onChange={(e) => handleFieldChange("payment_reference", e.target.value)}
+                  placeholder="Enter bill number"
+                  autoComplete="off"
+                  className={cn(submitError && "border-red-500 focus-visible:ring-red-500")}
+                  required
+                />
+              </Box>
+            ) : (
+              <Box className="space-y-2">
+                <RequiredLabel htmlFor="record-utr">UTR Number</RequiredLabel>
+                <Input
+                  id="record-utr"
+                  value={form.payment_reference}
+                  onChange={(e) => handleFieldChange("payment_reference", e.target.value)}
+                  placeholder="Enter UTR number"
+                  autoComplete="off"
+                  className={cn(submitError && "border-red-500 focus-visible:ring-red-500")}
+                  required
+                />
+              </Box>
+            )}
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      }
+      footerComponent={
+        <>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form={RECORD_PAYMENT_FORM_ID}
+            disabled={isDisabled}
+            title={!canSubmit ? "You don't have permission to record payments" : undefined}
+          >
+            {isPending ? "Saving..." : "Record Payment"}
+          </Button>
+        </>
+      }
+    />
   );
 }

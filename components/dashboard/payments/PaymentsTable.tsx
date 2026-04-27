@@ -25,6 +25,8 @@ export function PaymentsTable({
   onDelete,
   isMarkingPaid,
   markingPaidStudentId,
+  canMarkPaid = true,
+  canOpenPaymentHistory = true,
 }: PaymentsTableProps) {
   const { page, rowsPerPage, handleChangePage, handleChangeRowsPerPage, paginate } =
     useTablePagination(10);
@@ -67,6 +69,8 @@ export function PaymentsTable({
                 onDelete={onDelete}
                 isMarkingPaid={isMarkingPaid}
                 markingPaidStudentId={markingPaidStudentId}
+                canMarkPaid={canMarkPaid}
+                canOpenPaymentHistory={canOpenPaymentHistory}
               />
             ))}
           </TableBody>

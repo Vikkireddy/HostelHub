@@ -8,14 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ModalWithHeaderFooter } from "@/components/ui/ModalWithHeaderFooter";
 import { Typography } from "@/components/ui/typography";
 import { Box } from "@/components/ui/box";
 import { cn } from "@/lib/utils";
@@ -303,15 +296,17 @@ export default function ContactPage() {
         </Typography>
       </Box>
 
-      <Dialog open={channelPickerOpen} onOpenChange={setChannelPickerOpen}>
-        <DialogContent className="sm:max-w-md" closeOnInteractOutside>
-          <DialogHeader>
-            <DialogTitle>How would you like to send?</DialogTitle>
-            <DialogDescription>
-              Your name, email, and message will be included. Pick the channel you use most—we get both on our side.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex-col gap-2 sm:flex-col">
+      <ModalWithHeaderFooter
+        open={channelPickerOpen}
+        onOpenChange={setChannelPickerOpen}
+        maxWidth="md"
+        className="sm:max-w-md"
+        isBackdropCloseEnabled
+        headerTitle="How would you like to send?"
+        headerDescription="Your name, email, and message will be included. Pick the channel you use most—we get both on our side."
+        footerClassName="flex flex-col gap-2 sm:flex-col sm:space-x-0"
+        footerComponent={
+          <>
             <Button
               type="button"
               variant="outline"
@@ -336,9 +331,9 @@ export default function ContactPage() {
               <MessageCircle className="h-4 w-4" />
               Send via WhatsApp
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      />
     </Box>
   );
 }

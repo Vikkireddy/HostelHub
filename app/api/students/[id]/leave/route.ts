@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
+import { ensureStudentsLeftGenderColumn } from "@/lib/ensureGenderColumns";
+import { ensureStudentOptionalPhoneAndEmergency } from "@/lib/ensureStudentContactColumns";
+import { ensureStudentsLeftResidentTypeColumns } from "@/lib/ensureResidentTypeColumns";
+import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 const ENSURE_STUDENTS_LEFT_TABLE = `
@@ -10,8 +14,10 @@ const ENSURE_STUDENTS_LEFT_TABLE = `
     original_student_id INT NOT NULL,
     hostel_id INT NULL,
     name VARCHAR(255) NOT NULL,
+    gender VARCHAR(20) NULL,
     email VARCHAR(255),
     phone VARCHAR(20) NOT NULL,
+    emergency_contact_phone VARCHAR(20) NULL,
     room_number VARCHAR(20),
     course VARCHAR(255),
     join_date DATE,
@@ -30,6 +36,9 @@ export async function PATCH(
   try {
     const subErr = await requireSubscription(request);
     if (subErr) return subErr;
+
+    const denied = await assertDashboardPermission(request, "residents", "edit");
+    if (denied) return denied;
 
     const hostelId = getHostelIdFromRequest(request);
     if (hostelId == null) {
@@ -60,18 +69,40 @@ export async function PATCH(
     const leftDate = new Date().toISOString().slice(0, 10);
 
     await pool.execute(ENSURE_STUDENTS_LEFT_TABLE);
+    await ensureStudentsLeftGenderColumn();
+    await ensureStudentOptionalPhoneAndEmergency();
+    await ensureStudentsLeftResidentTypeColumns();
+
+    const residentType =
+      student.resident_type != null && String(student.resident_type).trim() !== ""
+        ? String(student.resident_type).trim()
+        : "student";
+    const detailsVal = student.resident_type_details;
+    const detailsJson =
+      detailsVal == null
+        ? null
+        : typeof detailsVal === "string"
+          ? detailsVal
+          : JSON.stringify(detailsVal);
 
     await pool.execute(
       `INSERT INTO students_left (
-        original_student_id, hostel_id, name, email, phone, room_number, course,
-        join_date, left_date, id_proof_type, id_proof_number, address
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        original_student_id, hostel_id, name, gender, email, phone, emergency_contact_phone, room_number, course,
+        join_date, left_date, id_proof_type, id_proof_number, address, resident_type, resident_type_details
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         studentId,
         hostelId,
         student.name,
+        student.gender != null && String(student.gender).trim() !== ""
+          ? String(student.gender).trim()
+          : null,
         student.email ?? null,
         student.phone,
+        student.emergency_contact_phone != null &&
+        String(student.emergency_contact_phone).trim() !== ""
+          ? String(student.emergency_contact_phone).trim()
+          : null,
         student.room_number ?? null,
         student.course ?? null,
         student.join_date ?? null,
@@ -79,6 +110,8 @@ export async function PATCH(
         student.id_proof_type ?? null,
         student.id_proof_number ?? null,
         student.address ?? null,
+        residentType,
+        detailsJson,
       ]
     );
 
