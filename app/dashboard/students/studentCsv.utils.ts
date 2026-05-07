@@ -5,6 +5,7 @@ export type StudentCsvRow = {
   phone: string;
   emergency_contact_phone: string;
   room_number: string;
+  monthly_rent: string;
   course: string;
   join_date: string;
   id_proof_type: string;
@@ -80,6 +81,9 @@ const HEADER_ALIASES: Record<string, keyof StudentCsvRow> = {
   room_number: "room_number",
   room_no: "room_number",
   roomnumber: "room_number",
+  monthly_rent: "monthly_rent",
+  rent: "monthly_rent",
+  resident_rent: "monthly_rent",
   course: "course",
   join_date: "join_date",
   joindate: "join_date",
@@ -101,6 +105,7 @@ const emptyRow = (): StudentCsvRow => ({
   phone: "",
   emergency_contact_phone: "",
   room_number: "",
+  monthly_rent: "",
   course: "",
   join_date: "",
   id_proof_type: "",
@@ -134,6 +139,7 @@ export const csvTextToStudentRows = (
     "email",
     "phone",
     "room_number",
+    "monthly_rent",
     "course",
     "join_date",
     "id_proof_type",
@@ -163,6 +169,7 @@ export const csvTextToStudentRows = (
       !o.phone &&
       !o.emergency_contact_phone &&
       !o.room_number &&
+      !o.monthly_rent &&
       !o.course &&
       !o.join_date &&
       !o.id_proof_type &&

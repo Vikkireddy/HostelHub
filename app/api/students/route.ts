@@ -13,6 +13,8 @@ import {
   validateOptionalPhone,
 } from "@/app/dashboard/students/students.constants";
 import { ensureStudentOptionalPhoneAndEmergency } from "@/lib/ensureStudentContactColumns";
+import { ensureStudentSecurityDepositColumns } from "@/lib/ensureStudentSecurityDepositColumns";
+import { ensureStudentMonthlyRentColumn } from "@/lib/ensureStudentMonthlyRentColumn";
 import { formatSqlDateOnlyForJson } from "@/lib/dateOnly";
 import { ensureStudentsResidentTypeColumns } from "@/lib/ensureResidentTypeColumns";
 import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
@@ -38,11 +40,13 @@ export async function GET(request: NextRequest) {
     }
 
     await ensureStudentsResidentTypeColumns();
+    await ensureStudentSecurityDepositColumns();
+    await ensureStudentMonthlyRentColumn();
     await ensureBillsForStudents(hostelId);
     await updateOverduePayments(hostelId);
     const { sumSelect, unpaidWhere } = await getPendingDuesSql();
     const [rows] = await pool.execute(
-      `SELECT s.*, r.number as room_number, r.rent as room_rent,
+      `SELECT s.*, r.number as room_number,
         COALESCE((SELECT ${sumSelect} FROM payments p 
           WHERE p.student_id = s.id AND ${unpaidWhere}), 0) as pending_dues,
         COALESCE((SELECT COUNT(*) FROM payments p 
@@ -60,6 +64,7 @@ export async function GET(request: NextRequest) {
       const payment_status =
         pendingDues === 0 ? "No Due Amount" : overdueCount > 0 ? "Overdue" : "Pending";
       const kind = normalizeResidentKind(s.resident_type);
+      const dep = s.security_deposit_amount;
       return {
         ...s,
         join_date: formatSqlDateOnlyForJson(s.join_date),
@@ -68,6 +73,8 @@ export async function GET(request: NextRequest) {
         payment_status,
         resident_type: kind,
         resident_type_details: mergeDetailsForKind(kind, parseJsonDetails(s.resident_type_details)),
+        security_deposit_amount:
+          dep == null || dep === "" ? null : Math.round(Number(dep) * 100) / 100,
       };
     });
     return NextResponse.json(students);
@@ -109,6 +116,8 @@ export async function POST(request: NextRequest) {
       address,
       resident_type,
       resident_type_details,
+      security_deposit_amount,
+      monthly_rent,
     } = body;
     const residentKind = normalizeResidentKind(resident_type);
     const residentDetailsJson = JSON.stringify(
@@ -122,7 +131,6 @@ export async function POST(request: NextRequest) {
     const required = [
       ["name", name],
       ["gender", gender],
-      ["email", email],
       ["phone", phone],
       ["room_id", room_id],
       ["course", course],
@@ -130,6 +138,7 @@ export async function POST(request: NextRequest) {
       ["id_proof_type", id_proof_type],
       ["id_proof_number", id_proof_number],
       ["address", address],
+      ["monthly_rent", monthly_rent],
     ] as const;
     const missing = required.filter(([, v]) => v == null || String(v).trim() === "");
     if (missing.length > 0) {
@@ -166,6 +175,60 @@ export async function POST(request: NextRequest) {
     await ensureStudentGenderColumn();
     await ensureStudentOptionalPhoneAndEmergency();
     await ensureStudentsResidentTypeColumns();
+    await ensureStudentSecurityDepositColumns();
+    await ensureStudentMonthlyRentColumn();
+    let monthlyRentForDb: number | null = null;
+    if (monthly_rent !== undefined && monthly_rent !== null && String(monthly_rent).trim() !== "") {
+      const raw =
+        typeof monthly_rent === "number"
+          ? monthly_rent
+          : Number(String(monthly_rent).replace(/,/g, "").trim());
+      if (!Number.isFinite(raw) || raw <= 0) {
+        return NextResponse.json(
+          { error: "Monthly rent must be a valid amount greater than 0." },
+          { status: 400 }
+        );
+      }
+      if (raw > 99999999.99) {
+        return NextResponse.json(
+          { error: "Monthly rent amount is too large." },
+          { status: 400 }
+        );
+      }
+      monthlyRentForDb = Math.round(raw * 100) / 100;
+    }
+    if (monthlyRentForDb == null) {
+      return NextResponse.json(
+        { error: "Monthly rent is required and must be greater than 0." },
+        { status: 400 }
+      );
+    }
+
+
+    let depositForDb: number | null = null;
+    if (
+      security_deposit_amount !== undefined &&
+      security_deposit_amount !== null &&
+      String(security_deposit_amount).trim() !== ""
+    ) {
+      const raw =
+        typeof security_deposit_amount === "number"
+          ? security_deposit_amount
+          : Number(String(security_deposit_amount).replace(/,/g, "").trim());
+      if (!Number.isFinite(raw) || raw < 0) {
+        return NextResponse.json(
+          { error: "Advance / security deposit must be a valid non-negative amount." },
+          { status: 400 }
+        );
+      }
+      if (raw > 99999999.99) {
+        return NextResponse.json(
+          { error: "Advance / security deposit amount is too large." },
+          { status: 400 }
+        );
+      }
+      depositForDb = Math.round(raw * 100) / 100;
+    }
 
     const limitErr = await checkStudentLimit(hostelId);
     if (limitErr) {
@@ -199,8 +262,8 @@ export async function POST(request: NextRequest) {
 
     try {
       const [result] = await pool.execute(
-        `INSERT INTO students (hostel_id, name, gender, email, phone, emergency_contact_phone, room_id, course, join_date, planned_vacate_date, id_proof_type, id_proof_number, address, resident_type, resident_type_details, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'present')`,
+        `INSERT INTO students (hostel_id, name, gender, email, phone, emergency_contact_phone, room_id, course, monthly_rent, join_date, planned_vacate_date, id_proof_type, id_proof_number, address, security_deposit_amount, resident_type, resident_type_details, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'present')`,
         [
           hostelId,
           name,
@@ -210,11 +273,13 @@ export async function POST(request: NextRequest) {
           emergencyForDb,
           room_id ? Number(room_id) : null,
           course || null,
+          monthlyRentForDb,
           join_date || null,
           plannedVacateYmd,
           id_proof_type || null,
           id_proof_number || null,
           address || null,
+          depositForDb,
           residentKind,
           residentDetailsJson,
         ]
@@ -224,8 +289,8 @@ export async function POST(request: NextRequest) {
       const err = insertError as { code?: string };
       if (err.code === "ER_BAD_FIELD_ERROR") {
         const [result] = await pool.execute(
-          `INSERT INTO students (hostel_id, name, gender, email, phone, emergency_contact_phone, room_id, course, join_date, status)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'present')`,
+          `INSERT INTO students (hostel_id, name, gender, email, phone, emergency_contact_phone, room_id, course, monthly_rent, join_date, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'present')`,
           [
             hostelId,
             name,
@@ -235,6 +300,7 @@ export async function POST(request: NextRequest) {
             emergencyForDb,
             room_id ? Number(room_id) : null,
             course || null,
+            monthlyRentForDb,
             join_date || null,
           ]
         );
@@ -264,8 +330,10 @@ export async function POST(request: NextRequest) {
       emergency_contact_phone: emergencyForDb,
       room_id: room_id ? Number(room_id) : null,
       course: course || null,
+      monthly_rent: monthlyRentForDb,
       join_date: join_date || null,
       planned_vacate_date: plannedVacateYmd,
+      security_deposit_amount: depositForDb,
       status: "present",
     });
   } catch (error) {

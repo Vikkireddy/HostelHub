@@ -120,6 +120,40 @@ export function normalizePhone(value: string): string {
   return value.replace(/\D/g, "").slice(0, 10);
 }
 
+/** Optional money on forms (e.g. security deposit). Empty string → null. */
+export function parseOptionalMoneyInput(
+  raw: string
+): { ok: true; value: number | null } | { ok: false; error: string } {
+  const s = String(raw ?? "").trim();
+  if (!s) return { ok: true, value: null };
+  const n = Number(s.replace(/,/g, ""));
+  if (!Number.isFinite(n) || n < 0) {
+    return { ok: false, error: "Enter a valid amount (0 or greater)." };
+  }
+  if (n > 99999999.99) {
+    return { ok: false, error: "Amount is too large." };
+  }
+  return { ok: true, value: Math.round(n * 100) / 100 };
+}
+
+/** Deduction at checkout: defaults empty to 0; must not exceed maxDeposit. */
+export function parseDepositDeductionInput(
+  raw: string,
+  maxDeposit: number
+): { ok: true; value: number } | { ok: false; error: string } {
+  const s = String(raw ?? "").trim();
+  const n = s === "" ? 0 : Number(s.replace(/,/g, ""));
+  if (!Number.isFinite(n) || n < 0) {
+    return { ok: false, error: "Enter a valid deduction amount." };
+  }
+  const v = Math.round(n * 100) / 100;
+  const max = Math.round(maxDeposit * 100) / 100;
+  if (v - max > 0.001) {
+    return { ok: false, error: "Deduction cannot exceed the total deposit." };
+  }
+  return { ok: true, value: v };
+}
+
 export const initialStudentForm: StudentFormValues = {
   name: "",
   gender: "",
@@ -133,6 +167,8 @@ export const initialStudentForm: StudentFormValues = {
   id_proof_type: "",
   id_proof_number: "",
   address: "",
+  security_deposit_amount: "",
+  monthly_rent: "",
   resident_type: "student",
   resident_type_details: emptyDetailsForKind("student"),
 };

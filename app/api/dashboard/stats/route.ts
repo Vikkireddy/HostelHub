@@ -50,9 +50,8 @@ export async function GET(request: NextRequest) {
           { month: "Feb", income: 0, expenses: 0, profit: 0 },
         ],
         roomDistribution: [
-          { name: "Single", value: 0, color: "var(--primary)" },
-          { name: "Double", value: 0, color: "#f97316" },
-          { name: "Triple", value: 0, color: "#22c55e" },
+          { name: "AC", value: 0, color: "var(--primary)" },
+          { name: "Non-AC", value: 0, color: "#22c55e" },
         ],
         stats: {
           totalStudents: 0,
@@ -228,9 +227,8 @@ export async function GET(request: NextRequest) {
       { month: "Feb", income: 0, expenses: 0, profit: 0 },
     ];
     const EMPTY_ROOM_DIST = [
-      { name: "Single", value: 0, color: "var(--primary)" },
-      { name: "Double", value: 0, color: "#f97316" },
-      { name: "Triple", value: 0, color: "#22c55e" },
+      { name: "AC", value: 0, color: "var(--primary)" },
+      { name: "Non-AC", value: 0, color: "#22c55e" },
     ];
 
     let revenueData: Array<{ month: string; revenue: number }>;
@@ -291,10 +289,10 @@ export async function GET(request: NextRequest) {
 
       roomDistribution = (roomsList as Array<Record<string, unknown>>).reduce(
         (acc: Array<{ name: string; value: number; color: string }>, r) => {
-          const type = String(r.type || "Unknown");
-          const existing = acc.find((x) => x.name === type);
+          const roomCategory = String(r.ac_type || "Non-AC");
+          const existing = acc.find((x) => x.name === roomCategory);
           if (existing) existing.value++;
-          else acc.push({ name: type, value: 1, color: type === "Single" ? "var(--primary)" : type === "Double" ? "#f97316" : "#22c55e" });
+          else acc.push({ name: roomCategory, value: 1, color: roomCategory === "AC" ? "var(--primary)" : "#22c55e" });
           return acc;
         },
         []
@@ -390,9 +388,8 @@ export async function GET(request: NextRequest) {
         { month: "Feb", income: 0, expenses: 0, profit: 0 },
       ],
       roomDistribution: roomDistribution.length ? roomDistribution : [
-        { name: "Single", value: 0, color: "var(--primary)" },
-        { name: "Double", value: 0, color: "#f97316" },
-        { name: "Triple", value: 0, color: "#22c55e" },
+        { name: "AC", value: 0, color: "var(--primary)" },
+        { name: "Non-AC", value: 0, color: "#22c55e" },
       ],
       stats: {
         totalStudents: studentsList.length,

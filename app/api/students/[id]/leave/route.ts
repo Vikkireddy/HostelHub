@@ -5,6 +5,7 @@ import { requireSubscription } from "@/lib/subscription/RequireSubscription";
 import { ensureStudentsLeftGenderColumn } from "@/lib/ensureGenderColumns";
 import { ensureStudentOptionalPhoneAndEmergency } from "@/lib/ensureStudentContactColumns";
 import { ensureStudentsLeftResidentTypeColumns } from "@/lib/ensureResidentTypeColumns";
+import { ensureStudentSecurityDepositColumns } from "@/lib/ensureStudentSecurityDepositColumns";
 import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
@@ -68,10 +69,43 @@ export async function PATCH(
 
     const leftDate = new Date().toISOString().slice(0, 10);
 
+    let securityDepositDeduction = 0;
+    const contentType = request.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      try {
+        const body = (await request.json()) as { security_deposit_deduction?: unknown };
+        const d = body?.security_deposit_deduction;
+        if (d !== undefined && d !== null && String(d).trim() !== "") {
+          securityDepositDeduction =
+            typeof d === "number" ? d : Number(String(d).replace(/,/g, "").trim());
+        }
+      } catch {
+        securityDepositDeduction = 0;
+      }
+    }
+
+    if (!Number.isFinite(securityDepositDeduction) || securityDepositDeduction < 0) {
+      return NextResponse.json(
+        { error: "Deduction / maintenance charges must be a valid non-negative amount." },
+        { status: 400 }
+      );
+    }
+
     await pool.execute(ENSURE_STUDENTS_LEFT_TABLE);
     await ensureStudentsLeftGenderColumn();
     await ensureStudentOptionalPhoneAndEmergency();
     await ensureStudentsLeftResidentTypeColumns();
+    await ensureStudentSecurityDepositColumns();
+
+    const totalDeposit =
+      Math.round(Number(student.security_deposit_amount ?? 0) * 100) / 100;
+    if (securityDepositDeduction - totalDeposit > 0.001) {
+      return NextResponse.json(
+        { error: "Deduction cannot exceed the recorded advance / security deposit." },
+        { status: 400 }
+      );
+    }
+    const refundAmount = Math.round((totalDeposit - securityDepositDeduction) * 100) / 100;
 
     const residentType =
       student.resident_type != null && String(student.resident_type).trim() !== ""
@@ -88,8 +122,9 @@ export async function PATCH(
     await pool.execute(
       `INSERT INTO students_left (
         original_student_id, hostel_id, name, gender, email, phone, emergency_contact_phone, room_number, course,
-        join_date, left_date, id_proof_type, id_proof_number, address, resident_type, resident_type_details
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        join_date, left_date, id_proof_type, id_proof_number, address, resident_type, resident_type_details,
+        security_deposit_amount, security_deposit_deduction, security_deposit_refund
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         studentId,
         hostelId,
@@ -112,6 +147,9 @@ export async function PATCH(
         student.address ?? null,
         residentType,
         detailsJson,
+        totalDeposit,
+        securityDepositDeduction,
+        refundAmount,
       ]
     );
 

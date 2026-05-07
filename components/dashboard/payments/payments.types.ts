@@ -47,7 +47,7 @@ type MonthBreakdownItemProps = {
  type StudentWithDuesProps = {
   id: string | number;
   name: string;
-  room_rent: number;
+  monthly_rent: number;
   pending_dues: number;
 };
 

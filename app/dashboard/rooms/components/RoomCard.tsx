@@ -72,16 +72,13 @@ export function RoomCard({
         <Typography variant="muted">Floor {room.floor}</Typography>
         <Box>
           <Typography className="text-sm">
-            <span className="text-slate-500">Type:</span> {room.type} · {room.ac_type || DEFAULT_AC_TYPE}
+            <span className="text-slate-500">Category:</span> {room.ac_type || DEFAULT_AC_TYPE}
           </Typography>
           <Typography className="text-sm">
             <span className="text-slate-500">Occupancy:</span> {room.occupancy}/{room.capacity}
           </Typography>
         </Box>
         <Progress value={occupancyPercent} variant={progressVariant} className="h-2" />
-        <Typography className="text-sm font-medium">
-          <span className="text-slate-500">Rent:</span> ₹{room.rent.toLocaleString()}/mo
-        </Typography>
       </CardContent>
     </Card>
   );

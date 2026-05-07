@@ -72,7 +72,7 @@ export function StudentsTabs({
                 { value: "all", label: t("ALL_ROOMS") },
                 ...rooms.map((r) => ({
                   value: String(r.id),
-                  label: `${r.number}${r.type ? ` (${r.type})` : ""}`,
+                  label: r.number,
                 })),
               ]}
               placeholder={t("ALL_ROOMS")}

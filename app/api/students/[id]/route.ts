@@ -12,6 +12,8 @@ import {
   validateOptionalPhone,
 } from "@/app/dashboard/students/students.constants";
 import { ensureStudentOptionalPhoneAndEmergency } from "@/lib/ensureStudentContactColumns";
+import { ensureStudentSecurityDepositColumns } from "@/lib/ensureStudentSecurityDepositColumns";
+import { ensureStudentMonthlyRentColumn } from "@/lib/ensureStudentMonthlyRentColumn";
 import { formatSqlDateOnlyForJson } from "@/lib/dateOnly";
 import { ensureStudentsResidentTypeColumns } from "@/lib/ensureResidentTypeColumns";
 import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
@@ -115,6 +117,8 @@ export async function PATCH(
     await ensurePlannedVacateDateColumn();
     await ensureStudentGenderColumn();
     await ensureStudentsResidentTypeColumns();
+    await ensureStudentSecurityDepositColumns();
+    await ensureStudentMonthlyRentColumn();
 
     const body = await request.json();
     const {
@@ -132,6 +136,8 @@ export async function PATCH(
       address,
       resident_type,
       resident_type_details,
+      security_deposit_amount,
+      monthly_rent,
     } = body;
     const plannedVacateYmd =
       planned_vacate_date === null ||
@@ -143,7 +149,6 @@ export async function PATCH(
     const required = [
       ["name", name],
       ["gender", gender],
-      ["email", email],
       ["phone", phone],
       ["room_id", room_id],
       ["course", course],
@@ -151,6 +156,7 @@ export async function PATCH(
       ["id_proof_type", id_proof_type],
       ["id_proof_number", id_proof_number],
       ["address", address],
+      ["monthly_rent", monthly_rent],
     ] as const;
     const missing = required.filter(([, v]) => v == null || String(v).trim() === "");
     if (missing.length > 0) {
@@ -185,6 +191,56 @@ export async function PATCH(
     const emergencyForDb = emergDigits.length === 10 ? emergDigits : null;
 
     await ensureStudentOptionalPhoneAndEmergency();
+
+    let depositForDb: number | null | undefined;
+    if (security_deposit_amount !== undefined) {
+      if (security_deposit_amount === null || String(security_deposit_amount).trim() === "") {
+        depositForDb = null;
+      } else {
+        const raw =
+          typeof security_deposit_amount === "number"
+            ? security_deposit_amount
+            : Number(String(security_deposit_amount).replace(/,/g, "").trim());
+        if (!Number.isFinite(raw) || raw < 0) {
+          return NextResponse.json(
+            { error: "Advance / security deposit must be a valid non-negative amount." },
+            { status: 400 }
+          );
+        }
+        if (raw > 99999999.99) {
+          return NextResponse.json(
+            { error: "Advance / security deposit amount is too large." },
+            { status: 400 }
+          );
+        }
+        depositForDb = Math.round(raw * 100) / 100;
+      }
+    }
+
+    let monthlyRentForDb: number | null | undefined;
+    if (monthly_rent !== undefined) {
+      if (monthly_rent === null || String(monthly_rent).trim() === "") {
+        monthlyRentForDb = null;
+      } else {
+        const raw =
+          typeof monthly_rent === "number"
+            ? monthly_rent
+            : Number(String(monthly_rent).replace(/,/g, "").trim());
+        if (!Number.isFinite(raw) || raw <= 0) {
+          return NextResponse.json(
+            { error: "Monthly rent must be a valid amount greater than 0." },
+            { status: 400 }
+          );
+        }
+        if (raw > 99999999.99) {
+          return NextResponse.json(
+            { error: "Monthly rent amount is too large." },
+            { status: 400 }
+          );
+        }
+        monthlyRentForDb = Math.round(raw * 100) / 100;
+      }
+    }
 
     const [existingRows] = await pool.execute(
       `SELECT s.*, r.number as room_number FROM students s 
@@ -250,11 +306,16 @@ export async function PATCH(
       }
     }
 
+    const depositSql = depositForDb !== undefined ? ", security_deposit_amount = ?" : "";
+    const depositParams = depositForDb !== undefined ? [depositForDb] : [];
+    const monthlyRentSql = monthlyRentForDb !== undefined ? ", monthly_rent = ?" : "";
+    const monthlyRentParams = monthlyRentForDb !== undefined ? [monthlyRentForDb] : [];
+
     await pool.execute(
       `UPDATE students SET 
         name = ?, gender = ?, email = ?, phone = ?, emergency_contact_phone = ?, room_id = ?, course = ?,
         join_date = ?, planned_vacate_date = ?, id_proof_type = ?, id_proof_number = ?, address = ?,
-        resident_type = ?, resident_type_details = ?
+        resident_type = ?, resident_type_details = ?${depositSql}${monthlyRentSql}
        WHERE id = ?`,
       [
         name,
@@ -271,6 +332,8 @@ export async function PATCH(
         address || null,
         nextKind,
         residentDetailsJson,
+        ...depositParams,
+        ...monthlyRentParams,
         studentId,
       ]
     );
@@ -305,6 +368,7 @@ export async function PATCH(
     const updated = (updatedRows as Array<Record<string, unknown>>)[0];
 
     const outKind = normalizeResidentKind(updated.resident_type);
+    const depOut = updated.security_deposit_amount;
     return NextResponse.json({
       ...updated,
       join_date: formatSqlDateOnlyForJson(updated.join_date),
@@ -314,6 +378,8 @@ export async function PATCH(
         outKind,
         parseJsonDetails(updated.resident_type_details)
       ),
+      security_deposit_amount:
+        depOut == null || depOut === "" ? null : Math.round(Number(depOut) * 100) / 100,
     });
   } catch (error) {
     console.error("Database error:", error);

@@ -30,6 +30,16 @@ export const ResidentDetailsDrawerOverviewTab = ({ student }: ResidentDetailsDra
       label={t("RESIDENT_DETAILS_PLANNED_VACATE")}
       value={sqlDateOnlyToYmd(student.planned_vacate_date) || "—"}
     />
+    <ResidentDetailsInfoRow
+      label={t("RESIDENT_SECURITY_DEPOSIT_FIELD")}
+      value={
+        student.security_deposit_amount == null ||
+        student.security_deposit_amount === "" ||
+        Number(student.security_deposit_amount) === 0
+          ? "—"
+          : formatAmount(Number(student.security_deposit_amount))
+      }
+    />
     <ResidentDetailsInfoRow label={t("PHONE")} value={student.phone || "—"} />
     <ResidentDetailsInfoRow label="Email" value={student.email || "—"} />
     <ResidentDetailsInfoRow

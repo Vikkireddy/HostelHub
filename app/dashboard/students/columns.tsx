@@ -201,6 +201,17 @@ export const getStudentColumns = (
     cell: ({ row }) => sqlDateOnlyToYmd(row.original.join_date) || "-",
   },
   {
+    accessorKey: "security_deposit_amount",
+    header: () => t("RESIDENT_SECURITY_DEPOSIT_TABLE"),
+    id: "security_deposit_amount",
+    cell: ({ row }) => {
+      const v = row.original.security_deposit_amount;
+      const n = v == null || v === "" ? 0 : Number(v);
+      if (!Number.isFinite(n) || n <= 0) return "—";
+      return `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+    },
+  },
+  {
     id: "actions",
     header: "",
     enableResizing: false,
@@ -299,5 +310,51 @@ export const getInactiveStudentColumns = (): ColumnDef<InactiveStudent>[] => [
         {sqlDateOnlyToYmd(row.original.left_date) || "-"}
       </span>
     ),
+  },
+  {
+    accessorKey: "security_deposit_amount",
+    header: t("INACTIVE_DEPOSIT_SETTLED"),
+    id: "inactive_deposit_total",
+    cell: ({ row }) => {
+      const v = row.original.security_deposit_amount;
+      const n = v == null || v === "" ? 0 : Number(v);
+      if (!Number.isFinite(n) || n <= 0) return <span className="text-slate-600">—</span>;
+      return (
+        <span className="text-slate-600">
+          ₹{n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+        </span>
+      );
+    },
+  },
+  {
+    accessorKey: "security_deposit_deduction",
+    header: t("INACTIVE_DEPOSIT_DEDUCTION"),
+    id: "inactive_deposit_deduction",
+    cell: ({ row }) => {
+      const v = row.original.security_deposit_deduction;
+      const n = v == null || v === "" ? 0 : Number(v);
+      if (!Number.isFinite(n) || n <= 0) return <span className="text-slate-600">—</span>;
+      return (
+        <span className="text-slate-600">
+          ₹{n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+        </span>
+      );
+    },
+  },
+  {
+    accessorKey: "security_deposit_refund",
+    header: t("INACTIVE_DEPOSIT_REFUNDED"),
+    id: "inactive_deposit_refund",
+    cell: ({ row }) => {
+      const v = row.original.security_deposit_refund;
+      if (v == null || v === "") return <span className="text-slate-600">—</span>;
+      const n = Number(v);
+      if (!Number.isFinite(n)) return <span className="text-slate-600">—</span>;
+      return (
+        <span className="text-slate-600">
+          ₹{n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+        </span>
+      );
+    },
   },
 ];

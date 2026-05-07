@@ -24,21 +24,25 @@ export interface Student {
   pending_dues?: number;
   payment_status?: "Overdue" | "No Due Amount" | "Pending";
   payment_count?: number;
+  /** Advance / security deposit collected at joining (optional). */
+  security_deposit_amount?: number | string | null;
+  /** Monthly rent charged to this resident (can vary by resident). */
+  monthly_rent?: number | string | null;
 }
 
 export interface InactiveStudent extends Student {
   left_date?: string;
+  security_deposit_deduction?: number | string | null;
+  security_deposit_refund?: number | string | null;
 }
 
 export interface StudentRoom {
   id: number;
   number: string;
   floor: number;
-  type: string;
   capacity: number;
   status: string;
   occupancy?: number;
-  rent?: number;
   ac_type?: string;
 }
 
@@ -72,6 +76,9 @@ export interface StudentFormValues {
   id_proof_type: string;
   id_proof_number: string;
   address: string;
+  /** Raw input for optional advance / security deposit */
+  security_deposit_amount: string;
+  monthly_rent: string;
   resident_type: ResidentKind;
   resident_type_details: Record<string, string>;
 }
@@ -132,7 +139,7 @@ export interface StudentCheckoutModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   student: Student | null;
-  onConfirm: (student: Student) => void;
+  onConfirm: (student: Student, options: { securityDepositDeduction: number }) => void;
   isPending: boolean;
 }
 
@@ -172,6 +179,8 @@ export interface SearchableStudent {
   address?: string;
   planned_vacate_date?: string | null;
   payment_status?: string;
+  security_deposit_amount?: number | string | null;
+  monthly_rent?: number | string | null;
 }
 
 export interface StudentsMuiTableProps<T> {

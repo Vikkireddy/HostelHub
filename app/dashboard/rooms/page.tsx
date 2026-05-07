@@ -20,7 +20,7 @@ import { RoomsSummaryCards } from "./components/RoomsSummaryCards";
 import { Room, RoomForm, initialForm } from "./components/types";
 import { SelectHostelPrompt } from "@/components/multi-hostel/SelectHostelPrompt";
 
-function filterRooms<T extends { number: string; floor: number; type: string }>(
+function filterRooms<T extends { number: string; floor: number; ac_type?: string }>(
   rooms: T[],
   query: string
 ): T[] {
@@ -30,7 +30,7 @@ function filterRooms<T extends { number: string; floor: number; type: string }>(
     (r) =>
       r.number.toLowerCase().includes(q) ||
       String(r.floor).includes(q) ||
-      r.type.toLowerCase().includes(q)
+      (r.ac_type || "").toLowerCase().includes(q)
   );
 }
 
@@ -75,10 +75,8 @@ export default function RoomsPage() {
         body: JSON.stringify({
           number: data.number,
           floor: Number(data.floor),
-          type: data.type,
           ac_type: data.ac_type,
           capacity: Number(data.capacity),
-          rent: Number(data.rent),
           status: data.status,
         }),
       });
@@ -111,10 +109,8 @@ export default function RoomsPage() {
         body: JSON.stringify({
           number: data.number,
           floor: Number(data.floor),
-          type: data.type,
           ac_type: data.ac_type,
           capacity: Number(data.capacity),
-          rent: Number(data.rent),
           status: data.status,
         }),
       });
@@ -134,7 +130,7 @@ export default function RoomsPage() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!form.number.trim() || !form.floor || !form.type || !form.ac_type || !form.capacity || !form.rent) return;
+    if (!form.number.trim() || !form.floor || !form.ac_type || !form.capacity) return;
     createRoom.mutate(form);
   };
 
@@ -143,10 +139,8 @@ export default function RoomsPage() {
     setEditForm({
       number: room.number,
       floor: String(room.floor),
-      type: room.type,
       ac_type: room.ac_type || DEFAULT_AC_TYPE,
       capacity: String(room.capacity),
-      rent: String(room.rent),
       status: room.status,
     });
     setEditModalOpen(true);
@@ -154,7 +148,7 @@ export default function RoomsPage() {
 
   const handleEditSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!editingRoom || !editForm.number.trim() || !editForm.floor || !editForm.type || !editForm.ac_type || !editForm.capacity || !editForm.rent)
+    if (!editingRoom || !editForm.number.trim() || !editForm.floor || !editForm.ac_type || !editForm.capacity)
       return;
     updateRoom.mutate({ id: editingRoom.id, data: editForm });
   };

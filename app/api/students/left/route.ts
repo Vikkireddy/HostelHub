@@ -4,6 +4,7 @@ import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
 import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
 import { formatSqlDateOnlyForJson } from "@/lib/dateOnly";
+import { ensureStudentSecurityDepositColumns } from "@/lib/ensureStudentSecurityDepositColumns";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 const CREATE_TABLE_IF_NOT_EXISTS = `
@@ -41,6 +42,7 @@ export async function GET(request: NextRequest) {
     }
 
     await pool.execute(CREATE_TABLE_IF_NOT_EXISTS);
+    await ensureStudentSecurityDepositColumns();
 
     const [rows] = await pool.execute(
       `SELECT * FROM students_left WHERE hostel_id = ? ORDER BY left_date DESC, created_at DESC`,
@@ -48,11 +50,22 @@ export async function GET(request: NextRequest) {
     );
     const list = rows as Array<Record<string, unknown>>;
     return NextResponse.json(
-      list.map((r) => ({
-        ...r,
-        join_date: formatSqlDateOnlyForJson(r.join_date),
-        left_date: formatSqlDateOnlyForJson(r.left_date),
-      }))
+      list.map((r) => {
+        const dep = r.security_deposit_amount;
+        const ded = r.security_deposit_deduction;
+        const ref = r.security_deposit_refund;
+        return {
+          ...r,
+          join_date: formatSqlDateOnlyForJson(r.join_date),
+          left_date: formatSqlDateOnlyForJson(r.left_date),
+          security_deposit_amount:
+            dep == null || dep === "" ? null : Math.round(Number(dep) * 100) / 100,
+          security_deposit_deduction:
+            ded == null || ded === "" ? null : Math.round(Number(ded) * 100) / 100,
+          security_deposit_refund:
+            ref == null || ref === "" ? null : Math.round(Number(ref) * 100) / 100,
+        };
+      })
     );
   } catch (error) {
     console.error("Database error:", error);

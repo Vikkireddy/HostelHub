@@ -10,6 +10,7 @@ import {
   hasPaymentBillProofOnPayments,
   ensureBillsForStudents,
 } from "@/lib/PaymentUtils";
+import { ensureStudentMonthlyRentColumn } from "@/lib/ensureStudentMonthlyRentColumn";
 import { MONTHS, MONTH_FIELD_ASC_SQL } from "./constants";
 import {
   assertPaymentReferenceAllowed,
@@ -38,6 +39,7 @@ export async function handlePostPayments(request: NextRequest) {
       );
     }
 
+    await ensureStudentMonthlyRentColumn();
     const hasRefCols = await hasPaymentReferenceColumns();
     const refAssert = await assertPaymentReferenceAllowed(hostelId, body, hasRefCols);
     if (!refAssert.ok) {
@@ -55,8 +57,8 @@ export async function handlePostPayments(request: NextRequest) {
     const hasBillCols = await hasPaymentBillProofOnPayments();
 
     const [studentRows] = await pool.execute(
-      `SELECT s.id, s.join_date, r.rent as room_rent FROM students s
-       LEFT JOIN rooms r ON s.room_id = r.id WHERE s.id = ? AND s.hostel_id = ?`,
+      `SELECT s.id, s.join_date, s.monthly_rent FROM students s
+       WHERE s.id = ? AND s.hostel_id = ?`,
       [studentId, hostelId]
     );
     const student = (studentRows as Array<Record<string, unknown>>)[0];

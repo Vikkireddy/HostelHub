@@ -8,12 +8,6 @@ import { Box } from "@/components/ui/box";
 import { VALID_AC_TYPES } from "../rooms.constants";
 import { RoomForm } from "./types";
 
-const ROOM_TYPE_OPTIONS = [
-  { value: "Single", label: "Single" },
-  { value: "Double", label: "Double" },
-  { value: "Triple", label: "Triple" },
-];
-
 const ROOM_STATUS_OPTIONS = [
   { value: "available", label: "Available" },
   { value: "maintenance", label: "Maintenance" },
@@ -57,15 +51,6 @@ export function RoomFormFields({
         />
       </Box>
       <Box className="space-y-2">
-        <RequiredLabel htmlFor={`${idPrefix}-type`}>Type</RequiredLabel>
-        <Dropdown
-          value={form.type}
-          onValueChange={(v) => setForm((f) => ({ ...f, type: v }))}
-          options={ROOM_TYPE_OPTIONS}
-          placeholder="Select type"
-        />
-      </Box>
-      <Box className="space-y-2">
         <RequiredLabel htmlFor={`${idPrefix}-ac-type`}>AC / Non-AC</RequiredLabel>
         <Dropdown
           value={form.ac_type}
@@ -86,18 +71,6 @@ export function RoomFormFields({
           required
         />
         {showCapacityHint && <Typography variant="caption">{showCapacityHint}</Typography>}
-      </Box>
-      <Box className="space-y-2">
-        <RequiredLabel htmlFor={`${idPrefix}-rent`}>Rent (₹/month)</RequiredLabel>
-        <Input
-          id={`${idPrefix}-rent`}
-          type="number"
-          min={0}
-          value={form.rent}
-          onChange={(e) => setForm((f) => ({ ...f, rent: e.target.value }))}
-          placeholder="e.g. 5000"
-          required
-        />
       </Box>
       <Box className="space-y-2">
         <Label htmlFor={`${idPrefix}-status`}>Status</Label>

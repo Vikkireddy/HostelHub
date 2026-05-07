@@ -15,6 +15,7 @@ export function filterStudents<T extends SearchableStudent>(items: T[], query: s
       (s.id_proof_type ?? "").toLowerCase().includes(q) ||
       (s.id_proof_number ?? "").toLowerCase().includes(q) ||
       (s.address ?? "").toLowerCase().includes(q) ||
-      (s.planned_vacate_date ?? "").toLowerCase().includes(q)
+      (s.planned_vacate_date ?? "").toLowerCase().includes(q) ||
+      String(s.security_deposit_amount ?? "").toLowerCase().includes(q)
   );
 }
