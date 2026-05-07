@@ -1,4 +1,5 @@
 import pool from "./db";
+import { ensureStudentMonthlyRentColumn } from "./ensureStudentMonthlyRentColumn";
 
 export async function hasPartialPaymentColumns(): Promise<boolean> {
   try {
@@ -187,14 +188,14 @@ const MONTH_NAMES = [
  * @param hostelId - When provided, only processes students for this hostel
  */
 export async function ensureBillsForStudents(hostelId?: number | null): Promise<void> {
+  await ensureStudentMonthlyRentColumn();
   const hasNewColumns = await hasPartialPaymentColumns();
   const hostelFilter = hostelId != null ? " AND s.hostel_id = ?" : "";
   const params = hostelId != null ? [hostelId] : [];
 
   const [students] = await pool.execute(
-    `SELECT s.id, s.join_date, r.rent, s.hostel_id FROM students s 
-     JOIN rooms r ON s.room_id = r.id 
-     WHERE s.status = 'present' AND r.rent > 0 AND s.join_date IS NOT NULL${hostelFilter}`,
+    `SELECT s.id, s.join_date, s.monthly_rent, s.hostel_id FROM students s 
+     WHERE s.status = 'present' AND COALESCE(s.monthly_rent, 0) > 0 AND s.join_date IS NOT NULL${hostelFilter}`,
     params
   );
 
@@ -205,7 +206,7 @@ export async function ensureBillsForStudents(hostelId?: number | null): Promise<
   for (const row of students as Array<Record<string, unknown>>) {
     const studentId = Number(row.id);
     const joinDate = new Date(row.join_date as string);
-    const rent = Number(row.rent ?? 0);
+    const rent = Number(row.monthly_rent ?? 0);
     if (rent <= 0) continue;
 
     for (let y = joinDate.getFullYear(); y <= currentYear; y++) {

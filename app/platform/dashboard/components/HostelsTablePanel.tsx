@@ -139,8 +139,11 @@ export function HostelsTablePanel({
                       </TableCell>
                       <TableCell>
                         <Typography>{h.adminName || "-"}</Typography>
-                        <Typography variant="caption" sx={{ color: "rgb(148,163,184)" }}>
+                        <Typography variant="caption" sx={{ color: "rgb(148,163,184)", display: "block" }}>
                           {h.adminEmail || "-"}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: "rgb(148,163,184)", display: "block" }}>
+                          {h.adminMobile?.trim() ? h.adminMobile.trim() : "—"}
                         </Typography>
                       </TableCell>
                       <TableCell>

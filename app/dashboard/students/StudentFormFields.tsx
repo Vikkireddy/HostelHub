@@ -57,14 +57,13 @@ export function StudentFormFields({
         />
       </Box>
       <Box className="space-y-2">
-        <RequiredLabel htmlFor={id("email")}>Email</RequiredLabel>
+        <Label htmlFor={id("email")}>Email (optional)</Label>
         <Input
           id={id("email")}
           type="email"
           value={form.email}
           onChange={(e) => onChange((f) => ({ ...f, email: e.target.value }))}
           placeholder="name@example.com"
-          required
         />
       </Box>
       <Box className="space-y-2">
@@ -195,7 +194,7 @@ export function StudentFormFields({
           onValueChange={(v) => onChange((f) => ({ ...f, room_id: v }))}
           options={rooms.map((r) => ({
             value: String(r.id),
-            label: `Room ${r.number} (Floor ${r.floor}, ${r.type}, ${r.ac_type || DEFAULT_AC_TYPE}) — ₹${Number(r.rent || 0).toLocaleString()}/mo`,
+            label: `Room ${r.number} (Floor ${r.floor}, ${r.ac_type || DEFAULT_AC_TYPE})`,
           }))}
           placeholder={idPrefix ? "Select room" : "Select which room this resident belongs to"}
         />
@@ -236,6 +235,40 @@ export function StudentFormFields({
         />
         <Typography variant="caption" className="text-muted-foreground">
           {t("PLANNED_VACATE_DATE_OPTIONAL")}
+        </Typography>
+      </Box>
+      <Box className="space-y-2 sm:col-span-2">
+        <RequiredLabel htmlFor={id("monthly_rent")}>Monthly Rent (₹)</RequiredLabel>
+        <Input
+          id={id("monthly_rent")}
+          value={form.monthly_rent}
+          onChange={(e) => {
+            const v = e.target.value.replace(/[^\d.,]/g, "");
+            onChange((f) => ({ ...f, monthly_rent: v }));
+          }}
+          placeholder="e.g. 6500"
+          inputMode="decimal"
+          autoComplete="off"
+          required
+        />
+      </Box>
+      <Box className="space-y-2 sm:col-span-2">
+        <Label htmlFor={id("security_deposit_amount")} className="text-sm font-medium">
+          {t("RESIDENT_SECURITY_DEPOSIT_FIELD")} <span className="text-muted-foreground">(optional)</span>
+        </Label>
+        <Input
+          id={id("security_deposit_amount")}
+          value={form.security_deposit_amount}
+          onChange={(e) => {
+            const v = e.target.value.replace(/[^\d.,]/g, "");
+            onChange((f) => ({ ...f, security_deposit_amount: v }));
+          }}
+          placeholder="e.g. 10000"
+          inputMode="decimal"
+          autoComplete="off"
+        />
+        <Typography variant="caption" className="text-muted-foreground">
+          {t("RESIDENT_SECURITY_DEPOSIT_HINT")}
         </Typography>
       </Box>
     </Box>

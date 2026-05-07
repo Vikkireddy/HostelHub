@@ -4,11 +4,12 @@ import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { updateOverduePayments, ensureBillsForStudents, getPendingDuesSql } from "@/lib/PaymentUtils";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
 import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
+import { ensureStudentMonthlyRentColumn } from "@/lib/ensureStudentMonthlyRentColumn";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 /**
  * Returns only students with pending/outstanding balances (for payment dropdown).
- * Includes room_rent for auto-filling payment amount.
+ * Includes resident monthly_rent for auto-filling payment amount.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -23,12 +24,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([], { status: 200 });
     }
 
+    await ensureStudentMonthlyRentColumn();
     await ensureBillsForStudents(hostelId);
     await updateOverduePayments(hostelId);
     const { sumSelect, unpaidWhere } = await getPendingDuesSql();
 
     const [rows] = await pool.execute(
-      `SELECT s.id, s.name, s.room_id, r.number as room_number, r.rent as room_rent,
+      `SELECT s.id, s.name, s.room_id, r.number as room_number, s.monthly_rent,
         COALESCE((SELECT ${sumSelect} FROM payments p 
           WHERE p.student_id = s.id AND ${unpaidWhere}), 0) as pending_dues
        FROM students s 
@@ -44,7 +46,7 @@ export async function GET(request: NextRequest) {
       name: s.name,
       room_id: s.room_id,
       room_number: s.room_number,
-      room_rent: Number(s.room_rent ?? 0),
+      monthly_rent: Number(s.monthly_rent ?? 0),
       pending_dues: Number(s.pending_dues ?? 0),
     }));
 

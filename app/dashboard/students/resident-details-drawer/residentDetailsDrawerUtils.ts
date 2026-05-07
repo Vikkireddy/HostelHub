@@ -16,7 +16,7 @@ export const formatAmount = (v: number | null | undefined) =>
 export type PaymentHistoryResponse = {
   student_id: number;
   student_name: string;
-  room_rent: number;
+  monthly_rent: number;
   total_paid: number;
   pending_due: number;
   last_payment_at: string | null;

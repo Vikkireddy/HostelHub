@@ -29,6 +29,7 @@ import {
   validatePhone,
   validateOptionalPhone,
   normalizePhone,
+  parseOptionalMoneyInput,
 } from "./students.constants";
 import { filterStudents } from "./students.utils";
 import { mergeDetailsForKind, normalizeResidentKind } from "@/lib/residentType.constants";
@@ -155,12 +156,18 @@ export default function StudentsPage() {
   const rooms = Array.isArray(roomsData) ? roomsData : [];
 
   const markAsLeft = useMutation({
-    mutationFn: async (student: Student) => {
-      const res = await fetchWithHostel(
-        `/api/students/${student.id}/leave`,
-        hostelId,
-        { method: "PATCH" }
-      );
+    mutationFn: async ({
+      student,
+      securityDepositDeduction,
+    }: {
+      student: Student;
+      securityDepositDeduction: number;
+    }) => {
+      const res = await fetchWithHostel(`/api/students/${student.id}/leave`, hostelId, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ security_deposit_deduction: securityDepositDeduction }),
+      });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || "Failed to mark resident as left");
@@ -200,6 +207,16 @@ export default function StudentsPage() {
           address: data.address || null,
           resident_type: data.resident_type,
           resident_type_details: data.resident_type_details,
+          monthly_rent: (() => {
+            const p = parseOptionalMoneyInput(data.monthly_rent);
+            if (!p.ok) return undefined;
+            return p.value;
+          })(),
+          security_deposit_amount: (() => {
+            const p = parseOptionalMoneyInput(data.security_deposit_amount);
+            if (!p.ok) return undefined;
+            return p.value;
+          })(),
         }),
       });
       if (!res.ok) {
@@ -269,6 +286,16 @@ export default function StudentsPage() {
           address: data.address || null,
           resident_type: data.resident_type,
           resident_type_details: data.resident_type_details,
+          monthly_rent: (() => {
+            const p = parseOptionalMoneyInput(data.monthly_rent);
+            if (!p.ok) return undefined;
+            return p.value;
+          })(),
+          security_deposit_amount: (() => {
+            const p = parseOptionalMoneyInput(data.security_deposit_amount);
+            if (!p.ok) return undefined;
+            return p.value;
+          })(),
         }),
       });
       if (!res.ok) {
@@ -350,18 +377,19 @@ export default function StudentsPage() {
       id_proof_type,
       id_proof_number,
       address,
+      monthly_rent,
     } = form;
     if (
       !name.trim() ||
       !gender.trim() ||
-      !email.trim() ||
       !phone.trim() ||
       !room_id ||
       !course.trim() ||
       !join_date ||
       !id_proof_type ||
       !id_proof_number.trim() ||
-      !address.trim()
+      !address.trim() ||
+      !monthly_rent.trim()
     )
       return;
     const phoneErr = validatePhone(phone);
@@ -377,6 +405,16 @@ export default function StudentsPage() {
     const err = validateIdProof(id_proof_type, id_proof_number);
     if (err) {
       setIdProofError(err);
+      return;
+    }
+    const monthlyRentParse = parseOptionalMoneyInput(form.monthly_rent);
+    if (!monthlyRentParse.ok || monthlyRentParse.value == null || monthlyRentParse.value <= 0) {
+      toast.error("Monthly rent must be greater than 0.");
+      return;
+    }
+    const depositParse = parseOptionalMoneyInput(form.security_deposit_amount);
+    if (!depositParse.ok) {
+      toast.error(depositParse.error);
       return;
     }
     const normalizedForm = {
@@ -420,6 +458,14 @@ export default function StudentsPage() {
       address: student.address || "",
       resident_type: kind,
       resident_type_details: mergeDetailsForKind(kind, student.resident_type_details ?? {}),
+      monthly_rent:
+        student.monthly_rent != null && student.monthly_rent !== ""
+          ? String(student.monthly_rent)
+          : "",
+      security_deposit_amount:
+        student.security_deposit_amount != null && student.security_deposit_amount !== ""
+          ? String(student.security_deposit_amount)
+          : "",
     });
     setEditModalOpen(true);
   };
@@ -441,19 +487,20 @@ export default function StudentsPage() {
       id_proof_type,
       id_proof_number,
       address,
+      monthly_rent,
     } = editForm;
     if (
       !editingStudent ||
       !name.trim() ||
       !gender.trim() ||
-      !email.trim() ||
       !phone.trim() ||
       !room_id ||
       !course.trim() ||
       !join_date ||
       !id_proof_type ||
       !id_proof_number.trim() ||
-      !address.trim()
+      !address.trim() ||
+      !monthly_rent.trim()
     )
       return;
     const phoneErr = validatePhone(phone);
@@ -471,6 +518,16 @@ export default function StudentsPage() {
       setEditIdProofError(err);
       return;
     }
+    const monthlyRentParse = parseOptionalMoneyInput(editForm.monthly_rent);
+    if (!monthlyRentParse.ok || monthlyRentParse.value == null || monthlyRentParse.value <= 0) {
+      toast.error("Monthly rent must be greater than 0.");
+      return;
+    }
+    const depositParse = parseOptionalMoneyInput(editForm.security_deposit_amount);
+    if (!depositParse.ok) {
+      toast.error(depositParse.error);
+      return;
+    }
     const normalizedData = {
       ...editForm,
       phone: normalizePhone(phone),
@@ -486,8 +543,8 @@ export default function StudentsPage() {
     setCheckoutModalOpen(true);
   };
 
-  const handleConfirmCheckout = (student: Student) => {
-    markAsLeft.mutate(student);
+  const handleConfirmCheckout = (student: Student, options: { securityDepositDeduction: number }) => {
+    markAsLeft.mutate({ student, securityDepositDeduction: options.securityDepositDeduction });
   };
 
   const handleDelete = (student: Student) => {

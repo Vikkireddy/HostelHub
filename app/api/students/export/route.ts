@@ -6,6 +6,8 @@ import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
 import { formatSqlDateOnlyForJson } from "@/lib/dateOnly";
 import { ensureStudentGenderColumn } from "@/lib/ensureGenderColumns";
 import { ensureStudentOptionalPhoneAndEmergency } from "@/lib/ensureStudentContactColumns";
+import { ensureStudentSecurityDepositColumns } from "@/lib/ensureStudentSecurityDepositColumns";
+import { ensureStudentMonthlyRentColumn } from "@/lib/ensureStudentMonthlyRentColumn";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 const escapeCsv = (value: unknown): string => {
@@ -29,10 +31,12 @@ export async function GET(request: NextRequest) {
 
     await ensureStudentGenderColumn();
     await ensureStudentOptionalPhoneAndEmergency();
+    await ensureStudentSecurityDepositColumns();
+    await ensureStudentMonthlyRentColumn();
 
     const [rows] = await pool.execute(
-      `SELECT s.name, s.gender, s.email, s.phone, s.emergency_contact_phone, r.number as room_number, s.course, s.join_date,
-              s.id_proof_type, s.id_proof_number, s.address, s.planned_vacate_date
+      `SELECT s.name, s.gender, s.email, s.phone, s.emergency_contact_phone, r.number as room_number, s.course, s.monthly_rent, s.join_date,
+              s.id_proof_type, s.id_proof_number, s.address, s.planned_vacate_date, s.security_deposit_amount
        FROM students s
        LEFT JOIN rooms r ON s.room_id = r.id
        WHERE s.hostel_id = ? AND s.status = 'present'
@@ -49,11 +53,13 @@ export async function GET(request: NextRequest) {
       "emergency_contact_phone",
       "room_number",
       "course",
+      "monthly_rent",
       "join_date",
       "id_proof_type",
       "id_proof_number",
       "address",
       "planned_vacate_date",
+      "security_deposit_amount",
     ];
     const exportRows = list.map((s) => ({
       name: s.name ?? "",
@@ -63,11 +69,19 @@ export async function GET(request: NextRequest) {
       emergency_contact_phone: s.emergency_contact_phone ?? "",
       room_number: s.room_number ?? "",
       course: s.course ?? "",
+      monthly_rent:
+        s.monthly_rent == null || s.monthly_rent === ""
+          ? ""
+          : String(Math.round(Number(s.monthly_rent) * 100) / 100),
       join_date: formatSqlDateOnlyForJson(s.join_date) ?? "",
       id_proof_type: s.id_proof_type ?? "",
       id_proof_number: s.id_proof_number ?? "",
       address: s.address ?? "",
       planned_vacate_date: formatSqlDateOnlyForJson(s.planned_vacate_date) ?? "",
+      security_deposit_amount:
+        s.security_deposit_amount == null || s.security_deposit_amount === ""
+          ? ""
+          : String(Math.round(Number(s.security_deposit_amount) * 100) / 100),
     }));
     const today = new Date().toISOString().slice(0, 10);
 
@@ -81,11 +95,13 @@ export async function GET(request: NextRequest) {
         s.emergency_contact_phone,
         s.room_number,
         s.course,
+        s.monthly_rent,
         formatSqlDateOnlyForJson(s.join_date),
         s.id_proof_type,
         s.id_proof_number,
         s.address,
         formatSqlDateOnlyForJson(s.planned_vacate_date),
+        s.security_deposit_amount,
       ].map(escapeCsv);
       lines.push(row.join(","));
     }

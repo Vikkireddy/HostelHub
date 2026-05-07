@@ -12,6 +12,15 @@ import { HostelOverviewPanel } from "./components/HostelOverviewPanel";
 import { matchesAccessFilter } from "./components/platformDashboard.utils";
 import type { AccessFilter, HostelOverviewPayload, PlanFilter, StatsPayload } from "./components/types";
 
+const platformToolbarOutlinedSx = {
+  color: "rgb(226,232,240)",
+  borderColor: "rgba(148,163,184,0.55)",
+  "&:hover": {
+    borderColor: "rgb(226,232,240)",
+    bgcolor: "rgba(148,163,184,0.12)",
+  },
+} as const;
+
 export default function PlatformDashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<StatsPayload | null>(null);
@@ -117,10 +126,10 @@ export default function PlatformDashboardPage() {
       <Box sx={{ minHeight: "100vh", display: "grid", placeItems: "center", bgcolor: "rgb(2,6,23)", px: 2 }}>
         <Stack spacing={2} alignItems="center">
           <Typography sx={{ color: "rgb(252,165,165)" }}>{error}</Typography>
-          <Button variant="outlined" onClick={load}>
+          <Button variant="outlined" onClick={load} sx={platformToolbarOutlinedSx}>
             {t("PLATFORM_RETRY")}
           </Button>
-          <Button component={Link} href="/platform/login" variant="text">
+          <Button component={Link} href="/platform/login" variant="text" sx={{ color: "rgb(148,163,184)" }}>
             {t("PLATFORM_SIGN_IN_AGAIN")}
           </Button>
         </Stack>
@@ -150,10 +159,15 @@ export default function PlatformDashboardPage() {
             </Typography>
           </Box>
           <Stack direction="row" spacing={1}>
-            <Button component={Link} href="/" variant="outlined">
+            <Button component={Link} href="/" variant="outlined" sx={platformToolbarOutlinedSx}>
               {t("PLATFORM_HOME")}
             </Button>
-            <Button variant="outlined" onClick={logout} startIcon={<LogOut size={16} />}>
+            <Button
+              variant="outlined"
+              onClick={logout}
+              startIcon={<LogOut size={16} />}
+              sx={platformToolbarOutlinedSx}
+            >
               {t("PLATFORM_SIGN_OUT")}
             </Button>
           </Stack>

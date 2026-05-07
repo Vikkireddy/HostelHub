@@ -4,6 +4,7 @@ import { getHostelIdFromRequest } from "@/lib/GetHostelId";
 import { hasPartialPaymentColumns, hasPaymentReferenceColumns } from "@/lib/PaymentUtils";
 import { requireSubscription } from "@/lib/subscription/RequireSubscription";
 import { assertDashboardPermission } from "@/lib/dashboardPermission.server";
+import { ensureStudentMonthlyRentColumn } from "@/lib/ensureStudentMonthlyRentColumn";
 export { dynamic } from "@/lib/forceDynamicRoute";
 
 export async function GET(request: NextRequest) {
@@ -27,14 +28,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    await ensureStudentMonthlyRentColumn();
+
     const [studentRows] = await pool.execute(
-      `SELECT s.id, s.name, COALESCE(r.rent, 0) as room_rent
+      `SELECT s.id, s.name, COALESCE(s.monthly_rent, 0) as monthly_rent
        FROM students s
-       LEFT JOIN rooms r ON s.room_id = r.id
        WHERE s.id = ? AND (s.hostel_id = ? OR s.hostel_id IS NULL) LIMIT 1`,
       [studentId, hostelId]
     );
-    const student = (studentRows as Array<{ id: number; name: string; room_rent: number }>)[0];
+    const student = (studentRows as Array<{ id: number; name: string; monthly_rent: number }>)[0];
     if (!student) {
       return NextResponse.json({ error: "Resident not found" }, { status: 404 });
     }
@@ -55,6 +57,9 @@ export async function GET(request: NextRequest) {
     } catch (error) {
       const err = error as { code?: string };
       if (err.code !== "ER_NO_SUCH_TABLE") throw error;
+    }
+    if (historyRows.length === 0) {
+      // Backward compatibility for older paid rows created before payment_transactions.
       const [rows] = await pool.execute(
         `SELECT id, amount, paid_at as recorded_at, 'Marked paid' as note
          FROM payments
@@ -78,7 +83,7 @@ export async function GET(request: NextRequest) {
           ? String(row.payment_reference)
           : null,
       status:
-        Number(row.amount ?? 0) > 0 && Number(row.amount ?? 0) < Number(student.room_rent ?? 0)
+        Number(row.amount ?? 0) > 0 && Number(row.amount ?? 0) < Number(student.monthly_rent ?? 0)
           ? "partial"
           : "paid",
       note: String(row.note ?? "Payment recorded"),
@@ -109,7 +114,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       student_id: student.id,
       student_name: student.name,
-      room_rent: Number(student.room_rent ?? 0),
+      monthly_rent: Number(student.monthly_rent ?? 0),
       total_paid: totalPaid,
       pending_due: pendingDue,
       last_payment_at: lastPaymentAt,

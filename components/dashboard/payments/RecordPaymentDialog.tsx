@@ -52,7 +52,7 @@ export function RecordPaymentDialog({
     onFormChange({
       ...form,
       student_id: value,
-      amount: student?.room_rent ? String(student.room_rent) : "",
+      amount: student?.monthly_rent ? String(student.monthly_rent) : "",
       payment_reference: "",
     });
   };
@@ -76,7 +76,7 @@ export function RecordPaymentDialog({
                 onValueChange={handleStudentChange}
                 options={studentsWithDues.map((s) => ({
                   value: String(s.id),
-                  label: `${s.name}${s.room_rent > 0 ? ` (₹${s.room_rent.toLocaleString()}/mo)` : ""}`,
+                  label: `${s.name}${s.monthly_rent > 0 ? ` (₹${s.monthly_rent.toLocaleString()}/mo)` : ""}`,
                 }))}
                 placeholder="Select resident"
                 disabled={studentsWithDues.length === 0}
